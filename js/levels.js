@@ -7,6 +7,7 @@
      kind: 'single' (tek ışık) | 'pair' (iki ışık: A ve B)
      learning: true ise öğrenme paneli açılır
      ranges: kaydırıcı aralıkları, init(): başlangıç durumu
+     goal: seviyenin amacı, todo: “bu sayfada ne yapacaksın” adımları
      targets: (öğrenme seviyelerinde) seçilebilen istenen davranışlar
      missions: [{id, text, target?, check(st), aha}]  -> aha, görev tamamlanınca görünen açıklama
      cards: {brain, model, limit, ai}, deeper: "Daha derine" (HTML)
@@ -28,7 +29,9 @@ const sameW=(a,b)=>a&&b&&a.length===b.length&&a.every((v,i)=>Math.abs(v-b[i])<1e
 const LEVELS=[
 /* ------------------------------ 1 ------------------------------ */
 {
-  id:1,part:'A',title:'Tek bir ışık hücresi',
+  id:1,goal:"Bir nöronun girdiyi nasıl bir karara (ateşle ya da sus) çevirdiğini görmek.",
+  todo:["Işık hücresine tıklayıp ışığı aç.", "Kaydırıcılarla parlaklığı, bağlantıyı ve eşiği değiştir; nöronun ne zaman ateşlediğini izle.", "Sağdaki görevleri sırayla yap. Her görevin açıklaması, görevi tamamlayınca açılır."],
+  part:'A',title:'Tek bir ışık hücresi',
   question:'Gözündeki tek bir hücre ışığı nasıl fark eder ve beyne “ışık var” der?',
   kind:'single',
   ranges:{b:[0,1,0.05],w:[0,2,0.1],theta:[0.1,2,0.1]},
@@ -59,7 +62,9 @@ const LEVELS=[
 },
 /* ------------------------------ 2 ------------------------------ */
 {
-  id:2,part:'A',title:'İki ışık, bir karar',
+  id:2,goal:"Bir nöronun birden çok sinyali toplayarak nasıl tek bir karar verdiğini görmek.",
+  todo:["Işıklara ya da tablodaki satırlara tıklayarak dört durumu dene.", "Kaydırıcılarla bağlantıları ve eşiği ayarla; tablodaki dört satırın hepsini tutturmaya çalış.", "Karar haritasında boyalı bölgenin nasıl değiştiğine bak."],
+  part:'A',title:'İki ışık, bir karar',
   question:'Bir nöron birden fazla sinyali nasıl birleştirip tek bir karar verir?',
   kind:'pair',
   ranges:{w:[0,2,0.1],theta:[0.1,3,0.1]},
@@ -87,7 +92,9 @@ const LEVELS=[
 },
 /* ------------------------------ 3 ------------------------------ */
 {
-  id:3,part:'A',title:'Susturan bağlantı',
+  id:3,goal:"Bir sinyalin nöronu susturabildiğini ve bir hücrenin bir şeyin yokluğunu bile fark edebildiğini görmek.",
+  todo:["Bir bağlantıyı sıfırın altına indir: pembe çizgi susturan bağlantı demek.", "Görevlerdeki üç davranışı kur.", "Karar haritasında çizginin yönünün nasıl döndüğüne bak."],
+  part:'A',title:'Susturan bağlantı',
   question:'Bir sinyal nöronu ateşlemek yerine susturabilir mi? “Yokluğu” fark eden bir hücre olur mu?',
   kind:'pair',
   ranges:{w:[-2,2,0.1],theta:[-2,2,0.1]},
@@ -115,11 +122,13 @@ const LEVELS=[
 },
 /* ------------------------------ 4 ------------------------------ */
 {
-  id:4,part:'B',title:'Kendi kendine öğrenme',
+  id:4,ver:2,goal:"Doğru bağlantıların kimse elle ayarlamadan, örnekler ve geri bildirimle nasıl ortaya çıktığını görmek. Öğrenmek, bağlantıların ayarlanmasıdır; hafıza, bu ayarın kalıcı olmasıdır.",
+  todo:["Sağdaki tablo öğretmenin elindeki eğitim verisi: 4 kart, her kartta bir girdi ve doğru cevap. Örneğin A = kabuğu sarı mı, B = dokununca yumuşak mı, doğru cevap = muz olgun mu (ikisi birden).", "“Bir örnek göster”e tekrar tekrar bas. Her basışta öğretmen bir kart gösterir; nöron tahmin eder, yanılırsa bağlantıları biraz düzeltilir. Ne değiştiği her adımda yazıyor.", "Hatalar bitene kadar devam et. İlerledikçe yeni düğmeler açılacak."],
+  part:'B',title:'Kendi kendine öğrenme',
   question:'Kimse bağlantıların kaç olması gerektiğini söylemezse, nöron doğru sayıları kendisi bulabilir mi?',
   kind:'pair',learning:true,
   ranges:{w:[-3,3,0.1],theta:[-3,3,0.1]},
-  init(){return{x:[0,0],w:[0,0],theta:0.5,targetKey:'and',rate:0.2};},
+  init(){return{x:[0,0],w:[0,0],theta:0,targetKey:'and',rate:0.2};},
   targets:['and','or','aNotB','nor','custom'],
   missions:[
     {id:'learnAnd',target:'and',text:'Makineye <b>VE</b>’yi öğret. “Bir örnek göster”e basarak her adımda ne değiştiğini izle.',
@@ -138,8 +147,8 @@ const LEVELS=[
   cards:{
     brain:'Öğrenmenin beyindeki temel izlerinden biri sinapsların güçlenip zayıflamasıdır. Donald Hebb 1949’da birlikte etkin olan nöronlar arasındaki bağlantının güçlendiğini öne sürdü (sonradan “birlikte ateşlenen birlikte bağlanır” diye özetlendi). 1973’te sinapsların tekrarlanan uyarıyla uzun süre güçlendiği gösterildi (uzun süreli güçlenme). Beyin hatadan da öğrenir: beyincik hareket hatalarından, dopamin nöronları ise “beklenenden iyi ya da kötü” sinyallerinden öğrenmeye katkıda bulunuyor gibi görünüyor.',
     model:'Her örnekte üç şey olur: nöron tahmin eder; tahmin istenenle karşılaştırılır; fark varsa yanan ışıkların bağlantıları ve eşik küçük bir adım düzeltilir. Buna algılayıcı (perceptron) kuralı denir. Çözümü olan bir tablo için bir noktada durmayı garanti eder.',
-    limit:'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle bir öğretmen olmadan öğrenir. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli.',
-    ai:'Bu kural 1958’de Frank Rosenblatt’ın algılayıcısıyla ortaya çıktı. Bugünkü bütün yapay sinir ağları aynı fikrin genelleştirilmiş hâliyle eğitilir: tahmin et, hatayı ölç, ağırlıkları hatayı azaltacak yönde biraz değiştir, milyonlarca kez tekrarla.'
+    limit:'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli.',
+    ai:'Tablodaki dört kart, yapay zekâda “etiketli eğitim verisi” diye anılır: her örnek bir girdi ve doğru cevap. Kural 1958’de Frank Rosenblatt’ın algılayıcısıyla ortaya çıktı. Ayrıca eğitimde hiç gösterilmeyen “doğrulama” ya da “sınav” verisiyle modelin ezberleyip ezberlemediği kontrol edilir (10. seviye). Bugünkü bütün yapay sinir ağları aynı fikrin genelleştirilmiş hâliyle eğitilir: tahmin et, hatayı ölç, ağırlıkları hatayı azaltacak yönde biraz değiştir, milyonlarca kez tekrarla.'
   },
   deeper:`<p><b>hata = istenen − çıktı</b>. Üç değer alabilir: <b>+1</b> (sustu ama ateşlemeliydi), <b>−1</b> (boşuna ateşledi), <b>0</b> (doğru).</p>
     <p>Düzeltme: <b>bağlantı += hız × hata × ışık</b> ve <b>eşik −= hız × hata</b>. Işık sönükse (0) çarpım sıfırdır, o bağlantı değişmez.</p>
@@ -148,7 +157,9 @@ const LEVELS=[
 },
 /* ------------------------------ 5 ------------------------------ */
 {
-  id:5,part:'B',title:'Tek nöronun duvarı',
+  id:5,goal:"Tek bir nöronun asla öğrenemeyeceği bir şey olduğunu ve neden birden çok nörona ihtiyaç olduğunu görmek.",
+  todo:["Önce elle dene: tablodaki dört satırı tutturmaya çalış.", "Sonra makineye öğret ve tur başına hata sayısını izle.", "“Daha derine”yi açıp nedenini oku."],
+  part:'B',title:'Tek nöronun duvarı',
   question:'Tek bir nöronun asla öğrenemeyeceği bir şey var mı?',
   kind:'pair',learning:true,
   ranges:{w:[-3,3,0.1],theta:[-3,3,0.1]},

@@ -197,3 +197,12 @@
 .lv-pn{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .lv-pn .soon{color:var(--ink-2);font-size:14px;max-width:48ch;text-align:right}
 .lv-pn a{color:var(--accent)}
+
+/* Amaç kutusu */
+.route{margin-top:12px;max-width:80ch;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:10px 16px;font-size:14.5px;line-height:1.5}
+.route p{margin:0 0 4px}
+.route .route-h{margin-top:6px}
+.route ol{margin:0;padding-left:20px;display:grid;gap:3px}
+
+/* Öğrenme panelinde kontroller adım adım açılır */
+.learn:not(.stage1) .st1,.learn:not(.stage2) .st2{display:none}

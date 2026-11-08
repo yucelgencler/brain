@@ -20,12 +20,13 @@ const R=()=>P.rec[P.level];
 function freshRec(lv){
   const st=Object.assign(lv.init(),{flags:{}});
   if(lv.learning)st.custom=[0,0,0,0];
-  return{st,done:[],active:lv.missions[0].id,notes:'',log:[],rounds:[],roundMistakes:0,cursor:0,steps:0,last:null};
+  return{ver:lv.ver||1,st,done:[],active:lv.missions[0].id,notes:'',log:[],rounds:[],roundMistakes:0,cursor:0,steps:0,last:null,stage:0};
 }
 function load(){
   let o=null;try{o=JSON.parse(localStorage.getItem(STORE)||'null');}catch(e){o=null;}
   for(const lv of LEVELS){
-    const f=freshRec(lv),r=o&&o.rec&&o.rec[lv.id];
+    const f=freshRec(lv),saved=o&&o.rec&&o.rec[lv.id],r=saved&&(saved.ver||1)===(lv.ver||1)?saved:null;
+    if(saved&&!r)f.notes=saved.notes||'';
     P.rec[lv.id]=r?Object.assign(f,r,{st:Object.assign(f.st,r.st,{flags:Object.assign({},r.st&&r.st.flags)})}):f;
   }
   if(o&&levelById(o.level))P.level=o.level;
@@ -58,6 +59,11 @@ function buildLevel(){
       <p class="kicker">Seviye ${lv.id} · ${esc(part.title)}</p>
       <h2>${esc(lv.title)}</h2>
       <p class="lv-q">${esc(lv.question)}</p>
+      <div class="route">
+        <p><b>Amaç:</b> ${esc(lv.goal)}</p>
+        <p class="route-h"><b>Bu sayfada ne yapacaksın:</b></p>
+        <ol>${lv.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
+      </div>
     </div>
     <div class="lv-grid">
       <div class="lv-main">
@@ -72,8 +78,8 @@ function buildLevel(){
       </div>
       <aside class="lv-side">
         <div class="panel"><div class="ph"><h3>Görevler</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></div>
-        ${pair?`<div class="panel"><div class="ph"><h3>Bütün durumlar</h3><span class="pc" id="tScore"></span></div>
-          <p class="hint">İki ışığın dört olası durumu. Bir satıra tıklarsan o durum nörona gösterilir.</p><table class="tt" id="tt"></table></div>`:''}
+        ${pair?`<div class="panel"><div class="ph"><h3>${lv.learning?'Eğitim verisi':'Bütün durumlar'}</h3><span class="pc" id="tScore"></span></div>
+          <p class="hint">${lv.learning?'Öğretmenin elindeki 4 kart. Her satır bir girdi (A, B) ve doğru cevap. Nöron sadece bunlardan öğrenir; şu an hangilerini bildiği “nöron” sütununda.':'İki ışığın dört olası durumu. Bir satıra tıklarsan o durum nörona gösterilir.'}</p><table class="tt" id="tt"></table></div>`:''}
         <div class="panel"><h3>${pair?'Karar haritası':'Karar çizgisi'}</h3>
           <svg id="map" class="${pair?'map2':'map1'}" viewBox="${pair?'0 0 260 250':'0 0 300 92'}" role="img" aria-label="${pair?'Karar haritası':'Karar çizgisi'}"></svg>
           <p class="hint" id="mapHint">${pair?'Her köşe bir durum (sol alt: ikisi de sönük, sağ üst: ikisi de yanık). Boyalı bölgede nöron ateşler; sınırı düz bir çizgi. Dolu daire “ateşlemeli”, boş daire “susmalı” demek.':'Hangi parlaklıklarda ateşlediğini gösterir. Boyalı kısım ateşleme bölgesi, üçgen şu anki parlaklık.'}</p>
@@ -289,7 +295,7 @@ function renderMissions(lv,rec){
 /* ---------- Doğruluk tablosu ---------- */
 function renderTable(lv,st){
   const T=targetOf(st),out=outputs(st.w,st.theta),custom=st.targetKey==='custom';
-  let h=`<thead><tr><th>A</th><th>B</th><th>toplam</th><th>nöron</th>${T?`<th>istenen${custom?' <small>(tıkla)</small>':''}</th><th></th>`:''}</tr></thead><tbody>`;
+  let h=`<thead><tr><th>A</th><th>B</th><th>toplam</th><th>nöron</th>${T?`<th>${lv.learning?'doğru cevap':'istenen'}${custom?' <small>(tıkla)</small>':''}</th><th></th>`:''}</tr></thead><tbody>`;
   COMBOS.forEach((x,i)=>{
     const cur=st.x[0]===x[0]&&st.x[1]===x[1],s=weightedSum(x,st.w),ok=T?out[i]===T[i]:null;
     h+=`<tr class="${cur?'cur':''}" data-i="${i}" tabindex="0">
@@ -365,20 +371,20 @@ function learnPanelHTML(lv){
   const sel=lv.targets.length>1
     ?`<div class="seg tsel" id="tsel">${lv.targets.map(k=>`<button data-k="${k}">${k==='custom'?'Kendi tablon':esc(GATES[k].short)}</button>`).join('')}</div>`
     :`<b>${esc(GATES[lv.targets[0]].name)}</b> <span class="pc">(${esc(GATES[lv.targets[0]].short)})</span>`;
-  return`<div class="panel learn">
+  return`<div class="panel learn" id="learn">
     <div class="ph"><h3>Öğrenme</h3>
-      <label class="ctl">Öğrenme hızı <select id="rate"><option value="0.1">yavaş (0,1)</option><option value="0.2">normal (0,2)</option><option value="0.5">hızlı (0,5)</option></select></label></div>
-    <div class="row"><span class="ctl">Öğretilecek davranış:</span> ${sel}</div>
+      <label class="ctl st2">Öğrenme hızı <select id="rate"><option value="0.1">yavaş (0,1)</option><option value="0.2">normal (0,2)</option><option value="0.5">hızlı (0,5)</option></select></label></div>
+    <div class="row st2"><span class="ctl">Öğretilecek davranış:</span> ${sel}</div>
     <div class="row">
       <button class="btn primary" id="lOne">Bir örnek göster</button>
-      <button class="btn" id="lRound">Bir tur (4 örnek)</button>
-      <button class="btn" id="lAuto" aria-pressed="false">Otomatik ▶</button>
-      <button class="btn ghost" id="lReset">Boş beyinle başla</button>
+      <button class="btn st1" id="lRound">Bir tur (4 örnek)</button>
+      <button class="btn st1" id="lAuto" aria-pressed="false">Otomatik ▶</button>
+      <button class="btn ghost st1" id="lReset">Boş beyinle başla</button>
     </div>
     <p class="hint" id="lNext"></p>
     <div class="lstep" id="lstep" aria-live="polite"></div>
-    <div class="lrounds"><div class="ph"><h4>Tur başına hata</h4><span class="pc" id="roundsN"></span></div><svg id="rounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="roundsHint"></p></div>
-    <details class="llog"><summary>Öğrenme defteri (son 10 adım)</summary><div class="llog-wrap"><table class="tt" id="ltable"></table></div></details>
+    <div class="lrounds st1"><div class="ph"><h4>Tur başına hata</h4><span class="pc" id="roundsN"></span></div><svg id="rounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="roundsHint"></p></div>
+    <details class="llog st2"><summary>Öğrenme defteri (son 10 adım)</summary><div class="llog-wrap"><table class="tt" id="ltable"></table></div></details>
   </div>`;
 }
 function wireLearn(lv){
@@ -389,7 +395,7 @@ function wireLearn(lv){
   $('#lOne').onclick=()=>learnOne(true);
   $('#lRound').onclick=()=>{if(busy)return;for(let k=0;k<4;k++)learnOne(false);};
   $('#lAuto').onclick=()=>{auto?stopAuto():startAuto();};
-  $('#lReset').onclick=()=>{stopAuto();st.w=[0,0];st.theta=0.5;rec.log=[];rec.last=null;resetRounds();syncSliders();refresh();toast('Boş beyin: bütün bağlantılar 0, eşik 0,5. Görevlerin duruyor.');};
+  $('#lReset').onclick=()=>{stopAuto();const i0=lv.init();st.w=i0.w.slice();st.theta=i0.theta;rec.log=[];rec.last=null;resetRounds();syncSliders();refresh();toast(`Boş beyin: bütün bağlantılar 0, eşik ${num(i0.theta)}. Görevlerin duruyor.`);};
 }
 function setTarget(k,quiet){
   const st=R().st;if(st.targetKey===k)return;
@@ -439,29 +445,42 @@ function applyStep(r){
 function stepHTML(r,pending){
   const want=r.target?'ateşlemesi':'susması';
   const items=[
-    `<b>Gösterilen örnek:</b> ${exDesc(r.x)}. İstenen: ${want}.`,
+    `<b>Öğretmenin kartı:</b> ${exDesc(r.x)}. Doğru cevap: ${want}.`,
     `<b>Tahmin:</b> toplam ${num(r.sum)} ${r.out?'≥':'<'} eşik ${num(r.theta0)} → nöron <b>${r.out?'ateşledi':'sustu'}</b>.`,
     r.err===0?`<b>Karşılaştırma:</b> doğru bildi. <span class="mk-ok">Hata 0.</span>`
       :r.err>0?`<b>Karşılaştırma:</b> sustu ama ateşlemeliydi. <span class="mk-bad">Hata +1.</span>`
       :`<b>Karşılaştırma:</b> boşuna ateşledi, susmalıydı. <span class="mk-bad">Hata −1.</span>`
   ];
+  const noLit=r.err&&!r.x.some(v=>v);
   if(pending){items.push(`<span class="pend">Düzeltme hesaplanıyor…</span>`);}
   else if(r.err===0){items.push(`<b>Düzeltme:</b> hata yok, hiçbir şey değişmedi.`);}
   else{
     const parts=r.x.map((xi,k)=>{const n='AB'[k];return xi?`${n} yanıktı → bağlantısı <b class="${r.dw[k]>0?'pos':'neg'}">${sgn(r.dw[k])}</b> (${num(r.w0[k])} → ${num(r.w[k])})`:`${n} sönüktü → bağlantısı değişmedi (bu hatadan sorumlu değil)`;});
     parts.push(`eşik <b>${sgn(r.dtheta)}</b> (${num(r.theta0)} → ${num(r.theta)}): artık daha ${r.dtheta<0?'kolay':'zor'} ateşler`);
-    items.push(`<b>Düzeltme:</b> ${parts.join('; ')}.`);
+    items.push(noLit
+      ?`<b>Düzeltme:</b> hiçbir ışık yanmıyordu, yani hiçbir bağlantı bu hatada rol oynamadı; bağlantılar değişmedi. Sadece ${parts[parts.length-1]}.`
+      :`<b>Düzeltme:</b> ${parts.join('; ')}.`);
     const s2=weightedSum(r.x,r.w),o2=s2>=r.theta-EPS?1:0;
     items.push(`<b>Şimdi aynı örnekte:</b> toplam ${num(s2)} ${o2?'≥':'<'} eşik ${num(r.theta)} → ${o2===r.target?'<span class="mk-ok">artık doğru</span>.':'hâlâ yanlış; tek adım yetmedi. Sıra bu örneğe tekrar gelince bir adım daha atacak.'}`);
   }
   return`<ol class="steps">${items.map(s=>`<li>${s}</li>`).join('')}</ol>`;
 }
+function learnStage(lv,rec){
+  if(lv.id!==4)return 2;
+  const learned=rec.st.flags.learned&&Object.keys(rec.st.flags.learned).length;
+  return learned?2:rec.steps>=4?1:0;
+}
 function updateLearn(lv,rec){
-  const st=rec.st,T=targetOf(st);
+  const st=rec.st,T=targetOf(st),stage=learnStage(lv,rec);
+  if(stage>(rec.stage||0)&&lv.id===4){
+    setTimeout(()=>toast(stage===1?'Bir tur bitti. Artık bir turu tek seferde ya da otomatik oynatabilirsin; tur başına hata grafiği de açıldı.':'Öğrendi! Şimdi öğrenme hızı, başka davranışlar ve öğrenme defteri de açıldı.'),stage===2?2200:0);
+  }
+  rec.stage=stage;
+  const box=$('#learn');box.classList.toggle('stage1',stage>=1);box.classList.toggle('stage2',stage>=2);
   document.querySelectorAll('#tsel button').forEach(b=>b.setAttribute('aria-pressed',st.targetKey===b.dataset.k?'true':'false'));
   const nx=COMBOS[rec.cursor%4];
-  $('#lNext').textContent=T?`Sıradaki örnek: ${exDesc(nx)}. Örnekler hep aynı sırayla gelir; dördü bir tur eder.`:'Önce öğretilecek davranışı seç.';
-  $('#lstep').innerHTML=rec.last?stepHTML(rec.last,!!rec.pendingShown):`<p class="hint">Henüz örnek gösterilmedi. “Bir örnek göster”e bas: nöron önce tahmin eder, sonra hatasına göre düzeltilir. Her aşama burada yazacak.</p>`;
+  $('#lNext').textContent=T?`Sıradaki kart: ${exDesc(nx)}. Kartlar hep aynı sırayla gelir; dördü bir tur eder.`:'Önce öğretilecek davranışı seç.';
+  $('#lstep').innerHTML=rec.last?stepHTML(rec.last,!!rec.pendingShown):`<p class="hint">Henüz kart gösterilmedi. “Bir örnek göster”e bas: öğretmen tablodan bir kart gösterir, nöron tahmin eder, yanıldıysa bağlantıları biraz düzeltilir. Her aşama burada yazacak.</p>`;
   ['lOne','lRound'].forEach(id=>{$('#'+id).disabled=busy;});
   // tur grafiği
   const rs=rec.rounds,svg=$('#rounds'),n=Math.max(20,rs.length),bw=400/n;

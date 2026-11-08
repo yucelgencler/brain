@@ -13,7 +13,7 @@
 ------------------------------------------------------------------- */
 const EPS=1e-9;
 // Kaydırıcılardan gelen ondalık sayılarda 0,1 + 0,2 gibi yuvarlama hatalarını temizler
-const tidy=v=>Math.round(v*1e6)/1e6;
+const tidy=v=>(Math.round(v*1e6)/1e6)||0;  // ||0: −0 yerine 0
 
 function weightedSum(x,w){let s=0;for(let i=0;i<x.length;i++)s+=x[i]*w[i];return tidy(s);}
 function fires(x,w,theta){return weightedSum(x,w)>=theta-EPS?1:0;}

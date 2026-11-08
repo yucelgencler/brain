@@ -73,4 +73,12 @@ test('seviye 1–3 çözümleri kaydırıcı aralığında',()=>{
 test('seviye 4–5 başlangıçta hiçbir görev tamamlanmamış',()=>{
   for(const id of [4,5]){const s={...lv(id).init(),flags:{}};for(const m of lv(id).missions)assert.ok(!m.check(s),id+':'+m.id);}
 });
+test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
+  const st=lv(4).init(),T=N.GATES.and.target;
+  const first=N.learnStep(N.COMBOS[0],st.w,st.theta,T[0],st.rate);
+  assert.strictEqual(first.err,-1);assert.deepStrictEqual(first.dw,[0,0]);
+  let w=st.w,theta=st.theta,r=0;
+  for(;r<50;r++){const o=N.learnRound(w,theta,T,st.rate);w=o.w;theta=o.theta;if(!o.mistakes)break;}
+  assert.ok(r>=2&&r<50,'tur sayısı '+r);assert.ok(N.solves(w,theta,T));
+});
 console.log(`\n${passed} test geçti.`);
