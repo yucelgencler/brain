@@ -88,6 +88,13 @@ function netLearnStep(x,t,n,rate){
   return{x:x.slice(),t,f,err,blame,before:n,after:m};
 }
 
+/* Tahmin ederek öğrenme (Rescorla-Wagner, 1972): öğretmen yok, doğru cevabı bir sonraki an verir.
+   beklenti = Σ bağlantı × işaret, sürpriz = olan − beklenti, bağlantı += hız × sürpriz × işaret */
+function predictStep(x,w,reward,rate){
+  const V=tidy(weightedSum(x,w)),d=tidy(reward-V),dw=x.map(xi=>tidy(rate*d*xi));
+  return{x:x.slice(),w0:w.slice(),V,r:reward,d,dw,w:w.map((wi,i)=>tidy(wi+dw[i]))};
+}
+
 // Tek bir nöronun bu tabloyu en fazla kaç doğruyla yapabildiği (kaba arama). XOR için 3 çıkar.
 function bestScore(target,lo=-2,hi=2,step=0.1){
   let best=0;
@@ -105,5 +112,5 @@ function num(v,d=1){
 
 if(typeof module!=='undefined'&&module.exports){
   module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num,multiOutputs,multiStep,
-    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep};
+    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep,predictStep};
 }

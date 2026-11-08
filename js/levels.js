@@ -15,7 +15,7 @@
 
    Durum (st): single -> {b, w:[w], theta}; pair -> {x:[a,b], w:[w1,w2], theta, targetKey, target, flags}
 ------------------------------------------------------------------- */
-const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves};
+const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves,predictStep,weightedSum};
 
 // Öğrenme seviyelerinde her istenen davranışın gerçek hayattaki karşılığı.
 // a, b: iki özellik (on: var / 1, off: yok / 0); yes/no: nöron ateşlerse / susarsa cevap.
@@ -54,6 +54,42 @@ const NET_PATTERNS={'0000':'hiç ateşlemiyor','1111':'her durumda ateşliyor','
   '1011':'alt aşağı ya da üst yukarı','1101':'üst aşağı ya da alt yukarı'};
 // Rastgele başlangıçlardan takılmadan öğrenenler (hız 2 ile 300 turun altında)
 const NET_SEEDS=[7,1,12,13,18,20,22,25,5,10,11,15];
+
+// Seviye 5: tahmin ederek öğrenme. İki işaret (fırın ışığı, fırın zili) ve bir an sonra gelen (ya da gelmeyen) kurabiye.
+const PREDICT={
+  cues:[{icon:'💡',name:'fırın ışığı',short:'ışık'},{icon:'🔔',name:'fırın zili',short:'zil'}],
+  yes:{icon:'🍪',name:'kurabiye geldi'},no:{icon:'🍽️',name:'kurabiye gelmedi'},
+  rules:{
+    always:{x:[0,1],p:1,label:'🔔 → hep 🍪',text:'Zil çalınca hep kurabiye geliyor'},
+    never:{x:[0,1],p:0,label:'🔔 → hiç 🍪',text:'Zil çalıyor ama kurabiye artık hiç gelmiyor'},
+    half:{x:[0,1],p:0.5,label:'🔔 → bazen 🍪',text:'Zil çalınca yarı yarıya kurabiye geliyor'},
+    light:{x:[1,0],p:1,label:'💡 → hep 🍪',text:'Fırın ışığı yanınca hep kurabiye geliyor'},
+    both:{x:[1,1],p:1,label:'💡+🔔 → hep 🍪',text:'Işık ve zil birlikte, sonra hep kurabiye'}
+  },
+  order:['always','never','half','light','both']
+};
+// Bir an: dünya kuralına göre işaretleri ve kurabiyeyi seçer (durumu değiştirmez)
+function predictPlan(st,rand){
+  const R=PREDICT.rules[st.rule],reward=R.p>=1?1:R.p<=0?0:(rand()<R.p?1:0);
+  const r=NN.predictStep(R.x,st.w,reward,st.rate);r.rule=st.rule;return r;
+}
+// Anı yaşanmış say: bağlantıları güncelle, kaydı tut, görev bayraklarını koy
+function predictCommit(st,r){
+  const f=st.flags;
+  if(st.runRule!==r.rule){st.runRule=r.rule;st.run=0;st.runStart=r.w0.slice();}
+  st.run++;st.n=(st.n||0)+1;st.w=r.w.slice();
+  st.hist=(st.hist||[]).concat([{k:r.rule,x:r.x,V:r.V,r:r.r,d:r.d}]).slice(-60);
+  const bell=NN.weightedSum([0,1],st.w);
+  if(r.rule==='always'&&st.w[1]>=0.9-1e-9)f.bell90=true;
+  if(r.x[1]&&!r.r&&r.d<=-0.5)f.miss=true;
+  if(f.miss&&r.rule==='never'&&bell<0.2)f.extinct=true;
+  if(r.rule==='half'&&st.run>=20)f.half=true;
+  if(r.rule==='both'&&st.run>=8){
+    if(st.runStart[0]>=0.85&&st.runStart[1]<=0.1){f.blocked=true;f.blockBell=st.w[1];}
+    if(st.runStart[0]<=0.1&&st.runStart[1]<=0.1){f.control=true;f.controlBell=st.w[1];}
+  }
+  return r;
+}
 
 const PARTS=[
   {id:'A',title:'Algı',sub:'tek bir nöron'},
@@ -197,7 +233,48 @@ const LEVELS=[
     <p>Hata +1 ise yanan ışıkların bağlantısı güçlenir ve eşik düşer: nöron bir dahakine daha kolay ateşler. Hata −1 ise tersi olur.</p>
     <p><b>Yakınsama teoremi</b> (Novikoff, 1962): istenen tablo karar haritasında düz bir çizgiyle ayrılabiliyorsa, bu kural sonlu sayıda adımda hatasız bir çözüm bulur ve durur.</p>`
 },
-/* ------------------------------ 5 ------------------------------ */
+/* ------------------------------ 5: tahmin ederek öğrenme ------------------------------ */
+{
+  key:'predict',goal:"Öğretmen olmadan, sadece tahmin edip bir an sonra ne olduğunu görerek öğrenmeyi görmek: beyin, beklediği ile olan arasındaki farktan (sürprizden) öğrenir; sürpriz yoksa öğrenecek bir şey de yoktur.",
+  todo:["Soldan dünyanın kuralını seç (başta: 🔔 fırın zili çalınca hep 🍪 kurabiye gelir) ve “Bir an yaşat”a bas: zil çalar, nöron ne kadar beklediğini söyler, bir an sonra kurabiyenin gelip gelmediği görülür.","Kimse nörona doğru cevabı söylemiyor. Tahminini, bir an sonra olanla kendisi karşılaştırıyor ve aradaki fark (sürpriz) kadar öğreniyor.","Alttaki grafikte beklentinin ve sürprizin an an nasıl değiştiğini izle. Görevlerde kuralı değiştirip beyni şaşırt."],
+  part:'B',title:'Tahmin ederek öğrenme',
+  question:'Kimse doğru cevabı söylemezse beyin nasıl öğrenir? Fırın zili çalınca kurabiye geleceğini ona kim öğretti?',
+  kind:'predict',
+  init(){return{w:[0,0],rule:'always',rate:0.3,hist:[],n:0,run:0,runRule:null,runStart:[0,0]};},
+  missions:[
+    {id:'learn',rule:'always',text:'Kural <b>🔔 → hep 🍪</b>. “Bir an yaşat”a bas ve beklenti <b>%90’ı geçene</b> kadar devam et. Her seferinde sürprize bak.',
+      check:st=>!!st.flags.bell90,
+      aha:'Kimse “zil, kurabiye demek” demedi; doğru cevabı bir sonraki an verdi. İlk seferde sürpriz en büyüktü (+1: hiç beklemiyordu, kurabiye geldi) ve bağlantı sürprizin 0,3’ü kadar arttı. Sonra her seferinde sürpriz küçüldü, bağlantı da daha az arttı. Grafiğe bak: öğrenme başta hızlı, sonra yavaş.'},
+    {id:'miss',rule:'never',text:'Eksik basamak: beklenti yüksekken kural <b>🔔 → hiç 🍪</b> olsun. Bir an yaşat: zil çalıyor ama kurabiye gelmiyor.',
+      check:st=>!!st.flags.miss,
+      aha:'Sürpriz eksi çıktı: beklenti yüksekti, olan sıfır. Dopamin nöronu bu an sustu; normal, sakin atışı bile durdu. Bağlantı aynı kuralla azaldı. Merdivende olmayan basamağa basınca sarsılman da bu: beyin bir şey bekliyordu ve gelmedi. Bu sarsıntı, beklentinin orada olduğunun kanıtı.'},
+    {id:'extinct',rule:'never',text:'Aynı kuralla devam et: zil artık kurabiye getirmiyor. Beklenti <b>%20’nin altına</b> insin.',
+      check:st=>!!st.flags.extinct,
+      aha:'Beklenti söndü; buna söndürme denir. Modelde bağlantı gerçekten küçüldü. Gerçek beyinde ise eski öğrenme silinmez: üstüne “artık gelmiyor” diye yeni bir öğrenme eklenir. Bir süre sonra ya da başka bir ortamda zil yine beklenti uyandırabilir. Pavlov bunu köpeklerde gördü: söndürülen tepki ertesi gün kendiliğinden geri gelebiliyordu.'},
+    {id:'half',rule:'half',text:'Kural <b>🔔 → bazen 🍪</b> (yarı yarıya). Arka arkaya en az <b>20 an</b> yaşat. Beklenti nerede duruyor, sürpriz bitiyor mu?',
+      check:st=>!!st.flags.half,
+      aha:'Beklenti %50 civarında dolaşıyor ve sürpriz hiç bitmiyor: kurabiye gelince yaklaşık +0,5 sevinç, gelmeyince −0,5 hayal kırıklığı. Nöron olasılığı öğrendi: beklentisi, ortalama sonuç. Ama tek tek anları bilemediği için sürpriz hiç sıfırlanmıyor. Dopamin nöronlarının, ödül en belirsizken (yarı yarıya) en uzun süreli etkinliği gösterdiği bulundu (Fiorillo ve arkadaşları, 2003); şans oyunlarının bu kadar çekici olmasının bir nedeninin bu olduğu düşünülüyor.'},
+    {id:'block',rule:'light',text:'Engelleme deneyi: <b>“Boş beyin”</b>e bas. Önce <b>💡 → hep 🍪</b> ile ışığı öğret (%85 üstü), sonra kuralı <b>💡+🔔 → hep 🍪</b> yapıp en az <b>8 an</b> yaşat. Zil ne kadar öğrendi?',
+      check:st=>!!st.flags.blocked,
+      aha:'Zil neredeyse hiçbir şey öğrenmedi, oysa 8 kez kurabiyeyle birlikte geldi! Işık kurabiyeyi zaten tahmin ediyordu: sürpriz yoktu, öğrenecek bir şey de kalmadı. Öğrenme “birlikte gelme”yle değil, sürprizle oluyor. Bu, Kamin’in 1969’daki engelleme deneyi: hayvanlarda gösterildi ve öğrenmenin tahmin hatasıyla olduğuna dair en güçlü kanıtlardan biri.'},
+    {id:'control',rule:'both',text:'Kontrol deneyi: <b>“Boş beyin”</b>e bas ve doğrudan <b>💡+🔔 → hep 🍪</b> ile en az <b>8 an</b> yaşat. Zil bu sefer ne kadar öğrendi?',
+      check:st=>!!st.flags.control,
+      aha:'Bu sefer zil de öğrendi (yaklaşık yarısını): ışık ve zil sürprizi paylaştı. Aynı sayıda an, aynı kurabiye; tek fark, ışığın önceden bilinmesiydi. Kontrol deneyi, engellemenin gerçekten “zaten biliyordum”dan kaynaklandığını gösteriyor. Beyin, yeni bir işarete ancak eski bilgisi yetmediğinde dikkat eder.'}
+  ],
+  cards:{
+    brain:'Beynin orta kısmındaki dopamin nöronları ödülün kendisine değil, sürprize tepki verir (Schultz ve arkadaşları, 1997). Beklenmedik ödülde ani bir atış patlaması olur. Ödül tahmin edilir hâle gelince ödüle değil, onu haber veren işarete tepki verirler. Beklenen ödül gelmezse o an susarlar. Beyin her an bir sonrakini tahmin eder: ayağın basamağı, kulağın bir sonraki heceyi. Bebekler bile hecelerin hangi sırayla geldiğini dinleyerek kelimeleri ayırmayı öğrenir (Saffran ve arkadaşları, 1996). Kendini gıdıklayamaman da bundan: beyin kendi dokunuşunu önceden tahmin edip etkisini azaltır (Blakemore ve arkadaşları, 1998).',
+    model:'Tahmin nöronu ya hep ya hiç çalışmıyor: ne kadar beklediğini 0 ile 1 arasında söylüyor (beklenti = o an gelen işaretlerin bağlantılarının toplamı). Sürpriz = olan − beklenti. Kural 4. seviyedekinin neredeyse aynısı: bağlantı += hız × sürpriz × işaret. Tek fark, doğru cevabı öğretmenin değil, bir an sonra dünyanın vermesi.',
+    limit:'Bu model (Rescorla ve Wagner, 1972) her denemeyi tek bir an sayıyor; gerçek beyin kurabiyenin ne zaman geleceğini de tahmin eder. Söndürme burada bağlantıyı siliyor; hayvanlarda ve insanda eski öğrenme silinmez, bastırılır ve geri dönebilir. Dopamin de yalnızca bir sürpriz sinyali değil; harekette ve isteklendirmede de rol oynar.',
+    ai:'Öğretmensiz, “bir sonrakini tahmin et” diye öğrenmeye kendi kendine denetimli öğrenme denir: dil modelleri metindeki bir sonraki kelimeyi tahmin ederek eğitilir, doğru cevap metnin kendisindedir. Ödül tahmin hatası ise pekiştirmeli öğrenmede (zamansal fark öğrenmesi) birebir kullanılır; Schultz’un dopamin bulgusu bu algoritmayla örtüştüğü için ünlü oldu.'
+  },
+  deeper:`<p><b>Beklenti:</b> o an gelen işaretlerin bağlantılarının toplamı. Sadece zil çaldıysa beklenti = zil bağlantısı; ışık ve zil birlikteyse ışık + zil.</p>
+    <p><b>Sürpriz:</b> olan − beklenti. Kurabiye geldiyse olan 1, gelmediyse 0.</p>
+    <p><b>Düzeltme:</b> o an gelen her işaretin bağlantısı += hız × sürpriz (hız 0,3). Gelmeyen işaretin bağlantısı değişmez.</p>
+    <p><b>Örnek:</b> zil bağlantısı 0 → 0,3 → 0,51 → 0,66 → 0,76 → 0,83 → 0,88 → 0,92. Her seferinde kalan yolun %30’u kapanıyor; yol kısaldıkça adım da kısalıyor.</p>
+    <p><b>Engelleme:</b> ışık 0,92’yi öğrendikten sonra ışık + zil birlikte gelince sürpriz 1 − 0,92 = 0,08. Zilin payı 0,3 × 0,08 = 0,02. Sekiz an sonra zil ancak 0,04’e çıkıyor. Kontrolde ikisi boş başlarsa sürprizi eşit paylaşıp ikisi de 0,5’e yaklaşıyor.</p>
+    <p><b>4. seviyeyle bağ:</b> orada hata = doğru − tahmin, burada sürpriz = olan − beklenti. Aynı “delta kuralı” (Widrow ve Hoff, 1960); farkı, tahminin ya hep ya hiç değil dereceli olması.</p>`
+},
+/* ------------------------------ 6: XOR ------------------------------ */
 {
   key:'xor',goal:"Tek bir nöronun asla öğrenemeyeceği bir şey olduğunu ve neden birden çok nörona ihtiyaç olduğunu görmek.",
   todo:["Önce elle dene: tablodaki dört satırı tutturmaya çalış.", "Sonra makineye öğret ve tur başına hata sayısını izle.", "“Daha derine”yi açıp nedenini oku."],
@@ -326,7 +403,7 @@ const LEVELS=[
 const ROADMAP=[
   {key:'light'},{key:'pair'},{key:'inhibit'},
   {key:'learn'},
-  {key:'predict',part:'B',title:'Tahmin ederek öğrenme',note:'yakında',about:'Öğretmen yok; doğru cevabı bir sonraki an veriyor. Sürpriz azaldıkça öğrenme yavaşlıyor.'},
+  {key:'predict'},
   {key:'xor'},
   {key:'fruit'},
   {key:'two'},
@@ -341,4 +418,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictPlan,predictCommit};}

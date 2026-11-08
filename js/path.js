@@ -58,7 +58,7 @@ function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 /* ---------- Seviye sayfasını kur ---------- */
 let auto=0,busy=false,lastFire=null,resetArm=0;
 function go(key){
-  stopAuto();multiStop();netStop();busy=false;lastFire=null;
+  stopAuto();multiStop();netStop();predictStop();busy=false;lastFire=null;
   P.level=key;const no=curRoad().id;
   if(location.hash!=='#seviye-'+no)history.replaceState(null,'','#seviye-'+no);
   if(L())buildLevel();else buildPlaceholder();save();
@@ -67,7 +67,7 @@ function go(key){
 function buildLevel(){
   const lv=L(),rec=R(),part=PARTS.find(p=>p.id===lv.part),multi=lv.kind==='multi';
   document.title=`Seviye ${lv.id}: ${lv.title} · Boş Beyin`;
-  flashPrev.clear();lastCardKey='';lastStepKey='';multiResetView();multiNetReset();
+  flashPrev.clear();lastCardKey='';lastStepKey='';multiResetView();multiNetReset();predictStop();predictResetView();
   const el=$('#lv');el.className='lv';
   const routeOpen=!rec.routeSeen;rec.routeSeen=true;
   el.innerHTML=`
@@ -78,7 +78,7 @@ function buildLevel(){
     <details class="route"${routeOpen?' open':''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
       <p><b>Amaç:</b> ${esc(lv.goal)}</p><ol>${lv.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></details>
     <div class="mission" id="mission" aria-live="polite"></div>
-    ${multi?multiGridHTML(lv):lv.kind==='net'?netGridHTML(lv):benchHTML(lv)}
+    ${multi?multiGridHTML(lv):lv.kind==='net'?netGridHTML(lv):lv.kind==='predict'?predictGridHTML(lv):benchHTML(lv)}
     <section class="reading" aria-label="Okuma">
       <section class="cards4" aria-label="Beyinde ve modelde">
         <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
@@ -103,6 +103,7 @@ function buildLevel(){
     </section>`;
   if(multi)wireMulti(lv);
   else if(lv.kind==='net')wireNet(lv);
+  else if(lv.kind==='predict'){if(rec.last&&rec.last.pending)rec.last=null;wirePredict(lv);}
   else{buildScene(lv);buildSliders(lv);if(lv.learning)wireLearn(lv);}
   $('#notes').value=rec.notes||'';
   $('#notes').addEventListener('input',e=>{R().notes=e.target.value;save();});
@@ -670,7 +671,7 @@ $('#lvnav').addEventListener('click',e=>{if(e.target.closest('a'))menuOpen(false
 /* ---------- Değişen değerler yerinde parlasın ---------- */
 const flashPrev=new Map();
 function flashScan(){
-  const quiet=reducedMotion||auto||(typeof mAuto!=='undefined'&&mAuto)||(typeof nAuto!=='undefined'&&nAuto);
+  const quiet=reducedMotion||auto||(typeof mAuto!=='undefined'&&mAuto)||(typeof nAuto!=='undefined'&&nAuto)||(typeof pAuto!=='undefined'&&pAuto);
   document.querySelectorAll('[data-fl]').forEach(el=>{
     const k=el.dataset.fl,t=el.textContent;
     if(!quiet&&flashPrev.has(k)&&flashPrev.get(k)!==t){el.classList.remove('flash');void el.getBoundingClientRect();el.classList.add('flash');}
@@ -684,6 +685,7 @@ function refresh(fromSlider){
   checkMissions(lv,rec);
   if(lv.kind==='multi'){updateMulti(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
   if(lv.kind==='net'){updateNet(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
+  if(lv.kind==='predict'){updatePredict(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
   updateScene(lv,st);updateGauge(lv,st);
   $('#answer').innerHTML=answerHTML(lv,st);
   if(!fromSlider)syncSliders();

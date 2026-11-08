@@ -434,3 +434,49 @@ details.manual[open]>summary{margin-bottom:6px}
 .cmpnet td,.cmpnet th{font-size:13px}
 .r-line{fill:none;stroke:var(--bad);stroke-width:2;vector-effect:non-scaling-stroke}
 .ans-big small{font-size:16px;color:var(--ink-2);font-weight:600}
+/* ---------- Seviye 5: tahmin ederek öğrenme ---------- */
+#pscene{display:block;width:100%;height:auto;max-height:340px;overflow:visible}
+.prules{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.prule-list{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.prule-list button{border:0;border-left:1px solid var(--line);background:var(--surface);padding:6px 10px;font-size:14px;text-align:left;cursor:pointer;color:var(--ink)}
+.prule-list button:first-child{border-left:0}
+.prule-list button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.prule-list button:disabled{cursor:default}
+.pwarn{margin:0;font-size:12.5px;line-height:1.4;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--held) 16%,var(--surface));color:var(--ink);border-left:3px solid var(--held)}
+.cname{font-size:12.5px;text-anchor:middle;fill:var(--ink)}
+.pcue.off .px-state.emo{filter:grayscale(1);opacity:.4}
+.soma-t.big{font-size:21px;fill:var(--ink);font-weight:700}
+.pnode{transition:fill .3s}
+.inh{fill:none;stroke-width:3;stroke-dasharray:6 4}
+.pworld{fill:var(--surface-2);stroke:var(--line);stroke-width:1.5;transition:fill .2s}
+.pworld.wait{stroke-dasharray:5 4;stroke:var(--ink-2)}
+.pworld.yes{fill:color-mix(in srgb,var(--ok) 16%,var(--surface));stroke:var(--ok)}
+.pworld.no{fill:color-mix(in srgb,var(--bad) 10%,var(--surface));stroke:var(--bad)}
+.dopa{fill:var(--node-off)}
+.dopa.burst{fill:color-mix(in srgb,var(--ok) 70%,var(--surface));stroke:var(--ok);animation:spike .5s ease-out}
+.dopa.pause{fill:var(--surface-2);stroke:var(--bad);stroke-dasharray:4 3}
+.dopa.calm{fill:var(--node-off)}
+.spk{stroke:var(--ink-2);stroke-width:2;stroke-linecap:round}
+.spk.burst{stroke:var(--ok)}
+.spk-base{stroke:var(--bad);stroke-width:1.5;stroke-dasharray:3 4}
+.teach{fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:2 6;stroke-linecap:round}
+.teach.on{stroke:var(--accent);stroke-width:2.5;animation:flow .8s linear infinite}
+.teach-t{font-size:11.5px;fill:var(--ink-2);text-anchor:middle}
+.pc-row{display:flex;align-items:center;gap:6px}
+.pc-row .tc-feats{flex:1 1 auto}
+.pc-arr{font-size:18px;color:var(--ink-2)}
+.pc-o{font-size:34px;line-height:1}
+#pchart{display:block;width:100%;height:auto}
+.m-ax.lab{text-anchor:start;font-weight:600}
+.p-v{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+.p-out.yes{fill:var(--ok)} .p-out.no{fill:none;stroke:var(--bad);stroke-width:1.5}
+.p-d.up{fill:var(--ok);opacity:.8} .p-d.down{fill:var(--bad);opacity:.75}
+.p-sep{stroke:var(--ink-2);stroke-width:1;stroke-dasharray:3 4;opacity:.6}
+.p-rl{font-size:10.5px;fill:var(--ink-2)}
+.pweights{display:flex;flex-direction:column;gap:6px;margin:4px 0 10px}
+.pwt{display:grid;grid-template-columns:150px 1fr 44px;align-items:center;gap:8px;font-size:13.5px}
+.pwt b{text-align:right}
+.pwt-bar{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.pwt-bar i{display:block;height:100%;background:var(--pos);border-radius:5px;transition:width .3s}
+.pwt-bar i.neg{background:var(--neg)}
+@media (prefers-reduced-motion: reduce){.dopa.burst,.teach.on{animation:none}}

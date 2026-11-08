@@ -84,7 +84,7 @@ test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
 test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   const {ROADMAP}=require('../js/levels.js');
   ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
-  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,6,7,8]);
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8]);
   assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[10].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
@@ -155,5 +155,41 @@ test('seviye 8: geri yayılım, lambaya bağlantısı 0 olan ara nörona pay ver
 test('seviye 8: başlangıç 7 senden farklı bir çözüm buluyor (görev açıklaması)',()=>{
   const {n}=trainNet(N.netRandom(7),400),pats=[N.netPattern(n,true,0),N.netPattern(n,true,1)].sort().join('|');
   assert.notStrictEqual(pats,['0010','0100'].join('|'));
+});
+
+/* ---------- Seviye 5: tahmin ederek öğrenme ---------- */
+const {PREDICT,predictPlan,predictCommit}=require('../js/levels.js');
+const pFresh=()=>Object.assign(lv('predict').init(),{flags:{}});
+const pRun=(st,rule,n,rand)=>{st.rule=rule;const out=[];for(let i=0;i<n;i++)out.push(predictCommit(st,predictPlan(st,rand||Math.random)));return out;};
+const pDone=st=>lv('predict').missions.filter(m=>m.check(st)).map(m=>m.id);
+test('seviye 5: sürpriz = olan − beklenti; sadece o an gelen işaretin bağlantısı değişir',()=>{
+  const s=N.predictStep([0,1],[0.4,0.5],1,0.3);
+  assert.strictEqual(s.V,0.5);assert.strictEqual(s.d,0.5);assert.deepStrictEqual(s.w,[0.4,0.65]);
+  const z=N.predictStep([1,0],[0.4,0.5],0.4,0.3);assert.strictEqual(z.d,0);assert.deepStrictEqual(z.w,[0.4,0.5]);
+});
+test('seviye 5: sürpriz her anda küçülüyor, 7 anda %90’ı geçiyor (deeper’daki sayılar)',()=>{
+  const st=pFresh(),rs=pRun(st,'always',7);
+  for(let i=1;i<rs.length;i++)assert.ok(rs[i].d<rs[i-1].d);
+  assert.deepStrictEqual(rs.slice(0,4).map(r=>Math.round(r.w[1]*100)/100),[0.3,0.51,0.66,0.76]);
+  assert.ok(st.w[1]>=0.9&&rs[5].w[1]<0.9);assert.deepStrictEqual(pDone(st),['learn']);
+});
+test('seviye 5: görevler sırayla tamamlanabiliyor; engellemede zil öğrenmiyor, kontrolde öğreniyor',()=>{
+  const st=pFresh();let k=0;const alt=()=>(k++%2)?0.9:0.1;
+  pRun(st,'always',7);pRun(st,'never',1);assert.ok(pDone(st).includes('miss'));
+  pRun(st,'never',4);assert.ok(pDone(st).includes('extinct'));
+  pRun(st,'half',20,alt);assert.ok(pDone(st).includes('half'));assert.ok(st.w[1]>0.3&&st.w[1]<0.7);
+  st.w=[0,0];st.runRule=null;pRun(st,'light',7);pRun(st,'both',8);
+  assert.ok(pDone(st).includes('block'));assert.ok(st.flags.blockBell<0.06,'zil '+st.flags.blockBell);
+  st.w=[0,0];st.runRule=null;pRun(st,'both',8);
+  assert.ok(pDone(st).includes('control'));assert.ok(Math.abs(st.flags.controlBell-0.5)<0.01);
+  assert.strictEqual(pDone(st).length,6);
+});
+test('seviye 5: temiz başlamayan engelleme denemesi sayılmıyor',()=>{
+  const st=pFresh();pRun(st,'always',5);pRun(st,'light',7);pRun(st,'both',10);
+  assert.ok(!st.flags.blocked&&!st.flags.control);
+});
+test('seviye 5: görevlerdeki kurallar tanımlı',()=>{
+  for(const m of lv('predict').missions)assert.ok(PREDICT.rules[m.rule],m.id);
+  assert.deepStrictEqual(PREDICT.order.slice().sort(),Object.keys(PREDICT.rules).sort());
 });
 console.log(`\n${passed} test geçti.`);
