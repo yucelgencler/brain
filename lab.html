@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boş Beyin Laboratuvarı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <a class="backlink" href="index.html">← Öğrenme yoluna dön</a>
+      <h1>Laboratuvar</h1>
+      <p>Rastgele bağlantılarla doğan küçük bir sinir ağına rakam ve kelime öğret; kelimeleri hem duyarak hem okuyarak. Her soruda sinyalin hangi yollardan geçtiğini izle.</p>
+    </div>
+    <form class="ask" id="askForm" autocomplete="off">
+      <label for="askInput" class="sr">Beyne sor ya da öğret</label>
+      <input id="askInput" placeholder="Sor: kedi ya da kediler. Öğret: aslan = hayvan">
+      <button type="submit">Sor</button>
+    </form>
+  </header>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Beyin bölgeleri"></nav>
+
+  <div class="main">
+    <section>
+      <div class="stage" id="stage">
+        <canvas id="net" aria-label="Sinir ağının canlı görünümü"></canvas>
+        <div class="tip" id="tip" role="status"></div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--pos)"></i>uyarıcı bağlantı (+)</span>
+          <span><i class="sw" style="background:var(--neg)"></i>baskılayıcı bağlantı (−)</span>
+          <span><i class="dot" style="background:var(--node-on)"></i>ateşlenen nöron</span>
+          <span>Çizgi kalınlaştıkça bağlantı güçlü. Bir nöronun üstüne gel ya da dokun.</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="btnTrain" aria-pressed="false">Eğit</button>
+        <button class="btn" id="btnStep">Bir adım eğit</button>
+        <label class="ctl">Hız <input type="range" id="speed" min="1" max="40" value="8"></label>
+        <label class="ctl">Öğrenme hızı
+          <select id="lr">
+            <option value="0.003">yavaş</option>
+            <option value="0.01">normal</option>
+            <option value="0.03">hızlı</option>
+            <option value="0.1">aceleci</option>
+            <option value="1">pervasız</option>
+          </select>
+        </label>
+        <label class="ctl">Gizli nöron <input type="range" id="hidden" min="2" max="48"><output id="hiddenOut"></output></label>
+        <label class="ctl">Gizli katman
+          <select id="layers"><option value="1">1</option><option value="2">2</option></select>
+        </label>
+        <button class="btn ghost" id="btnReset">Boş beyinle başla</button>
+      </div>
+      <div class="stats" id="stats" aria-live="off"></div>
+
+      <div class="answer" id="answer" aria-live="polite"></div>
+      <div class="log" id="log"></div>
+
+      <section class="deck" aria-labelledby="deckTitle">
+        <div class="deck-head">
+          <h2 id="deckTitle">Eğitim destesi</h2>
+          <div class="seg" id="deckFilter">
+            <button data-v="last">Son adımda çekilenler</button><button data-v="wrong">Yanlış bilinenler</button><button data-v="all">Bütün eğitim kartları</button><button data-v="test">Sınav kartları</button>
+          </div>
+        </div>
+        <p class="hint" id="deckHint"></p>
+        <p class="hint deck-legend">Kartın altındaki renkli şerit, gizli nöronların o karta tepkisi: her kare bir gizli nöron (soldan G1, G2…), koyu ateşlenmiş, pembe susturulmuş, soluk kararsız. Aynı cevabın kartlarında şeritler benzeşiyorsa beyin o cevap için bir iç desen kurmuş demektir. Bir karta tıklarsan beyne o kart gösterilir ve sinyali yukarıda izlersin.</p>
+        <div class="cards" id="cards"></div>
+        <button class="btn small deck-more" id="deckMore" hidden></button>
+      </section>
+    </section>
+
+    <aside class="side">
+      <div class="panel" id="taskPanel"></div>
+      <div class="panel">
+        <h2>Öğrenme eğrisi</h2>
+        <p class="hint">Kayıp, beynin ne kadar yanıldığının ölçüsü; düştükçe öğreniyor. Doğruluk, eğitim sorularının yüzde kaçını bildiği.</p>
+        <canvas id="chart" height="130"></canvas>
+      </div>
+      <div class="panel">
+        <h2>Kavram haritası</h2>
+        <p class="hint">Her nokta, bir sorunun gizli katmanda bıraktığı izin iki boyuta indirilmiş hâli. Renk doğru cevabı gösterir. Aynı renkler kümeleniyorsa beyin bir kavram oluşturuyor.</p>
+        <canvas id="map"></canvas>
+      </div>
+      <div class="panel">
+        <h2>Beyindeki karşılığı</h2>
+        <p class="about" id="about"></p>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/core.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

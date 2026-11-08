@@ -49,6 +49,9 @@ function load(){
     S.tasks[t.id]=st||newState(t);
   }
   if(o&&taskById(o.active))S.active=o.active;
+  // Öğrenme yolundan gelen bağlantı: lab.html?task=digits gibi
+  const qt=new URLSearchParams(location.search).get('task');
+  if(qt&&taskById(qt))S.active=qt;
 }
 
 /* ---------- Tema renkleri (tuval için) ---------- */

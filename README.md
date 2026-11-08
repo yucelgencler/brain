@@ -1,58 +1,58 @@
 # Boş Beyin
 
-Rastgele bağlantılarla doğan küçük bir sinir ağına rakam ve kelime öğreten, her sinyali canlı gösteren bir laboratuvar. İnsan beyninin öğrenme biçimini yapay sinir ağları üzerinden anlamak için yapıldı.
+Beynin bir girdiyi nasıl algıladığını, nasıl cevaba çevirdiğini ve nasıl öğrendiğini; ardından yapay zekânın buna nerede benzeyip nerede ayrıldığını **kendi deneylerinle** keşfettiğin bir öğrenme yolu. Tek bir ışık hücresi ve tek bir nöronla başlar, her seviyede tek bir yeni fikir ekler.
 
-Kurulum veya derleme gerekmez: `index.html` dosyasını tarayıcıda açman yeterli. Ağ tamamen tarayıcıda çalışır ve eğitilir; öğrettiklerin aynı tarayıcıda saklanır.
+Kurulum veya derleme gerekmez: `index.html` dosyasını tarayıcıda açman yeterli. İlerlemen ve notların aynı tarayıcıda saklanır.
 
-## Bölgeler
+## Öğrenme yolu
 
-| Sekme | Girdi | Çıktı | Ne gösteriyor |
-|---|---|---|---|
-| Rakamları tanıma | 5×7 piksel çizim | 0–9 ve öğrettiğin yeni şekiller | Bozuk deseni tamamlama, kapasite sınırı, kayma sorunu |
-| Kelimeler (duyarak) | Her kelime ayrı bir nöron | Anlam (hayvan, meyve…) | Saf ezber, yeni kelime = yeni nöron, anlam uzayı |
-| Kelimeler (okuyarak) | Kelimenin piksel resmi (harf başına 3×6) | Anlam | Şekilden okuma, hiç görülmemiş kelimelerde tahmin, kayma sorunu |
+Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görevlerle fark et → İnsan beyninde / Bu modelde / Benzetmenin sınırı / Yapay zekâda** kartları, isteyene “Daha derine” ve kişisel not alanı.
 
-Toplama ve çarpma bölgeleri kodda duruyor ama şimdilik kapalı. Açmak için `js/core.js` içindeki `TASKS` dizisine `addTask` ve `mulTask` eklenmeli.
+| # | Bölüm | Seviye | Yeni fikir | Durum |
+|---|---|---|---|---|
+| 1 | Algı | Tek bir ışık hücresi | girdi, bağlantı, eşik, ya hep ya hiç | hazır |
+| 2 | Algı | İki ışık, bir karar | sinyalleri toplamak, VE / VEYA, karar haritası | hazır |
+| 3 | Algı | Susturan bağlantı | negatif bağlantı, kendiliğinden ateşleme, karanlık dedektörü | hazır |
+| 4 | Öğrenme | Kendi kendine öğrenme | hatadan düzeltme (algılayıcı kuralı), adım adım | hazır |
+| 5 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
+| 6 | Anlama | İki nöron birlikte | gizli nöron, ara temsil | yakında |
+| 7 | Anlama | Yatay mı dikey mi? | algı alanı, çizgi dedektörleri | yakında |
+| 8 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
+| 9 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
+| 10 | Hafıza | Ezber ve genelleme | eğitim / sınav kartları | yakında |
+| 11 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
+| 12 | Anlam | Kelimeler ve anlam | anlam uzayı | laboratuvarda |
+| 13 | Anlam | Okuma ve kayma sorunu | şekilden okuma, paylaşımlı dedektörler | laboratuvarda |
+
+İlkeler: ekranda sadece o seviyenin getirdiği kontroller olur; hesaplar canlı sayılarla gösterilir; beyin benzetmesinin sınırları her seviyede açıkça yazılır.
+
+## Laboratuvar
+
+`lab.html`, çok katmanlı sinir ağıyla serbest deney sayfası (rakamlar, kelimeleri duyarak ve okuyarak öğrenme). `lab.html?task=digits|words|read` doğrudan bir bölgeyi açar. Toplama ve çarpma bölgeleri kodda duruyor ama kapalı; açmak için `js/core.js` içindeki `TASKS` dizisine `addTask` ve `mulTask` eklenmeli.
 
 ## Dosya yapısı
 
 ```
-index.html          Sayfa iskeleti
-css/style.css       Görünüm (açık tema: boyanmış doku kesiti, koyu tema: floresan mikroskop)
-js/core.js          Sinir ağı (ileri yayılım, geri yayılım, Adam), PCA ve görevler. Arayüzden bağımsız.
-js/app.js           Arayüz: ağ tuvali, eğitim döngüsü, paneller, deste görünümü, kayıt
-tests/core.test.js  Çekirdek testleri (Node.js ile, bağımlılık yok)
+index.html            Öğrenme yolu
+lab.html              Serbest laboratuvar
+css/style.css         Ortak görünüm (açık tema: boyanmış doku kesiti, koyu tema: floresan mikroskop)
+css/levels.css        Öğrenme yolu görünümü
+js/neuron.js          Tek nöron: ya hep ya hiç ateşleme, algılayıcı öğrenme kuralı. Arayüzden bağımsız.
+js/levels.js          Seviyelerin içeriği: sorular, görevler ve kontrolleri, kartlar
+js/path.js            Öğrenme yolu arayüzü: sahne, gösterge, tablo, karar haritası, öğrenme paneli
+js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
+js/app.js             Laboratuvar arayüzü
+tests/neuron.test.js  Tek nöron ve seviye görevleri testleri
+tests/core.test.js    Laboratuvar çekirdeği testleri
 ```
 
-## Ağ
+## Yeni bir seviye eklemek
 
-- Katmanlar: duyu nöronları → 1 veya 2 gizli katman (tanh) → cevap nöronları (softmax; toplamadaki “miktar” kodlamasında sigmoid)
-- Öğrenme: 32 kartlık mini yığınlar, çapraz entropi kaybı, Adam
-- Başlangıç: Xavier ile rastgele ağırlıklar (simetriyi kırmak için)
-- Yeni kelime veya şekil eklenince ağ yeniden boyutlanır, eski bağlantılar etiketlerine göre korunur
-
-## Yeni bir bölge eklemek
-
-`js/core.js` başındaki açıklamada arayüz tanımlı. Kısaca bir görev nesnesi şunları sağlar:
-
-```
-id, short, region, about
-defaults()           -> {hidden, layers, lr, ...}
-inputLabels(cfg)     -> duyu nöronlarının adları
-outputLabels(cfg)    -> cevap nöronlarının adları
-inputLayout          -> (isteğe bağlı) {cols, rows} ya da cfg => {cols, rows}
-dataset(cfg)         -> {train:[{x, y, q}], test:[...]}
-encode(q, cfg)       -> girdi dizisi ya da {error}
-parse(text, cfg)     -> soru nesnesi ya da null
-qText(q), truth(q, cfg), mapPoints(cfg)
-```
-
-Sağ paneldeki arayüz `js/app.js` içindeki `PANELS` nesnesine, görevin `id` ya da `kind` adıyla eklenir.
-
-Akla gelen sonraki bölgeler: unutma deneyi (sadece yeni kartlarla eğitince eski bilginin bozulması), konumdan bağımsız görme (kayma sorununu çözen paylaşımlı dedektörler), uyku benzeri tekrar oynatma.
+`js/levels.js` başındaki açıklamada seviye nesnesinin alanları var: `kind` (`single` ya da `pair`), `ranges`, `init()`, `missions` (her biri `check(st)` ve tamamlanınca görünen `aha` metniyle), `cards` ve `deeper`. Öğrenme paneli için `learning: true` ve `targets`. Görevlerin kontrolleri arayüzden bağımsız olduğu için Node ile test edilebilir.
 
 ## Testler
 
 ```
+node tests/neuron.test.js
 node tests/core.test.js
 ```
