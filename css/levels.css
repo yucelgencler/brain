@@ -395,3 +395,42 @@ details.manual[open]>summary{margin-bottom:6px}
 .soon-page .btn{text-decoration:none;display:inline-block}
 .lvmenu a.soon-i{opacity:1;color:var(--ink-2)}
 .lvmenu a.soon-i:hover{color:var(--ink)}
+
+/* Seviye 8: ağ */
+#nscene{display:block;width:100%;height:auto;max-height:330px;overflow:visible}
+.lv:not(.mode-learn) .nm-learn{display:none}
+.lv.mode-learn .nm-manual{display:none}
+.modesel{width:100%}
+.modesel button{flex:1;font-weight:600;padding:8px 6px}
+.ncombos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ncombo{display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 4px;cursor:pointer;font-size:22px;line-height:1.1}
+.ncombo small{font-size:12px}
+.ncombo.ok small{color:var(--ok)} .ncombo.bad small{color:var(--bad)}
+.ncombo.cur{box-shadow:0 0 0 3px color-mix(in srgb,var(--light) 60%,transparent);border-color:var(--light)}
+.nsliders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:900px){.nsliders{grid-template-columns:1fr}}
+.nsg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.nsg h4{margin:0 0 2px;font-size:13px}
+.nsg .sl{border:0;padding:2px 0;background:none}
+.nsg .sl-l{font-size:12.5px;font-weight:500}
+.nn-l{font-size:11px;text-anchor:middle;fill:var(--ink-2);pointer-events:none}
+.nn-v{font-size:14px;font-weight:700;text-anchor:middle;fill:var(--ink-2);pointer-events:none}
+.nn-l.on,.nn-v.on{fill:var(--surface)}
+.nn-v.out{fill:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nn-l.on,:root:not([data-theme="light"]) .nn-v.on{fill:#0B0D1B}}
+.soma.lamp.lit{fill:var(--light);stroke:var(--light-ink)}
+.lamp-i{font-size:34px;text-anchor:middle;pointer-events:none}
+.m-fire2{fill:var(--node-on)}
+.m-hline{stroke-width:1.8;stroke-dasharray:5 4}
+.m-hline.h0{stroke:var(--brain)} .m-hline.h1{stroke:var(--ai)}
+.hid-row{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;margin:4px 0}
+.hid-n{font-weight:700;font-size:13px}
+.hid-n.h0{color:var(--brain)} .hid-n.h1{color:var(--ai)}
+.hid-grid{display:grid;grid-template-columns:repeat(4,auto);gap:3px}
+.hg{font-size:13px;padding:3px 4px;border-radius:6px;background:color-mix(in srgb,var(--node-on) calc(var(--v) * 60%),var(--surface-2));border:1px solid var(--line)}
+.hg.on{border-color:var(--node-on)}
+.hid-t{font-size:13px;font-weight:600}
+#nCmp{margin:6px 0}
+.cmpnet td,.cmpnet th{font-size:13px}
+.r-line{fill:none;stroke:var(--bad);stroke-width:2;vector-effect:non-scaling-stroke}
+.ans-big small{font-size:16px;color:var(--ink-2);font-weight:600}

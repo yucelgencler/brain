@@ -55,6 +55,39 @@ function multiStep(x,W,th,y,rate){
   return{per,W:per.map(p=>p.w),th:per.map(p=>p.theta),mistakes:per.filter(p=>p.err).length};
 }
 
+/* ---------- Seviye 8: iki ara (gizli) nöron + bir çıkış nöronu ----------
+   net = {W:[[a,b],[a,b]] (ara nöronların A,B bağlantıları), th:[t1,t2], V:[v1,v2] (ara → çıkış), thO}
+   soft=false: ya hep ya hiç; soft=true: yumuşak eşik (0–1 arası ateşleme gücü) */
+const sigmoid=z=>1/(1+Math.exp(-z));
+function rng(seed){let a=seed|0;return function(){a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function netRandom(seed){const r=rng(seed),u=()=>r()*2-1;return{W:[[u(),u()],[u(),u()]],th:[u(),u()],V:[u(),u()],thO:u()};}
+function netZero(){return{W:[[0,0],[0,0]],th:[0,0],V:[0,0],thO:0};}
+function netClone(n){return{W:n.W.map(w=>w.slice()),th:n.th.slice(),V:n.V.slice(),thO:n.thO};}
+function netForward(x,n,soft){
+  const act=(s,t)=>soft?sigmoid(s-t):(s>=t-EPS?1:0);
+  const hs=n.W.map(w=>weightedSum(x,w)),h=hs.map((s,j)=>act(s,n.th[j]));
+  const os=weightedSum(h,n.V),o=act(os,n.thO);
+  return{hs,h,os,o};
+}
+// Çıkış ≥ 0,5 ise lamba yanar
+function netOutputs(n,soft){return COMBOS.map(x=>netForward(x,n,soft).o>=0.5?1:0);}
+function netSolves(n,soft,target,margin){
+  return COMBOS.every((x,i)=>{const o=netForward(x,n,soft).o;return margin?Math.abs(o-target[i])<margin:(o>=0.5?1:0)===target[i];});
+}
+// Ara nöronun dört durumdaki ateşleme deseni ("0100" gibi)
+function netPattern(n,soft,j){return COMBOS.map(x=>netForward(x,n,soft).h[j]>=0.5?1:0).join('');}
+/* Geri yayılım: 4. seviyedeki kuralın aynısı (bağlantı += hız × hata × girdi).
+   Fark: ara nöronların hatası doğrudan bilinmez; çıkışın hatasından pay alır:
+   pay_j = çıkış hatası × (ara j → çıkış bağlantısı) × eğim_j,  eğim = ateş × (1 − ateş) */
+function netLearnStep(x,t,n,rate){
+  const f=netForward(x,n,true),err=t-f.o;
+  const blame=f.h.map((hj,j)=>err*n.V[j]*hj*(1-hj));
+  const m=netClone(n);
+  m.V=n.V.map((v,j)=>v+rate*err*f.h[j]);m.thO=n.thO-rate*err;
+  m.W=n.W.map((w,j)=>w.map((wi,i)=>wi+rate*blame[j]*x[i]));m.th=n.th.map((th,j)=>th-rate*blame[j]);
+  return{x:x.slice(),t,f,err,blame,before:n,after:m};
+}
+
 // Tek bir nöronun bu tabloyu en fazla kaç doğruyla yapabildiği (kaba arama). XOR için 3 çıkar.
 function bestScore(target,lo=-2,hi=2,step=0.1){
   let best=0;
@@ -71,5 +104,6 @@ function num(v,d=1){
 }
 
 if(typeof module!=='undefined'&&module.exports){
-  module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num,multiOutputs,multiStep};
+  module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num,multiOutputs,multiStep,
+    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep};
 }

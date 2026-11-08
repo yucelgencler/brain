@@ -15,7 +15,7 @@
 
    Durum (st): single -> {b, w:[w], theta}; pair -> {x:[a,b], w:[w1,w2], theta, targetKey, target, flags}
 ------------------------------------------------------------------- */
-const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy};
+const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves};
 
 // Öğrenme seviyelerinde her istenen davranışın gerçek hayattaki karşılığı.
 // a, b: iki özellik (on: var / 1, off: yok / 0); yes/no: nöron ateşlerse / susarsa cevap.
@@ -46,6 +46,14 @@ const SCENARIOS={
     b:{q:'B ışığı',on:{icon:'🟡',text:'B yanık'},off:{icon:'⚪',text:'B sönük',cls:'dim'}},
     yes:'ateşle',no:'sus'}
 };
+
+// Ara nöronun dört durumdaki ateşleme deseni → anlamı (sıra: 00, alt yukarı, üst yukarı, ikisi de yukarı)
+const NET_PATTERNS={'0000':'hiç ateşlemiyor','1111':'her durumda ateşliyor','0001':'ikisi de yukarı','0111':'en az biri yukarı',
+  '0100':'sadece alt yukarı','0010':'sadece üst yukarı','1000':'ikisi de aşağı','1110':'ikisi birden yukarı değil',
+  '0110':'anahtarlar farklı','1001':'anahtarlar aynı','0101':'alt yukarı','0011':'üst yukarı','1010':'alt aşağı','1100':'üst aşağı',
+  '1011':'alt aşağı ya da üst yukarı','1101':'üst aşağı ya da alt yukarı'};
+// Rastgele başlangıçlardan takılmadan öğrenenler (hız 2 ile 300 turun altında)
+const NET_SEEDS=[7,1,12,13,18,20,22,25,5,10,11,15];
 
 const PARTS=[
   {id:'A',title:'Algı',sub:'tek bir nöron'},
@@ -270,6 +278,47 @@ const LEVELS=[
   deeper:`<p>Her kavram nöronu bağımsız bir algılayıcıdır: bir kartta muz nöronunun hatası sadece muz nöronunun bağlantılarını değiştirir, armut nöronununkilere dokunmaz. Bu yüzden 4. seviyedeki unutma burada olmaz: armudu öğrenmek muzun üzerine yazmaz.</p>
     <p><b>Ne kadar ortak?</b> İki desenin ortaklığını ölçmenin basit bir yolu: ikisinde de ateşleyen nöron sayısı ÷ en az birinde ateşleyen nöron sayısı. Olgun muz ile olgun armut: 2 ÷ 4 = %50.</p>
     <p><b>Ortak özellikler neden zayıf kalıyor?</b> Kural sadece hata olunca değişir. “Sarı” hem muzda hem armutta hem limonda var; muz nöronu sarıya güvenirse limonda ve armutta yanılır. Hatalar sarının bağlantısını eksiye doğru iter ya da sıfırda bırakır. Ayırt edici özellik (şekil) ise her seferinde aynı yöne itilir ve güçlenir.</p>`
+},
+/* ------------------------------ 8: duvarı aşmak ------------------------------ */
+{
+  key:'two',goal:"Tek nöronun öğrenemediği merdiven lambasını, nöronları üst üste koyarak çözmek; sonra makinenin aradaki (gizli) nöronların ne yapacağını kendisinin bulmasını izlemek.",
+  todo:["Önce “Elle kur” bölümünde: iki ara nöronu ve lamba nöronunu kaydırıcılarla ayarla. 2. ve 3. seviyede öğrendiğin iki şey yetecek.","Sonra “Makine öğrensin”e geç: rastgele bağlantılarla başlayan ağa kartları göster ve lambayı kendisinin öğrenmesini izle.","Öğrendikten sonra “Ara nöronlar ne yakalıyor?” panelinde makinenin çözümünü kendi çözümünle karşılaştır."],
+  part:'C',title:'Duvarı aşmak: gizli nöronlar',
+  question:'Tek nöronun asla öğrenemediği merdiven lambası, birkaç nöron üst üste konunca çözülebilir mi? Peki makine bunu kendisi bulabilir mi?',
+  kind:'net',
+  init(){return{mode:'manual',x:[1,0],man:{W:[[0,0],[0,0]],th:[0.5,0.5],V:[0,0],thO:0.5},lrn:null,seed:7,fromZero:false,zeroRounds:0,rate:2};},
+  missions:[
+    {id:'g1',text:'Elle kur: <b>Ara nöron 1</b> sadece <b>alt anahtar yukarı, üst aşağı</b>yken ateşlesin. (İpucu: 3. seviyedeki susturan bağlantı.)',
+      check:st=>NN.netPattern(st.man,false,0)==='0100',
+      aha:'Ara nöron 1 artık bir dedektör: “alt yukarı, üst aşağı” durumunu yakalıyor. Bunu 3. seviyede tek başına yapmıştın; şimdi bu nöron daha büyük bir ağın parçası.'},
+    {id:'g2',text:'<b>Ara nöron 2</b> de tersini yakalasın: sadece <b>üst yukarı, alt aşağı</b>yken ateşlesin.',
+      check:st=>NN.netPattern(st.man,false,1)==='0010',
+      aha:'İki ara nöron, problemi iki kolay parçaya böldü. Her biri tek başına düz bir çizgiyle çözülebilen bir şey yakalıyor.'},
+    {id:'wall',text:'Şimdi <b>lamba nöronunu</b> bağla: ara nöronlardan <b>biri</b> ateşlerse yansın. Dört durumun dördü de doğru mu?',
+      check:st=>NN.netSolves(st.man,false,NN.GATES.xor.target),
+      aha:'Duvar aşıldı! Tek nöronun asla yapamadığını üç nöron birlikte yaptı: iki ara nöron birer parça yakalıyor, lamba nöronu onları VEYA ile birleştiriyor. Karar haritasına bak: artık tek bir çizgi değil, iki çizgi var; lambanın yandığı bölge, tek bir düz çizginin asla çizemeyeceği bir şekil aldı (senin çözümünde iki ayrı köşe parçası). Beyin de karmaşık kararları basit parçaları katman katman birleştirerek verir.'},
+    {id:'learn',text:'<b>“Makine öğrensin”</b>e geç ve öğret: rastgele bağlantılarla başlayan ağ, lambayı kendisi öğrenebilir mi?',
+      check:st=>!!st.flags.learned,
+      aha:'Öğrendi. Kimse ara nöronlara ne yakalamaları gerektiğini söylemedi; sadece lambanın doğru cevabı biliniyordu. Lamba her yanıldığında hata, ara nöronlara bağlantıları oranında paylaştırıldı ve her biri kendi payına göre düzeltildi. Buna geri yayılım denir; bugünkü bütün yapay zekâ ağları böyle eğitilir.'},
+    {id:'compare',text:'Öğrendikten sonra <b>“Ara nöronlar ne yakalıyor?”</b> panelinde <b>“Benim çözümümle karşılaştır”</b>a bas. Makine senin yolunu mu buldu?',
+      check:st=>!!st.flags.learned&&!!st.flags.compared,
+      aha:'Makine bazen senin çözümünü (biri “sadece alt”, biri “sadece üst”), çoğu zaman başka bir yolu buluyor: örneğin biri “ikisi de aşağı”, öbürü “ikisi birden yukarı değil” olur ve lamba “ikisi birden değil ama hiçbiri de değil” der. Doğru cevaba giden tek bir yol yok. Beyinde de aynı beceriyi iki kişi farklı iç temsillerle öğrenebilir; ara nöronların ne yakaladığını dışarıdan görmek zordur.'},
+    {id:'zero',text:'Deney: <b>“Tamamen sıfırla”</b> ile bütün bağlantıları 0 yapıp en az 200 tur öğret. Ne oluyor?',
+      check:st=>!!st.flags.symmetry,
+      aha:'Hiç öğrenemiyor. Bütün bağlantılar aynı başlayınca iki ara nöron her kartta birebir aynı payı alıyor ve sonsuza kadar ikiz kalıyor: ağ, aslında tek bir ara nöronu olan bir ağ gibi çalışıyor ve duvara takılıyor. Bu yüzden hem yapay ağlar hem beyin farklı, düzensiz bağlantılarla başlar; bu çeşitlilik, nöronların farklı şeyler öğrenebilmesinin ön koşulu (simetriyi kırmak).'}
+  ],
+  cards:{
+    brain:'Beyin bilgiyi katman katman işler: görme yolunda ilk aşamalar kenar ve renk gibi basit parçaları, sonraki aşamalar bu parçaların birleşimlerini yakalar. Aradaki nöronlar ne doğrudan bir duyuya ne de doğrudan bir harekete bağlıdır; ne yakaladıkları deneyimle şekillenir. Bir hata yapıldığında beynin bu ara bağlantılardan hangisini ne kadar düzelteceğini nasıl bildiği (“suç paylaştırma sorunu”) nörobilimin hâlâ açık sorularından biri.',
+    model:'İki ara (gizli) nöron A ve B anahtarlarını dinliyor, lamba nöronu da iki ara nöronu. “Elle kur”da nöronlar ya hep ya hiç çalışıyor. “Makine öğrensin”de yumuşak eşiğe geçiliyor: nöron ne kadar güçlü ateşlediğini 0 ile 1 arasında söylüyor; böylece “eşiğe ne kadar yakındı?” bilgisi var ve lambanın hatası ara nöronlara pay edilebiliyor.',
+    limit:'Geri yayılım, hatanın aynı bağlantılardan geriye doğru, tam sayısıyla gönderilmesini ister; gerçek sinapslar ise tek yönlüdür. Beynin hatayı bu kadar düzgün geriye taşıdığına dair kanıt yok; dendritlerdeki ayrı sinyaller ya da geri bildirim bağlantıları gibi beyne daha uygun açıklamalar araştırılıyor. Yumuşak eşik ise gerçek nöronlardaki ateşleme sıklığına kabaca benziyor.',
+    ai:'Geri yayılım 1986’da Rumelhart, Hinton ve Williams’ın çalışmasıyla yaygınlaştı ve 1969’daki tek katman duvarını aştı. Bugünkü bütün sinir ağları, dil modelleri dahil, bu yöntemle eğitilir. “Derin öğrenme”deki “derin”, bu ara katmanlardan çok sayıda olması demek.'
+  },
+  deeper:`<p><b>Yumuşak eşik:</b> ateşleme gücü = 1 ÷ (1 + e<sup>−(toplam − eşik)</sup>). Toplam eşiğe eşitken %50, çok üstündeyken %100’e, çok altındayken %0’a yaklaşır.</p>
+    <p><b>Lambanın hatası:</b> doğru cevap − lambanın ateşleme gücü. Örneğin lamba %73 yandı ama sönmeliydi: hata −0,73.</p>
+    <p><b>Ara nöronun payı:</b> lambanın hatası × (o ara nörondan lambaya bağlantı) × eğim. Eğim = ateş × (1 − ateş): ara nöron kararsızsa (%50 civarı) payı büyük, kararını kesin vermişse (%0 ya da %100) payı küçük.</p>
+    <p><b>Düzeltme:</b> 4. seviyedeki kuralın aynısı: bağlantı += hız × hata (ya da pay) × girdi; eşik −= hız × hata (ya da pay).</p>
+    <p><b>Simetri:</b> Bütün bağlantılar aynı başlarsa iki ara nöron hep aynı payı alır ve ikiz kalır; bu yüzden rastgele başlanır.</p>
+    <p><b>Takılma:</b> Rastgele başlangıçların bir kısmında ağ hiç çözüme ulaşamadan bir “çukura” takılır (yerel en küçük). Burada “Rastgele başlat” takılmadığı bilinen başlangıçlardan birini seçiyor; gerçekte ağı yeniden başlatmak ya da daha çok ara nöron kullanmak gerekir.</p>`
 }
 ];
 
@@ -280,7 +329,7 @@ const ROADMAP=[
   {key:'predict',part:'B',title:'Tahmin ederek öğrenme',note:'yakında',about:'Öğretmen yok; doğru cevabı bir sonraki an veriyor. Sürpriz azaldıkça öğrenme yavaşlıyor.'},
   {key:'xor'},
   {key:'fruit'},
-  {key:'two',part:'C',title:'Duvarı aşmak: gizli nöronlar',note:'yakında',about:'Nöronları üst üste koymak: aradaki gizli nöronlar kendi özelliklerini öğrenir ve tek nöronun duvarı (merdiven lambası) aşılır.'},
+  {key:'two'},
   {key:'lines',part:'C',title:'Yatay mı dikey mi?',note:'yakında',about:'3×3 piksellik çizgiler: gizli nöronların kendiliğinden çizgi dedektörlerine dönüşmesi ve bir nöronun “gördüğü” desen (algı alanı).'},
   {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar',about:'5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'},
   {key:'hebb',part:'D',title:'Birlikte yanan, birlikte bağlanır',note:'yakında',about:'Etiket yok; hep birlikte gelen özellikler birbirine bağlanıp bir “şey” oluşturuyor. Parçası görülünce bütünü tamamlanıyor.'},
@@ -292,4 +341,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS};}

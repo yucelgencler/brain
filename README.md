@@ -17,7 +17,7 @@ Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görev
 | 5 | Öğrenme | Tahmin ederek öğrenme | öğretmen yok, cevabı bir sonraki an veriyor; sürpriz = hata | yakında |
 | 6 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
 | 7 | Anlama | Muz ve armut: ortak nöronlar | birden çok nöron ve çıktı, ortak özellikler, desen | hazır |
-| 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, ara temsil, XOR'un çözümü | yakında |
+| 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, yumuşak eşik, geri yayılım (suç paylaştırma), simetri | hazır |
 | 9 | Anlama | Yatay mı dikey mi? | algı alanı, çizgi dedektörleri | yakında |
 | 10 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
 | 11 | Hafıza | Birlikte yanan, birlikte bağlanır | öğretmensiz öğrenme, parçadan bütünü tamamlama | yakında |
@@ -46,6 +46,7 @@ js/neuron.js          Tek nöron: ya hep ya hiç ateşleme, algılayıcı öğre
 js/levels.js          Seviyelerin içeriği: sorular, görevler ve kontrolleri, kartlar
 js/path.js            Öğrenme yolu arayüzü: sahne, gösterge, tablo, karar haritası, öğrenme paneli
 js/multi.js           Seviye 7 arayüzü: birden çok nöron, karşılaştırma, bağlantı tablosu
+js/net.js             Seviye 8 arayüzü: iki ara nöron + lamba, elle kur / makine öğrensin
 js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
 js/app.js             Laboratuvar arayüzü
 tests/neuron.test.js  Tek nöron ve seviye görevleri testleri

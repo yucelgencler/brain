@@ -84,7 +84,7 @@ test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
 test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   const {ROADMAP}=require('../js/levels.js');
   ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
-  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,6,7]);
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,6,7,8]);
   assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[10].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
@@ -126,5 +126,34 @@ test('seviye 4: başka durumu öğrenince muz unutuluyor',()=>{
   let [w,t]=run(N.GATES.and.target,st.w,st.theta);assert.ok(N.solves(w,t,N.GATES.and.target));
   [w,t]=run(N.GATES.or.target,w,t);assert.ok(N.solves(w,t,N.GATES.or.target));
   assert.ok(!N.solves(w,t,N.GATES.and.target));
+});
+const XT=N.GATES.xor.target;
+function trainNet(n,rounds){for(let r=1;r<=rounds;r++){N.COMBOS.forEach((x,i)=>{n=N.netLearnStep(x,XT[i],n,2).after;});if(N.netSolves(n,true,XT,0.4))return{n,r};}return{n,r:null};}
+test('seviye 8: elle kurulan çözüm duvarı aşıyor, görevler başta açık',()=>{
+  const L=lv('two'),st={...L.init(),flags:{}};
+  for(const m of L.missions)assert.ok(!m.check(st),m.id);
+  st.man={W:[[1,-1],[-1,1]],th:[0.5,0.5],V:[1,1],thO:0.5};
+  for(const id of ['g1','g2','wall'])assert.ok(L.missions.find(m=>m.id===id).check(st),id);
+  // çözüm kaydırıcı aralığında (−2..2)
+  assert.ok(N.netSolves(st.man,false,XT));
+});
+test('seviye 8: “Rastgele başlat” başlangıçlarının hepsi takılmadan öğreniyor',()=>{
+  const {NET_SEEDS}=require('../js/levels.js');
+  for(const sd of NET_SEEDS){const {r}=trainNet(N.netRandom(sd),400);assert.ok(r,'takıldı: '+sd);}
+  assert.strictEqual(NET_SEEDS[0],lv('two').init().seed);
+});
+test('seviye 8: tamamen sıfırdan başlayınca ara nöronlar ikiz kalıyor',()=>{
+  const {n,r}=trainNet(N.netZero(),300);
+  assert.strictEqual(r,null);
+  assert.ok(Math.abs(n.W[0][0]-n.W[1][0])<1e-9&&Math.abs(n.W[0][1]-n.W[1][1])<1e-9&&Math.abs(n.th[0]-n.th[1])<1e-9);
+});
+test('seviye 8: geri yayılım, lambaya bağlantısı 0 olan ara nörona pay vermez',()=>{
+  const n={W:[[0.3,-0.2],[0.1,0.4]],th:[0.1,-0.1],V:[0,1.5],thO:0.2};
+  const s=N.netLearnStep([1,1],0,n,2);
+  assert.ok(s.blame[0]===0);assert.deepStrictEqual(s.after.W[0],n.W[0]);assert.ok(s.blame[1]!==0);
+});
+test('seviye 8: başlangıç 7 senden farklı bir çözüm buluyor (görev açıklaması)',()=>{
+  const {n}=trainNet(N.netRandom(7),400),pats=[N.netPattern(n,true,0),N.netPattern(n,true,1)].sort().join('|');
+  assert.notStrictEqual(pats,['0010','0100'].join('|'));
 });
 console.log(`\n${passed} test geçti.`);
