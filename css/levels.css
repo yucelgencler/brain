@@ -386,3 +386,12 @@ details.manual[open]>summary{margin-bottom:6px}
 .aha-box .btn{flex:none}
 @media (max-width:760px){.aha-box{flex-direction:column;align-items:stretch}}
 #mscene{max-height:340px}
+
+/* Henüz hazır olmayan seviye */
+.soon-page{max-width:760px;margin-top:6px}
+.soon-badge{display:inline-block;margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--held);background:color-mix(in srgb,var(--held) 14%,var(--surface));border-radius:999px;padding:3px 10px}
+.soon-badge.lab{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.soon-about{font-size:17px;line-height:1.55;margin:4px 0 12px}
+.soon-page .btn{text-decoration:none;display:inline-block}
+.lvmenu a.soon-i{opacity:1;color:var(--ink-2)}
+.lvmenu a.soon-i:hover{color:var(--ink)}

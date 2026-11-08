@@ -22,6 +22,11 @@ const P={v:2,level:'light',rec:{}};
 const levelByKey=k=>LEVELS.find(l=>l.key===k);
 const levelByNo=n=>LEVELS.find(l=>l.id===n);
 const L=()=>levelByKey(P.level);
+// Yol haritasındaki her durak (hazır olsun olmasın) gezilebilir
+const roadByKey=k=>ROADMAP.find(r=>r.key===k);
+const roadByNo=n=>ROADMAP.find(r=>r.id===n);
+const curRoad=()=>roadByKey(P.level);
+const roadNeighbors=()=>{const i=ROADMAP.indexOf(curRoad());return[ROADMAP[i-1]||null,ROADMAP[i+1]||null];};
 // İlk sürüm kayıtları seviye numarasıyla tutuyordu
 const LEGACY_NO={light:1,pair:2,inhibit:3,learn:4,xor:5};
 const R=()=>P.rec[P.level];
@@ -38,12 +43,12 @@ function load(){
     P.rec[lv.key]=r?Object.assign(f,r,{st:Object.assign(f.st,r.st,{flags:Object.assign({},r.st&&r.st.flags)})}):f;
   }
   const ol=o&&(o.v?o.level:Object.keys(LEGACY_NO).find(k=>LEGACY_NO[k]===o.level));
-  if(ol&&levelByKey(ol))P.level=ol;
+  if(ol&&roadByKey(ol))P.level=ol;
   const h=levelFromHash();if(h)P.level=h;
 }
 let saveT=0;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(STORE,JSON.stringify(P));}catch(e){}},200);}
-function levelFromHash(){const m=location.hash.match(/^#seviye-(\d+)$/);const lv=m?levelByNo(+m[1]):null;return lv?lv.key:null;}
+function levelFromHash(){const m=location.hash.match(/^#seviye-(\d+)$/);const r=m?roadByNo(+m[1]):null;return r?r.key:null;}
 
 function targetOf(st){if(!st.targetKey)return null;if(st.targetKey==='custom')return st.custom;return GATES[st.targetKey].target;}
 function inputsOf(st,lv){return lv.kind==='single'?[st.b]:st.x;}
@@ -54,9 +59,9 @@ function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 let auto=0,busy=false,lastFire=null,resetArm=0;
 function go(key){
   stopAuto();multiStop();busy=false;lastFire=null;
-  P.level=key;const no=L().id;
+  P.level=key;const no=curRoad().id;
   if(location.hash!=='#seviye-'+no)history.replaceState(null,'','#seviye-'+no);
-  buildLevel();save();
+  if(L())buildLevel();else buildPlaceholder();save();
   $('#lv').focus({preventScroll:true});window.scrollTo({top:0,behavior:'auto'});
 }
 function buildLevel(){
@@ -91,9 +96,9 @@ function buildLevel(){
         </section>
       </div>
       <nav class="lv-pn" aria-label="Seviyeler arası">
-        <button class="btn" id="prevLv"${LEVELS.indexOf(lv)===0?' hidden':''}>← Önceki seviye</button>
+        <button class="btn" id="prevLv"${roadNeighbors()[0]?'':' hidden'}>← Önceki seviye</button>
         <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
-        ${nextHTML(lv)}
+        ${nextHTML()}
       </nav>
     </section>`;
   if(multi)wireMulti(lv);
@@ -101,9 +106,7 @@ function buildLevel(){
   $('#notes').value=rec.notes||'';
   $('#notes').addEventListener('input',e=>{R().notes=e.target.value;save();});
   $('#deeper').addEventListener('toggle',e=>{if(e.target.open){R().st.flags.openedDeeper=true;refresh();}});
-  const li=LEVELS.indexOf(lv);
-  const pv=$('#prevLv');if(pv)pv.onclick=()=>go(LEVELS[li-1].key);
-  const nx=$('#nextLv');if(nx)nx.onclick=()=>go(LEVELS[li+1].key);
+  wirePrevNext();
   $('#resetLv').onclick=e=>{
     const b=e.currentTarget;
     if(resetArm&&Date.now()-resetArm<3500){resetArm=0;const notes=R().notes;P.rec[lv.key]=freshRec(lv);R().notes=notes;R().routeSeen=true;buildLevel();save();toast('Seviye baştan başladı. Notların duruyor.');return;}
@@ -156,12 +159,37 @@ function answerHTML(lv,st){
   return`<div class="ans-l">${lv.learning?'Nöronun şimdiki cevabı':'Nöronun cevabı'}</div><div class="ans-big ${on?'on':''}" data-fl="ans">${esc(big.toLocaleUpperCase('tr-TR'))}</div><div class="ans-sub">${sub}</div>${verdict}
     <div class="calc" id="calc">${calcHTML(lv,st)}</div>`;
 }
-function nextHTML(lv){
-  const nxt=LEVELS[LEVELS.indexOf(lv)+1],skipped=ROADMAP.filter(r=>r.id>lv.id&&(!nxt||r.id<nxt.id));
-  const soonNote=skipped.length?`<span class="soon">${skipped.map(r=>`${r.id}. seviye “${esc(r.title)}” ${r.lab?'laboratuvarda':'yakında'}`).join(', ')}.</span>`:'';
-  if(nxt)return`${soonNote}<button class="btn primary" id="nextLv">Sonraki: ${esc(nxt.title)} →</button>`;
-  const up=skipped[0];
-  return`<span class="soon">Sıradaki: <b>${esc(up.title)}</b> (yakında). O zamana kadar <a href="lab.html?task=digits">rakam laboratuvarına</a> göz atabilirsin.</span>`;
+function nextHTML(){
+  const n=roadNeighbors()[1];if(!n)return'';
+  return`<button class="btn primary" id="nextLv">Sonraki: ${n.id}. ${esc(n.title)}${n.level?'':n.lab?' (laboratuvar)':' (yakında)'} →</button>`;
+}
+function wirePrevNext(){
+  const[p,n]=roadNeighbors();
+  const pv=$('#prevLv');if(pv&&p)pv.onclick=()=>go(p.key);
+  const nx=$('#nextLv');if(nx&&n)nx.onclick=()=>go(n.key);
+}
+// Henüz hazır olmayan ya da laboratuvarda duran seviye: tanıtım sayfası
+function buildPlaceholder(){
+  const r=curRoad(),part=PARTS.find(p=>p.id===r.part);
+  document.title=`Seviye ${r.id}: ${r.title} · Boş Beyin`;
+  const el=$('#lv');el.className='lv';
+  $('#barMissions').innerHTML='';
+  el.innerHTML=`
+    <div class="lv-head">
+      <div><p class="kicker">Seviye ${r.id} · ${esc(part.title)}</p><h2>${esc(r.title)}</h2></div>
+    </div>
+    <section class="panel soon-page">
+      <p class="soon-badge ${r.lab?'lab':''}">${r.lab?'Şimdilik laboratuvarda':'Yakında'}</p>
+      <p class="soon-about">${esc(r.about||'Bu seviyenin içeriği hazırlanıyor.')}</p>
+      ${r.lab?`<p><a class="btn primary" href="lab.html?task=${r.lab}">Laboratuvarda aç →</a></p>
+        <p class="hint">Laboratuvar bu konunun serbest deney hâli: daha büyük bir ağ, daha çok ayar. Öğrenme yolundaki adım adım düzene sonra kavuşacak.</p>`
+        :`<p class="hint">Bu seviye henüz yapılmadı. İstediğin seviyeye geçebilirsin; hiçbir seviye kilitli değil.</p>`}
+    </section>
+    <nav class="lv-pn" aria-label="Seviyeler arası">
+      <button class="btn" id="prevLv"${roadNeighbors()[0]?'':' hidden'}>← Önceki seviye</button>
+      ${nextHTML()}
+    </nav>`;
+  wirePrevNext();renderNav();
 }
 
 /* ---------- Sahne: ışık hücreleri → bağlantılar → nöron → akson ---------- */
@@ -614,9 +642,9 @@ function updateLearn(lv,rec){
 
 /* ---------- Üst şerit ve seviye menüsü ---------- */
 function renderNav(){
-  const lv=L(),li=LEVELS.indexOf(lv);
-  $('#barLevel').innerHTML=`<span class="bl-n">${lv.id}/${ROADMAP.length}</span> ${esc(lv.title)} <span aria-hidden="true">▾</span>`;
-  $('#barPrev').disabled=li<=0;$('#barNext').disabled=li>=LEVELS.length-1;
+  const r0=curRoad(),[pr,nx]=roadNeighbors();
+  $('#barLevel').innerHTML=`<span class="bl-n">${r0.id}/${ROADMAP.length}</span> ${esc(r0.title)} <span aria-hidden="true">▾</span>`;
+  $('#barPrev').disabled=!pr;$('#barNext').disabled=!nx;
   const el=$('#lvnav');
   el.innerHTML=PARTS.map(p=>{
     const items=ROADMAP.filter(r=>r.part===p.id).map(r=>{
@@ -624,16 +652,16 @@ function renderNav(){
         const l=r.level,rec=P.rec[l.key],n=l.missions.length,d=rec.done.length,cur=l.key===P.level;
         return`<li><a href="#seviye-${r.id}" class="${cur?'cur':''}" ${cur?'aria-current="page"':''}><span class="ln">${r.id}</span><span class="lt">${esc(l.title)}</span><span class="lp ${d===n?'full':''}">${d===n?'✓':d+'/'+n}</span></a></li>`;
       }
-      if(r.lab)return`<li><a href="lab.html?task=${r.lab}" class="lab"><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></a></li>`;
-      return`<li><span class="soon-i"${r.about?` title="${esc(r.about)}"`:''}><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></span></li>`;
+      const cur=r.key===P.level;
+      return`<li><a href="#seviye-${r.id}" class="${r.lab?'lab':'soon-i'} ${cur?'cur':''}"${r.about?` title="${esc(r.about)}"`:''}><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></a></li>`;
     });
     return`<div class="pgroup"><h3>${esc(p.title)}<small>${esc(p.sub)}</small></h3><ol>${items.join('')}</ol></div>`;
   }).join('');
 }
 function menuOpen(on){const m=$('#lvnav'),b=$('#barLevel');m.hidden=!on;b.setAttribute('aria-expanded',on?'true':'false');}
 $('#barLevel').onclick=e=>{e.stopPropagation();menuOpen($('#lvnav').hidden);};
-$('#barPrev').onclick=()=>{const i=LEVELS.indexOf(L());if(i>0)go(LEVELS[i-1].key);};
-$('#barNext').onclick=()=>{const i=LEVELS.indexOf(L());if(i<LEVELS.length-1)go(LEVELS[i+1].key);};
+$('#barPrev').onclick=()=>{const p=roadNeighbors()[0];if(p)go(p.key);};
+$('#barNext').onclick=()=>{const n=roadNeighbors()[1];if(n)go(n.key);};
 document.addEventListener('click',e=>{if(!$('#lvnav').hidden&&!e.target.closest('#lvnav'))menuOpen(false);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')menuOpen(false);});
 $('#lvnav').addEventListener('click',e=>{if(e.target.closest('a'))menuOpen(false);});
@@ -671,5 +699,5 @@ window.addEventListener('hashchange',()=>{const k=levelFromHash();if(k&&k!==P.le
 document.addEventListener('visibilitychange',()=>{if(document.hidden){try{localStorage.setItem(STORE,JSON.stringify(P));}catch(e){}}});
 
 load();
-history.replaceState(null,'','#seviye-'+L().id);
-buildLevel();
+history.replaceState(null,'','#seviye-'+curRoad().id);
+if(L())buildLevel();else buildPlaceholder();

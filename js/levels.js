@@ -281,14 +281,14 @@ const ROADMAP=[
   {key:'xor'},
   {key:'fruit'},
   {key:'two',part:'C',title:'Duvarı aşmak: gizli nöronlar',note:'yakında',about:'Nöronları üst üste koymak: aradaki gizli nöronlar kendi özelliklerini öğrenir ve tek nöronun duvarı (merdiven lambası) aşılır.'},
-  {key:'lines',part:'C',title:'Yatay mı dikey mi?',note:'yakında'},
-  {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar'},
+  {key:'lines',part:'C',title:'Yatay mı dikey mi?',note:'yakında',about:'3×3 piksellik çizgiler: gizli nöronların kendiliğinden çizgi dedektörlerine dönüşmesi ve bir nöronun “gördüğü” desen (algı alanı).'},
+  {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar',about:'5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'},
   {key:'hebb',part:'D',title:'Birlikte yanan, birlikte bağlanır',note:'yakında',about:'Etiket yok; hep birlikte gelen özellikler birbirine bağlanıp bir “şey” oluşturuyor. Parçası görülünce bütünü tamamlanıyor.'},
-  {key:'where',part:'D',title:'Hafıza nerede?',note:'yakında'},
-  {key:'general',part:'D',title:'Ezber ve genelleme',note:'yakında'},
-  {key:'sleep',part:'D',title:'Unutma ve uyku',note:'yakında'},
-  {key:'words',part:'E',title:'Kelimeler ve anlam',lab:'words',note:'laboratuvar'},
-  {key:'read',part:'E',title:'Okuma ve kayma sorunu',lab:'read',note:'laboratuvar'}
+  {key:'where',part:'D',title:'Hafıza nerede?',note:'yakında',about:'Öğrenmiş bir ağdan nöron ya da bağlantı silince ne olur? Bilgi tek bir yerde değil, bağlantılara dağılmış; beyin hasarı da çoğu zaman yavaş yavaş bozulma olarak görülür.'},
+  {key:'general',part:'D',title:'Ezber ve genelleme',note:'yakında',about:'Eğitimde hiç gösterilmeyen sınav (doğrulama) kartlarıyla: ağ kuralı mı öğrendi, yoksa örnekleri mi ezberledi?'},
+  {key:'sleep',part:'D',title:'Unutma ve uyku',note:'yakında',about:'Yeni bir şey öğrenince eskisinin bozulması ve beynin uykuda yaptığı tekrar oynatmanın bunu nasıl önlediği.'},
+  {key:'words',part:'E',title:'Kelimeler ve anlam',lab:'words',note:'laboratuvar',about:'Her kelime bir duyu nöronu, her anlam bir cevap nöronu. Eğitim ilerledikçe benzer anlamlı kelimeler gizli katmanda birbirine yaklaşır (anlam uzayı).'},
+  {key:'read',part:'E',title:'Okuma ve kayma sorunu',lab:'read',note:'laboratuvar',about:'Kelimeyi piksel resmi olarak okumak: hiç görmediği kelimeleri tahmin etmesi, bir harf kayınca neden şaşırdığı ve paylaşımlı dedektörlerin çözümü.'}
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
