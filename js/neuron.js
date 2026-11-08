@@ -48,6 +48,13 @@ function learnRound(w,theta,target,rate){
   return{w,theta,mistakes};
 }
 
+// Birden çok nöron aynı girdileri okur (seviye 7). Her nöron kendi bağlantıları ve eşiğiyle, birbirinden bağımsız öğrenir.
+function multiOutputs(x,W,th){return W.map((w,k)=>fires(x,w,th[k]));}
+function multiStep(x,W,th,y,rate){
+  const per=W.map((w,k)=>learnStep(x,w,th[k],y[k],rate));
+  return{per,W:per.map(p=>p.w),th:per.map(p=>p.theta),mistakes:per.filter(p=>p.err).length};
+}
+
 // Tek bir nöronun bu tabloyu en fazla kaç doğruyla yapabildiği (kaba arama). XOR için 3 çıkar.
 function bestScore(target,lo=-2,hi=2,step=0.1){
   let best=0;
@@ -64,5 +71,5 @@ function num(v,d=1){
 }
 
 if(typeof module!=='undefined'&&module.exports){
-  module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num};
+  module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num,multiOutputs,multiStep};
 }

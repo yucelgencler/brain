@@ -13,18 +13,19 @@ Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görev
 | 1 | Algı | Tek bir ışık hücresi | girdi, bağlantı, eşik, ya hep ya hiç | hazır |
 | 2 | Algı | İki ışık, bir karar | sinyalleri toplamak, VE / VEYA, karar haritası | hazır |
 | 3 | Algı | Susturan bağlantı | negatif bağlantı, kendiliğinden ateşleme, karanlık dedektörü | hazır |
-| 4 | Öğrenme | Öğretmenle öğrenme | etiketli eğitim verisi, hatadan düzeltme (algılayıcı kuralı) | hazır |
+| 4 | Öğrenme | Öğretmenle öğrenme | etiketli eğitim verisi, hatadan düzeltme (algılayıcı kuralı), unutma | hazır |
 | 5 | Öğrenme | Tahmin ederek öğrenme | öğretmen yok, cevabı bir sonraki an veriyor; sürpriz = hata | yakında |
 | 6 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
-| 7 | Anlama | İki nöron birlikte | gizli nöron, ara temsil | yakında |
-| 8 | Anlama | Yatay mı dikey mi? | algı alanı, çizgi dedektörleri | yakında |
-| 9 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
-| 10 | Hafıza | Birlikte yanan, birlikte bağlanır | öğretmensiz öğrenme, parçadan bütünü tamamlama | yakında |
-| 11 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
-| 12 | Hafıza | Ezber ve genelleme | eğitim ve doğrulama (sınav) verisi | yakında |
-| 13 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
-| 14 | Anlam | Kelimeler ve anlam | anlam uzayı | laboratuvarda |
-| 15 | Anlam | Okuma ve kayma sorunu | şekilden okuma, paylaşımlı dedektörler | laboratuvarda |
+| 7 | Anlama | Muz ve armut: ortak nöronlar | birden çok nöron ve çıktı, ortak özellikler, desen | hazır |
+| 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, ara temsil, XOR'un çözümü | yakında |
+| 9 | Anlama | Yatay mı dikey mi? | algı alanı, çizgi dedektörleri | yakında |
+| 10 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
+| 11 | Hafıza | Birlikte yanan, birlikte bağlanır | öğretmensiz öğrenme, parçadan bütünü tamamlama | yakında |
+| 12 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
+| 13 | Hafıza | Ezber ve genelleme | eğitim ve doğrulama (sınav) verisi | yakında |
+| 14 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
+| 15 | Anlam | Kelimeler ve anlam | anlam uzayı | laboratuvarda |
+| 16 | Anlam | Okuma ve kayma sorunu | şekilden okuma, paylaşımlı dedektörler | laboratuvarda |
 
 Seviye numaraları `js/levels.js` içindeki `ROADMAP` sırasından hesaplanır; ilerleme her seviyenin sabit `key` adıyla saklandığı için araya yeni seviye eklemek kayıtları bozmaz.
 
@@ -44,6 +45,7 @@ css/levels.css        Öğrenme yolu görünümü
 js/neuron.js          Tek nöron: ya hep ya hiç ateşleme, algılayıcı öğrenme kuralı. Arayüzden bağımsız.
 js/levels.js          Seviyelerin içeriği: sorular, görevler ve kontrolleri, kartlar
 js/path.js            Öğrenme yolu arayüzü: sahne, gösterge, tablo, karar haritası, öğrenme paneli
+js/multi.js           Seviye 7 arayüzü: birden çok nöron, karşılaştırma, bağlantı tablosu
 js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
 js/app.js             Laboratuvar arayüzü
 tests/neuron.test.js  Tek nöron ve seviye görevleri testleri

@@ -84,16 +84,47 @@ test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
 test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   const {ROADMAP}=require('../js/levels.js');
   ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
-  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,6]);
-  assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[9].key,'hebb');
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,6,7]);
+  assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[10].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
 test('öğrenme seviyelerinin her hedefi için gerçek hayat durumu var',()=>{
   const {SCENARIOS}=require('../js/levels.js');
-  for(const l of LEVELS.filter(l=>l.learning))for(const k of l.targets){
+  for(const l of LEVELS.filter(l=>l.learning&&l.targets))for(const k of l.targets){
     const sc=SCENARIOS[k];assert.ok(sc,k);
     for(const f of [sc.a.on,sc.a.off,sc.b.on,sc.b.off])assert.ok(f.icon&&f.text,k);
     assert.ok(sc.yes&&sc.no&&sc.title&&sc.short,k);
   }
+});
+function learnFruit(){
+  const L=lv('fruit'),st={...L.init(),flags:{}};
+  for(let r=0;r<100;r++){let m=0;for(const c of L.deck){const o=N.multiStep(c.x,st.W,st.th,c.y,st.rate);st.W=o.W;st.th=o.th;if(o.mistakes)m++;}if(!m)return{L,st,rounds:r+1};}
+  return null;
+}
+test('seviye 7: muz ve armut öğreniliyor, görev açıklamaları doğru',()=>{
+  const res=learnFruit();assert.ok(res,'öğrenemedi');
+  const {L,st}=res,out=x=>N.multiOutputs(x,st.W,st.th);
+  for(const c of L.deck)assert.deepStrictEqual(out(c.x),c.y,c.name);
+  // muz uzun şekle +, damlaya −; armut tersi
+  assert.ok(st.W[0][2]>0&&st.W[0][3]<0&&st.W[1][3]>0&&st.W[1][2]<0);
+  // ortak özellikler (sarı, yumuşak) tek başına: hiçbiri
+  assert.deepStrictEqual(out([1,0,0,0,0,1]),[0,0]);
+  // iki şekil birden: kanıtlar birbirini götürüyor
+  assert.deepStrictEqual(out([0,0,1,1,0,0]),[0,0]);
+  // ortak özelliklerin bağlantıları sıfır ya da eksi
+  for(const k of [0,1])for(const i of [0,5])assert.ok(st.W[k][i]<=1e-9);
+});
+test('seviye 7: bir nöronun hatası öbürünün bağlantılarına dokunmaz',()=>{
+  const o=N.multiStep([1,0,1,0,0,1],[[0,0,0,0,0,0],[0,0,0,0,0,0]],[0.5,-0.5],[1,0],0.2);
+  assert.strictEqual(o.per[0].err,1);assert.strictEqual(o.per[1].err,-1);
+  const o2=N.multiStep([1,0,1,0,0,1],[[0,0,0,0,0,0],[0,0,0,0,0,0]],[0,1],[1,0],0.2);
+  assert.strictEqual(o2.mistakes,0);assert.deepStrictEqual(o2.W,[[0,0,0,0,0,0],[0,0,0,0,0,0]]);
+});
+test('seviye 7 görevleri başlangıçta açık',()=>{const s={...lv('fruit').init(),flags:{}};for(const m of lv('fruit').missions)assert.ok(!m.check(s),m.id);});
+test('seviye 4: başka durumu öğrenince muz unutuluyor',()=>{
+  const st=lv('learn').init(),run=(T,w,t)=>{for(let r=0;r<100;r++){const o=N.learnRound(w,t,T,st.rate);w=o.w;t=o.theta;if(!o.mistakes)break;}return[w,t];};
+  let [w,t]=run(N.GATES.and.target,st.w,st.theta);assert.ok(N.solves(w,t,N.GATES.and.target));
+  [w,t]=run(N.GATES.or.target,w,t);assert.ok(N.solves(w,t,N.GATES.or.target));
+  assert.ok(!N.solves(w,t,N.GATES.and.target));
 });
 console.log(`\n${passed} test geçti.`);

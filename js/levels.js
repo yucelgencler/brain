@@ -50,7 +50,7 @@ const SCENARIOS={
 const PARTS=[
   {id:'A',title:'Algı',sub:'tek bir nöron'},
   {id:'B',title:'Öğrenme',sub:'hatadan düzeltme'},
-  {id:'C',title:'Anlama',sub:'gizli nöronlar'},
+  {id:'C',title:'Anlama',sub:'birden çok nöron'},
   {id:'D',title:'Hafıza',sub:'bilgi nerede saklanır'},
   {id:'E',title:'Anlam',sub:'kelimeler ve okuma'}
 ];
@@ -173,12 +173,15 @@ const LEVELS=[
       aha:'Aynı kural, hiç değişmeden, bambaşka bir şey öğrendi: muz olgunluğu ile kapıya bakmak arasında kural açısından hiçbir fark yok, fark sadece eğitim verisinde. Beyinde de öğrenme mekanizması konudan bağımsız; konuyu deneyim belirliyor. Öğrenilen şey bağlantılarda saklanıyor.'},
     {id:'repair',text:'Öğrendikten sonra bir bağlantıyı elle boz. Sonra yeniden öğret: kendini onarabiliyor mu?',
       check:st=>!!st.flags.repaired,
-      aha:'Bozduğun yeri hataları sayesinde yeniden buldu. Öğrenen bir sistem hasarı aynı yoldan onarabilir. Beyindeki iyileşmenin, örneğin felçten sonraki rehabilitasyonun, önemli bir kısmı da yeniden öğrenmedir.'}
+      aha:'Bozduğun yeri hataları sayesinde yeniden buldu. Öğrenen bir sistem hasarı aynı yoldan onarabilir. Beyindeki iyileşmenin, örneğin felçten sonraki rehabilitasyonun, önemli bir kısmı da yeniden öğrenmedir.'},
+    {id:'forget',text:'<b>Unutma deneyi:</b> Muz’u öğret, sonra başka bir durumu (ör. Kapı) öğret, sonra “Muz olgun mu?”ya geri dön. Hâlâ biliyor mu?',
+      check:st=>!!st.flags.forgot,
+      aha:'Unuttu. Bu nöronun bütün bilgisi iki bağlantı ve bir eşikte; yeni durumu öğrenirken aynı sayıların üzerine yazıldı. İki durum en az bir kartta farklı cevap istediği için tek nöron ikisini aynı anda bilemez; kartta “hangi soru soruluyor?” bilgisi de yok. Bu model abartılı: burada muzun “sarı kabuk” bilgisi ile kapının “zil” bilgisi aynı A kablosundan geliyor, beyinde ise bunlar tamamen ayrı nöronlardır. Asıl karışma muz ile armut gibi özellikleri ortak olan şeyler arasında olur (sonraki bölüm). Beynin bununla nasıl başa çıktığı ise “Unutma ve uyku” seviyesinin konusu.'}
   ],
   cards:{
     brain:'Öğrenmenin beyindeki temel izlerinden biri sinapsların güçlenip zayıflamasıdır. Donald Hebb 1949’da birlikte etkin olan nöronlar arasındaki bağlantının güçlendiğini öne sürdü (sonradan “birlikte ateşlenen birlikte bağlanır” diye özetlendi). 1973’te sinapsların tekrarlanan uyarıyla uzun süre güçlendiği gösterildi (uzun süreli güçlenme). Beyin hatadan da öğrenir: beyincik hareket hatalarından, dopamin nöronları ise “beklenenden iyi ya da kötü” sinyallerinden öğrenmeye katkıda bulunuyor gibi görünüyor.',
     model:'Her kartta üç şey olur: nöron tahmin eder; tahmin doğru cevapla karşılaştırılır; fark varsa o kartta var olan özelliklerin bağlantıları ve eşik küçük bir adım düzeltilir. Buna algılayıcı (perceptron) kuralı denir. Çözümü olan bir tablo için bir noktada durmayı garanti eder. Bu seviyede girdiler artık ham ışık değil, “sarı mı?”, “yumuşak mı?” gibi özellikler: beyinde de bir nöronun girdileri çoğu zaman, bu özellikleri daha önceki aşamalarda zaten tespit etmiş başka nöronlardan gelir.',
-    limit:'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli. Gerçek bir kararın da iki değil yüzlerce, binlerce girdisi olur: muzun kokusu, lekeleri, sapı…',
+    limit:'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli. Gerçek bir kararın da iki değil yüzlerce, binlerce girdisi olur: muzun kokusu, lekeleri, sapı… Burada bilerek tek nöron ve tek çıktı var, kuralı yalın görmek için. Beyinde aynı soruyu birçok nöron birlikte cevaplar, birden çok olası cevap aynı anda yarışır ve karar çoğu zaman “ya hep ya hiç” değil, kanıt biriktikçe güçlenen dereceli bir süreçtir. Birden çok nöron ve çıktı 7. seviyede (Muz ve armut) geliyor.',
     ai:'Tablodaki dört kart, yapay zekâda “etiketli eğitim verisi” diye anılır: her örnek bir girdi ve doğru cevap. Kural 1958’de Frank Rosenblatt’ın algılayıcısıyla ortaya çıktı. Ayrıca eğitimde hiç gösterilmeyen “doğrulama” ya da “sınav” verisiyle modelin ezberleyip ezberlemediği kontrol edilir (“Ezber ve genelleme” seviyesi). Bugünkü bütün yapay sinir ağları aynı fikrin genelleştirilmiş hâliyle eğitilir: tahmin et, hatayı ölç, ağırlıkları hatayı azaltacak yönde biraz değiştir, milyonlarca kez tekrarla.'
   },
   deeper:`<p><b>hata = istenen − çıktı</b>. Üç değer alabilir: <b>+1</b> (sustu ama ateşlemeliydi), <b>−1</b> (boşuna ateşledi), <b>0</b> (doğru).</p>
@@ -222,6 +225,51 @@ const LEVELS=[
     </ul>
     <p>İlk ikisini toplarsan bağlantıların toplamı en az <b>2 × eşik</b> olur. Eşik pozitif olduğu için 2 × eşik, eşikten büyüktür; yani toplam eşikten büyük çıkar. Bu dördüncü koşulla çelişir. <b>Hiçbir sayı seçimi dört koşulu birden sağlayamaz.</b></p>
     <p>Resimle söylersek: karar haritasında ateşlemesi gereken iki köşe çaprazda, susması gereken iki köşe öbür çaprazda. Tek bir düz çizgi bu iki çaprazı ayıramaz.</p>`
+},
+/* ------------------------------ 7: muz ve armut ------------------------------ */
+{
+  key:'fruit',goal:"Birden çok nöronun aynı girdileri nasıl paylaştığını görmek: muzu ve armudu tanıyan nöronlar hangi özellikleri ortak kullanıyor, hangi bağlantılar ayrı?",
+  todo:["Soldaki altı nöron özellik nöronu (sarı, yeşil, şekil, yumuşaklık…), sağdaki iki nöron kavram nöronu: 🍌 muz ve 🍐 armut. Her özellik nöronu iki kavram nöronuna da bağlı.","“Bir kart göster”e basarak ikisine birden öğret: her kartta iki nöron da tahmin eder, yanılan düzeltilir. Altı kartın hepsini doğru bilene kadar devam et.","“Ortak mı, farklı mı?” panelinde iki meyveyi karşılaştır; sonra özellik nöronlarına tıklayıp kendi meyveni yaparak dene."],
+  part:'C',title:'Muz ve armut: ortak nöronlar',
+  question:'Muzu görüp tanıyan nöronlarla armudu görüp tanıyan nöronlar aynı mı, farklı mı?',
+  kind:'multi',learning:true,
+  features:[
+    {icon:'🟡',name:'sarı'},{icon:'🟢',name:'yeşil'},{icon:'🌙',name:'uzun, kavisli'},
+    {icon:'💧',name:'damla şekli'},{icon:'⭕',name:'yuvarlak'},{icon:'🧽',name:'yumuşak'}
+  ],
+  outs:[{icon:'🍌',name:'muz'},{icon:'🍐',name:'armut'}],
+  deck:[
+    {name:'olgun muz',icon:'🍌',x:[1,0,1,0,0,1],y:[1,0]},
+    {name:'ham muz',icon:'🍌',cls:'green',x:[0,1,1,0,0,0],y:[1,0]},
+    {name:'olgun armut',icon:'🍐',cls:'ripe',x:[1,0,0,1,0,1],y:[0,1]},
+    {name:'ham armut',icon:'🍐',x:[0,1,0,1,0,0],y:[0,1]},
+    {name:'limon',icon:'🍋',x:[1,0,0,0,1,0],y:[0,0]},
+    {name:'yeşil elma',icon:'🍏',x:[0,1,0,0,1,0],y:[0,0]}
+  ],
+  init(){return{x:[1,0,1,0,0,1],shown:0,W:[[0,0,0,0,0,0],[0,0,0,0,0,0]],th:[0,0],rate:0.2,cmp:[0,2]};},
+  missions:[
+    {id:'learn',text:'İki nörona birden öğret: “Bir kart göster”e basarak <b>altı kartın hepsini</b> doğru bilene kadar devam et.',
+      check:st=>!!st.flags.learned,
+      aha:'Öğrendi. İki kavram nöronu aynı altı özellik nöronunu dinliyor ama her birinin kendi bağlantıları var; bir kartta muz nöronu yanılınca sadece muz nöronunun bağlantıları düzeldi. Bağlantı tablosuna bak: ikisi aynı özelliklere farklı sayılar vermiş.'},
+    {id:'compare',text:'“Ortak mı, farklı mı?” panelinde iki kart seç ve karşılaştır (ör. olgun muz ile olgun armut). Hangi özellik nöronları ikisinde de ateşliyor?',
+      check:st=>!!st.flags.compared,
+      aha:'Olgun muz ile olgun armutta sarı ve yumuşak nöronları ortak, şekil nöronları farklı. Beyinde de böyle: renk, kenar ve doku nöronları bütün nesneler için ortak; bir nesneyi ötekinden ayıran, ortak havuzdaki hangi nöronların birlikte ateşlediği, yani desen.'},
+    {id:'shared',text:'Öğrendikten sonra kendi meyveni yap: özellik nöronlarına tıklayarak <b>sadece 🟡 sarı ve 🧽 yumuşak</b> açık kalsın. Beyin buna ne diyor?',
+      check:st=>!!st.flags.learned&&st.shown<0&&sameW(st.x,[1,0,0,0,0,1]),
+      aha:'Ne muz ne armut diyor. Sarı ve yumuşak iki meyvede de var, limon da sarı: bu özellikler muzu armuttan ayırmaya yaramıyor. Öğrenme kuralı sadece hata olunca değiştiği için, ayırt etmeye yaramayan özelliklerin bağlantıları sıfır civarında kaldı ya da eksiye indi. Beyin de dikkatini ayırt edici özelliklere yöneltmeyi öğrenir.'},
+    {id:'mixed',text:'Şimdi <b>🌙 uzun, kavisli</b> ile <b>💧 damla şekli</b>ni birlikte aç: hem muz hem armut şekli. Ne oluyor?',
+      check:st=>!!st.flags.learned&&st.shown<0&&st.x[2]===1&&st.x[3]===1,
+      aha:'Kafası karıştı. Bağlantı tablosuna bak: muz nöronu uzun şekli lehte (+), damla şeklini aleyhte (−) kanıt saymayı öğrendi; armut nöronu tam tersini. İki şekil birden gelince lehte ve aleyhte kanıtlar birbirini götürüyor. Öğrenen beyin sadece “neye benziyor”u değil, “neye benzemiyor”u da öğreniyor.'}
+  ],
+  cards:{
+    brain:'Görme yolunun ilk aşamaları (renk, kenar, kıvrım) bütün nesneler için ortaktır: aynı hücreler muzun da armudun da rengini ve kenarını algılar. Nesneleri tanıyan alt şakak korteksinde bir nesne, birçok nöronun birlikte ateşleme deseni olarak temsil edilir; muz ve armut desenleri bazı nöronları paylaşır. İnsan beyninde bazı nöronların belirli kavramlara çok seçici tepki verdiği de gösterildi (Quiroga ve arkadaşları, 2005), ama bir kavram yine de birçok hücreye dağılmıştır.',
+    model:'Altı özellik nöronu iki kavram nöronuna bağlı. Özellik nöronları ortak: sarı nöronu hem muz hem armut nöronuna sinyal yollar. Bağlantılar ayrı: sarıdan muza giden bağlantı ile armuda giden farklı sayılar olabilir. Her kavram nöronu 4. seviyedeki nöronun aynısı ve aynı kuralla, aynı anda öğrenir.',
+    limit:'Burada özellik nöronları hazır veriliyor ve her kavram tek bir nöron. Beyinde özellik dedektörlerinin kendisi de deneyimle şekillenir ve bir kavram binlerce nörona yayılır. Sonraki seviyede aradaki nöronların kendi özelliklerini kendilerinin öğrendiğini göreceğiz.',
+    ai:'Görüntü tanıyan yapay ağlar da böyle çalışır: ilk katmanlar bütün nesneler için ortak kenar ve renk dedektörleridir; son katmanda her sınıfın kendi çıktı nöronu vardır ve hepsi aynı özellikleri farklı ağırlıklarla okur. Bir nesnenin katmanlardaki etkinlik deseni onun temsilidir; benzer nesnelerin desenleri birbirine yakındır.'
+  },
+  deeper:`<p>Her kavram nöronu bağımsız bir algılayıcıdır: bir kartta muz nöronunun hatası sadece muz nöronunun bağlantılarını değiştirir, armut nöronununkilere dokunmaz. Bu yüzden 4. seviyedeki unutma burada olmaz: armudu öğrenmek muzun üzerine yazmaz.</p>
+    <p><b>Ne kadar ortak?</b> İki desenin ortaklığını ölçmenin basit bir yolu: ikisinde de ateşleyen nöron sayısı ÷ en az birinde ateşleyen nöron sayısı. Olgun muz ile olgun armut: 2 ÷ 4 = %50.</p>
+    <p><b>Ortak özellikler neden zayıf kalıyor?</b> Kural sadece hata olunca değişir. “Sarı” hem muzda hem armutta hem limonda var; muz nöronu sarıya güvenirse limonda ve armutta yanılır. Hatalar sarının bağlantısını eksiye doğru iter ya da sıfırda bırakır. Ayırt edici özellik (şekil) ise her seferinde aynı yöne itilir ve güçlenir.</p>`
 }
 ];
 
@@ -231,7 +279,8 @@ const ROADMAP=[
   {key:'learn'},
   {key:'predict',part:'B',title:'Tahmin ederek öğrenme',note:'yakında',about:'Öğretmen yok; doğru cevabı bir sonraki an veriyor. Sürpriz azaldıkça öğrenme yavaşlıyor.'},
   {key:'xor'},
-  {key:'two',part:'C',title:'İki nöron birlikte',note:'yakında'},
+  {key:'fruit'},
+  {key:'two',part:'C',title:'Duvarı aşmak: gizli nöronlar',note:'yakında',about:'Nöronları üst üste koymak: aradaki gizli nöronlar kendi özelliklerini öğrenir ve tek nöronun duvarı (merdiven lambası) aşılır.'},
   {key:'lines',part:'C',title:'Yatay mı dikey mi?',note:'yakında'},
   {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar'},
   {key:'hebb',part:'D',title:'Birlikte yanan, birlikte bağlanır',note:'yakında',about:'Etiket yok; hep birlikte gelen özellikler birbirine bağlanıp bir “şey” oluşturuyor. Parçası görülünce bütünü tamamlanıyor.'},

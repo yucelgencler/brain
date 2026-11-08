@@ -53,7 +53,7 @@ function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 /* ---------- Seviye sayfasını kur ---------- */
 let auto=0,busy=false,lastFire=null,resetArm=0;
 function go(key){
-  stopAuto();busy=false;lastFire=null;
+  stopAuto();multiStop();busy=false;lastFire=null;
   P.level=key;const no=L().id;
   if(location.hash!=='#seviye-'+no)history.replaceState(null,'','#seviye-'+no);
   buildLevel();save();
@@ -74,7 +74,7 @@ function buildLevel(){
         <ol>${lv.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
       </div>
     </div>
-    <div class="lv-grid">
+    ${lv.kind==='multi'?multiGridHTML(lv):`<div class="lv-grid">
       <div class="lv-main">
         <div class="stage scene-wrap"><svg id="scene" viewBox="0 0 730 270" role="img" aria-label="Işık hücresi, bağlantı ve nöron"></svg></div>
         <div class="gauge" id="gauge" aria-hidden="true">
@@ -94,7 +94,7 @@ function buildLevel(){
           <p class="hint" id="mapHint">${pair?'Her köşe bir durum (sol alt: ikisi de sönük, sağ üst: ikisi de yanık). Boyalı bölgede nöron ateşler; sınırı düz bir çizgi. Dolu daire “ateşlemeli”, boş daire “susmalı” demek.':'Hangi parlaklıklarda ateşlediğini gösterir. Boyalı kısım ateşleme bölgesi, üçgen şu anki parlaklık.'}</p>
         </div>
       </aside>
-    </div>
+    </div>`}
     <section class="cards4" aria-label="Beyinde ve modelde">
       <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
       <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
@@ -112,8 +112,8 @@ function buildLevel(){
       <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
       ${nextHTML(lv)}
     </nav>`;
-  buildScene(lv);buildSliders(lv);
-  if(lv.learning)wireLearn(lv);
+  if(lv.kind==='multi')wireMulti(lv);
+  else{buildScene(lv);buildSliders(lv);if(lv.learning)wireLearn(lv);}
   $('#notes').value=rec.notes||'';
   $('#notes').addEventListener('input',e=>{R().notes=e.target.value;save();});
   $('#deeper').addEventListener('toggle',e=>{if(e.target.open){R().st.flags.openedDeeper=true;refresh();}});
@@ -446,6 +446,12 @@ function wireLearn(lv){
 function setTarget(k,quiet){
   const st=R().st;if(st.targetKey===k)return;
   st.targetKey=k;resetRounds();
+  // Unutma deneyi: daha önce öğrendiği bir duruma dönünce artık bilmiyorsa
+  const T=targetOf(st);
+  if(st.flags.learned&&st.flags.learned[k]&&T&&!solves(st.w,st.theta,T)){
+    st.flags.forgot=true;
+    setTimeout(()=>toast(`“${SCENARIOS[k].title}” sorusunu unuttu! Tabloya bak: artık yanlış cevaplar var.`),50);
+  }
   if(k==='custom'&&!quiet)toast('Tablodaki “istenen” sütununa tıklayarak kendi tablonu kur, sonra öğret.');
 }
 function resetRounds(){const rec=R();rec.rounds=[];rec.roundMistakes=0;rec.cursor=0;}
@@ -587,6 +593,7 @@ function renderNav(){
 function refresh(fromSlider){
   const lv=L(),rec=R(),st=rec.st;
   checkMissions(lv,rec);
+  if(lv.kind==='multi'){updateMulti(lv,rec);renderMissions(lv,rec);renderNav();save();return;}
   updateScene(lv,st);updateGauge(lv,st);
   $('#calc').innerHTML=calcHTML(lv,st);
   if(!fromSlider)syncSliders();
