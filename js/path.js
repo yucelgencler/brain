@@ -11,6 +11,11 @@ const STORE='bos-beyin-yol-v1';
 const sgn=v=>(v>1e-9?'+':'')+num(v);
 const onoff=v=>v?'yanık':'sönük';
 const exDesc=x=>`A ${onoff(x[0])}, B ${onoff(x[1])}`;
+// Öğrenme seviyelerinde gerçek hayat durumu (js/levels.js SCENARIOS)
+const scnOf=st=>SCENARIOS[st.targetKey]||SCENARIOS.custom;
+const feat=(sc,k,v)=>sc['ab'[k]][v?'on':'off'];
+const featTxt=(sc,x)=>x.map((v,k)=>feat(sc,k,v).text).join(', ');
+const ans=(sc,v)=>v?sc.yes:sc.no;
 
 /* ---------- Durum ve kayıt ---------- */
 const P={v:2,level:'light',rec:{}};
@@ -137,7 +142,7 @@ function sceneInputs(lv){return lv.kind==='pair'?[{y:30,name:'A'},{y:160,name:'B
 function buildScene(lv){
   const svg=$('#scene'),ins=sceneInputs(lv),pair=lv.kind==='pair';
   let h=`<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs>
-    <text class="coltitle" x="80" y="16">${pair?'Işık hücreleri':'Işık hücresi'}</text>
+    <text class="coltitle" x="80" y="16">${lv.learning?'Özellikler (girdi)':pair?'Işık hücreleri':'Işık hücresi'}</text>
     <text class="coltitle" x="255" y="16">Bağlantı (sinaps)</text>
     <text class="coltitle" x="${NX}" y="16">Nöron</text>
     <text class="coltitle" x="640" y="16">Akson → beyne</text>`;
@@ -152,7 +157,7 @@ function buildScene(lv){
         <rect class="px-cell" id="pxc${i}" x="40" y="${p.y}" width="80" height="80" rx="12"/>
         <text class="px-state" id="pxs${i}" x="80" y="${p.y+46}"></text>
       </g>
-      <text class="px-name" x="80" y="${p.y+100}">${pair?p.name+' ışığı':'tıkla: aç / kapat'}</text>`;
+      <text class="px-name" id="pxn${i}" x="80" y="${p.y+100}">${pair?p.name+' ışığı':'tıkla: aç / kapat'}</text>`;
   });
   h+=`<circle class="soma" id="soma" cx="${NX}" cy="${NY}" r="${NR}"/>
     <text class="soma-t" id="somaT" x="${NX}" y="${NY+5}">nöron</text>
@@ -180,10 +185,17 @@ function updateScene(lv,st){
   ins.forEach((v,i)=>{
     const w=st.w[i],aw=Math.min(Math.abs(w),2),kind=Math.abs(w)<1e-9?'zero':w>0?'pos':'neg';
     $('#pxc'+i).style.fill=`color-mix(in srgb, var(--light) ${Math.round(v*100)}%, var(--surface-2))`;
-    $('#pxs'+i).textContent=lv.kind==='single'?(v?num(v,2):'kapalı'):onoff(v);
-    $('#pxs'+i).classList.toggle('lit',v>0.45);
+    const pxs=$('#pxs'+i);
+    if(lv.learning){
+      const sc=scnOf(st),f=feat(sc,i,v);
+      pxs.textContent=f.icon;pxs.setAttribute('class','px-state emo '+(f.cls||''));pxs.setAttribute('y',+$('#pxc'+i).getAttribute('y')+53);
+      $('#pxn'+i).textContent=`${'AB'[i]}: ${sc['ab'[i]].q}`;
+    }else{
+      pxs.textContent=lv.kind==='single'?(v?num(v,2):'kapalı'):onoff(v);
+      pxs.classList.toggle('lit',v>0.45);
+    }
     const g=$('#in'+i);g.setAttribute('aria-pressed',v>0?'true':'false');
-    g.setAttribute('aria-label',lv.kind==='single'?`Işık hücresi, parlaklık ${num(v,2)}. Aç ya da kapat`:`${sceneInputs(lv)[i].name} ışığı ${onoff(v)}. Değiştir`);
+    g.setAttribute('aria-label',lv.kind==='single'?`Işık hücresi, parlaklık ${num(v,2)}. Aç ya da kapat`:lv.learning?`${'AB'[i]}: ${feat(scnOf(st),i,v).text}. Değiştir`:`${sceneInputs(lv)[i].name} ışığı ${onoff(v)}. Değiştir`);
     const syn=$('#syn'+i);syn.setAttribute('class','syn '+kind);syn.style.strokeWidth=kind==='zero'?1.2:(1.4+3.2*aw/2);
     const fl=$('#flow'+i),sig=Math.abs(v*w);fl.setAttribute('class','flow '+kind);fl.style.opacity=sig<1e-9?0:clamp(0.35+sig*0.5,0,1);fl.style.strokeWidth=1.4+3.2*aw/2;
     const bt=$('#bt'+i);bt.setAttribute('class','bouton '+kind);bt.setAttribute('r',kind==='zero'?3:(3.5+3.5*aw/2));
@@ -198,9 +210,16 @@ function updateScene(lv,st){
   $('#somaTh').textContent=`eşik ${num(st.theta)}`;
   $('#ap').classList.toggle('on',!!on);
   $('#axon').classList.toggle('on',!!on);
-  $('#outT').textContent=on?'ATEŞLİYOR':'SESSİZ';
-  $('#outT').classList.toggle('on',!!on);
-  $('#outS').textContent=on?(lv.kind==='single'?'beyne: “ışık var”':'darbe beyne gidiyor'):'beyne mesaj yok';
+  const outT=$('#outT');
+  if(lv.learning){
+    const w=ans(scnOf(st),on).toLocaleUpperCase('tr-TR');
+    outT.textContent=w;outT.classList.toggle('long',w.length>9);
+    $('#outS').textContent=on?'nöron ateşliyor':'nöron sessiz';
+  }else{
+    outT.textContent=on?'ATEŞLİYOR':'SESSİZ';outT.classList.remove('long');
+    $('#outS').textContent=on?(lv.kind==='single'?'beyne: “ışık var”':'darbe beyne gidiyor'):'beyne mesaj yok';
+  }
+  outT.classList.toggle('on',!!on);
 }
 function showDeltas(r){
   if(reducedMotion)return;
@@ -301,6 +320,7 @@ function renderMissions(lv,rec){
 /* ---------- Doğruluk tablosu ---------- */
 function renderTable(lv,st){
   const T=targetOf(st),out=outputs(st.w,st.theta),custom=st.targetKey==='custom';
+  if(lv.learning)return renderTrainTable(lv,st,T,out,custom);
   let h=`<thead><tr><th>A</th><th>B</th><th>toplam</th><th>nöron</th>${T?`<th>${lv.learning?'doğru cevap':'istenen'}${custom?' <small>(tıkla)</small>':''}</th><th></th>`:''}</tr></thead><tbody>`;
   COMBOS.forEach((x,i)=>{
     const cur=st.x[0]===x[0]&&st.x[1]===x[1],s=weightedSum(x,st.w),ok=T?out[i]===T[i]:null;
@@ -321,6 +341,26 @@ function renderTable(lv,st){
   });
 }
 
+function renderTrainTable(lv,st,T,out,custom){
+  const sc=scnOf(st);
+  const cell=(k,v)=>{const f=feat(sc,k,v);return`<td class="fcell" title="${esc(f.text)}"><span class="ti ${f.cls||''}" aria-hidden="true">${f.icon}</span><span class="sr">${esc(f.text)}</span><small>${v}</small></td>`;};
+  let h=`<caption>A: ${esc(sc.a.q)} · B: ${esc(sc.b.q)}</caption><thead><tr><th>A</th><th>B</th><th>toplam</th><th>nöron der ki</th><th>doğru cevap${custom?' <small>(tıkla)</small>':''}</th><th></th></tr></thead><tbody>`;
+  COMBOS.forEach((x,i)=>{
+    const cur=st.x[0]===x[0]&&st.x[1]===x[1],ok=out[i]===T[i];
+    h+=`<tr class="${cur?'cur':''}" data-i="${i}" tabindex="0">${cell(0,x[0])}${cell(1,x[1])}<td class="num">${num(weightedSum(x,st.w))}</td>
+      <td><span class="fire ${out[i]?'on':''}">${esc(ans(sc,out[i]))}</span></td>
+      <td>${custom?`<button class="want" data-i="${i}">${esc(ans(sc,T[i]))}</button>`:esc(ans(sc,T[i]))}</td><td class="${ok?'mk-ok':'mk-bad'}">${ok?'✓':'✗'}</td></tr>`;
+  });
+  const tt=$('#tt');tt.innerHTML=h+'</tbody>';
+  $('#tScore').textContent=`${score(st.w,st.theta,T)}/4 doğru`;
+  tt.querySelectorAll('tbody tr').forEach(tr=>{
+    const pick=()=>{st.x=COMBOS[+tr.dataset.i].slice();refresh();};
+    tr.addEventListener('click',e=>{if(e.target.closest('.want'))return;pick();});
+    tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
+  });
+  tt.querySelectorAll('.want').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;st.custom=st.custom.slice();st.custom[i]=st.custom[i]?0:1;resetRounds();refresh();});
+}
+
 /* ---------- Karar haritası ---------- */
 function renderMap2(st){
   const svg=$('#map'),d0=-0.45,d1=1.45,X0=34,Y0=10,S=200;
@@ -336,9 +376,9 @@ function renderMap2(st){
   if(pts.length>=2){const[p,q]=pts.sort((u,v)=>u[0]-v[0]||u[1]-v[1]).filter((p,i,arr)=>i===0||i===arr.length-1);h+=`<line class="m-line" x1="${px(p[0])}" y1="${py(p[1])}" x2="${px(q[0])}" y2="${py(q[1])}"/>`;}
   // eksenler
   h+=`<text class="m-ax" x="${px(0)}" y="${Y0+S+16}">0</text><text class="m-ax" x="${px(1)}" y="${Y0+S+16}">1</text>
-    <text class="m-ax" x="${X0+S/2}" y="${Y0+S+34}">A ışığı →</text>
+    <text class="m-ax" x="${X0+S/2}" y="${Y0+S+34}">${L().learning?'A':'A ışığı'} →</text>
     <text class="m-ax" x="${X0-12}" y="${py(0)+4}">0</text><text class="m-ax" x="${X0-12}" y="${py(1)+4}">1</text>
-    <text class="m-ax" x="${X0-24}" y="${Y0+S/2}" transform="rotate(-90 ${X0-24} ${Y0+S/2})">B ışığı →</text>`;
+    <text class="m-ax" x="${X0-24}" y="${Y0+S/2}" transform="rotate(-90 ${X0-24} ${Y0+S/2})">${L().learning?'B':'B ışığı'} →</text>`;
   COMBOS.forEach((x,i)=>{
     const cx=px(x[0]),cy=py(x[1]),cur=st.x[0]===x[0]&&st.x[1]===x[1];
     const want=T?T[i]:out[i],ok=T?out[i]===T[i]:null;
@@ -375,12 +415,12 @@ function renderMap1(st){
 /* ---------- Öğrenme paneli (seviye 4–5) ---------- */
 function learnPanelHTML(lv){
   const sel=lv.targets.length>1
-    ?`<div class="seg tsel" id="tsel">${lv.targets.map(k=>`<button data-k="${k}">${k==='custom'?'Kendi tablon':esc(GATES[k].short)}</button>`).join('')}</div>`
-    :`<b>${esc(GATES[lv.targets[0]].name)}</b> <span class="pc">(${esc(GATES[lv.targets[0]].short)})</span>`;
+    ?`<div class="seg tsel" id="tsel">${lv.targets.map(k=>`<button data-k="${k}">${esc(SCENARIOS[k].short)}</button>`).join('')}</div>`
+    :`<b>${esc(SCENARIOS[lv.targets[0]].title)}</b>`;
   return`<div class="panel learn" id="learn">
     <div class="ph"><h3>Öğrenme</h3>
       <label class="ctl st2">Öğrenme hızı <select id="rate"><option value="0.1">yavaş (0,1)</option><option value="0.2">normal (0,2)</option><option value="0.5">hızlı (0,5)</option></select></label></div>
-    <div class="row st2"><span class="ctl">Öğretilecek davranış:</span> ${sel}</div>
+    <div class="row st2"><span class="ctl">Öğretilecek durum:</span> ${sel}</div>
     <div class="row">
       <button class="btn primary" id="lOne">Bir örnek göster</button>
       <button class="btn st1" id="lRound">Bir tur (4 örnek)</button>
@@ -388,7 +428,7 @@ function learnPanelHTML(lv){
       <button class="btn ghost st1" id="lReset">Boş beyinle başla</button>
     </div>
     <p class="hint" id="lNext"></p>
-    <div class="lstep" id="lstep" aria-live="polite"></div>
+    <div class="lcard-row"><div class="tcard-wrap" id="tcard"></div><div class="lstep" id="lstep" aria-live="polite"></div></div>
     <div class="lrounds st1"><div class="ph"><h4>Tur başına hata</h4><span class="pc" id="roundsN"></span></div><svg id="rounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="roundsHint"></p></div>
     <details class="llog st2"><summary>Öğrenme defteri (son 10 adım)</summary><div class="llog-wrap"><table class="tt" id="ltable"></table></div></details>
   </div>`;
@@ -422,7 +462,7 @@ function learnOne(staged){
   const rec=R(),st=rec.st,T=targetOf(st);
   if(!T){toast('Önce öğretilecek davranışı seç.');return;}
   const i=rec.cursor%4,x=COMBOS[i],r=learnStep(x,st.w,st.theta,T[i],st.rate);
-  r.w0=st.w.slice();r.theta0=st.theta;
+  r.w0=st.w.slice();r.theta0=st.theta;r.key=st.targetKey;rec.cardSeq=(rec.cardSeq||0)+1;
   st.x=x.slice();
   if(staged&&!reducedMotion){
     busy=true;rec.last=r;rec.pendingShown=true;refresh();
@@ -449,27 +489,47 @@ function applyStep(r){
   syncSliders();showDeltas(r);refresh();
 }
 function stepHTML(r,pending){
-  const want=r.target?'ateşlemesi':'susması';
+  const sc=SCENARIOS[r.key]||SCENARIOS.custom,said=`“${esc(ans(sc,r.out))}”`,right=`“${esc(ans(sc,r.target))}”`;
   const items=[
-    `<b>Öğretmenin kartı:</b> ${exDesc(r.x)}. Doğru cevap: ${want}.`,
-    `<b>Tahmin:</b> toplam ${num(r.sum)} ${r.out?'≥':'<'} eşik ${num(r.theta0)} → nöron <b>${r.out?'ateşledi':'sustu'}</b>.`,
+    `<b>Öğretmenin kartı:</b> ${esc(featTxt(sc,r.x))}. Doğru cevap: ${right}.`,
+    `<b>Tahmin:</b> toplam ${num(r.sum)} ${r.out?'≥':'<'} eşik ${num(r.theta0)} → nöron <b>${r.out?'ateşledi':'sustu'}</b>, yani ${said} dedi.`,
     r.err===0?`<b>Karşılaştırma:</b> doğru bildi. <span class="mk-ok">Hata 0.</span>`
-      :r.err>0?`<b>Karşılaştırma:</b> sustu ama ateşlemeliydi. <span class="mk-bad">Hata +1.</span>`
-      :`<b>Karşılaştırma:</b> boşuna ateşledi, susmalıydı. <span class="mk-bad">Hata −1.</span>`
+      :r.err>0?`<b>Karşılaştırma:</b> ${said} dedi ama doğrusu ${right}: sustu, ateşlemeliydi. <span class="mk-bad">Hata +1.</span>`
+      :`<b>Karşılaştırma:</b> ${said} dedi ama doğrusu ${right}: boşuna ateşledi. <span class="mk-bad">Hata −1.</span>`
   ];
   const noLit=r.err&&!r.x.some(v=>v);
   if(pending){items.push(`<span class="pend">Düzeltme hesaplanıyor…</span>`);}
   else if(r.err===0){items.push(`<b>Düzeltme:</b> hata yok, hiçbir şey değişmedi.`);}
   else{
-    const parts=r.x.map((xi,k)=>{const n='AB'[k];return xi?`${n} yanıktı → bağlantısı <b class="${r.dw[k]>0?'pos':'neg'}">${sgn(r.dw[k])}</b> (${num(r.w0[k])} → ${num(r.w[k])})`:`${n} sönüktü → bağlantısı değişmedi (bu hatadan sorumlu değil)`;});
-    parts.push(`eşik <b>${sgn(r.dtheta)}</b> (${num(r.theta0)} → ${num(r.theta)}): artık daha ${r.dtheta<0?'kolay':'zor'} ateşler`);
+    const th=`eşik <b>${sgn(r.dtheta)}</b> (${num(r.theta0)} → ${num(r.theta)}): artık daha ${r.dtheta<0?'kolay':'zor'} ateşler`;
+    const parts=r.x.map((xi,k)=>{const n='AB'[k],t=esc(feat(sc,k,xi).text);return xi?`${n} = 1 (${t}) → bağlantısı <b class="${r.dw[k]>0?'pos':'neg'}">${sgn(r.dw[k])}</b> (${num(r.w0[k])} → ${num(r.w[k])})`:`${n} = 0 (${t}) → bağlantısı değişmedi, bu hatada rol oynamadı`;});
     items.push(noLit
-      ?`<b>Düzeltme:</b> hiçbir ışık yanmıyordu, yani hiçbir bağlantı bu hatada rol oynamadı; bağlantılar değişmedi. Sadece ${parts[parts.length-1]}.`
-      :`<b>Düzeltme:</b> ${parts.join('; ')}.`);
+      ?`<b>Düzeltme:</b> kartta A da B de 0’dı (${esc(featTxt(sc,r.x))}), yani hiçbir bağlantı bu hatada rol oynamadı; bağlantılar değişmedi. Sadece ${th}.`
+      :`<b>Düzeltme:</b> ${parts.join('; ')}; ${th}.`);
     const s2=weightedSum(r.x,r.w),o2=s2>=r.theta-EPS?1:0;
-    items.push(`<b>Şimdi aynı örnekte:</b> toplam ${num(s2)} ${o2?'≥':'<'} eşik ${num(r.theta)} → ${o2===r.target?'<span class="mk-ok">artık doğru</span>.':'hâlâ yanlış; tek adım yetmedi. Sıra bu örneğe tekrar gelince bir adım daha atacak.'}`);
+    items.push(`<b>Şimdi aynı kartta:</b> toplam ${num(s2)} ${o2?'≥':'<'} eşik ${num(r.theta)} → ${o2===r.target?`artık ${right} diyor, <span class="mk-ok">doğru</span>.`:`hâlâ “${esc(ans(sc,o2))}” diyor; tek adım yetmedi. Sıra bu karta tekrar gelince bir adım daha atacak.`}`);
   }
   return`<ol class="steps">${items.map(s=>`<li>${s}</li>`).join('')}</ol>`;
+}
+function cardHTML(sc,x,target,guess,label){
+  const verdict=guess==null?'':guess===target?'ok':'bad';
+  return`<div class="tcard ${verdict}">
+    <div class="tc-top">${esc(label)}</div>
+    <div class="tc-scn">${esc(sc.title)}</div>
+    <div class="tc-feats">${x.map((v,k)=>{const f=feat(sc,k,v);return`<div class="tc-f ${v?'on':'off'}"><span class="tc-i ${f.cls||''}" aria-hidden="true">${f.icon}</span><span class="tc-t">${esc(f.text)}</span><span class="tc-k">${'AB'[k]} = ${v}</span></div>`;}).join('')}</div>
+    <div class="tc-ans">Doğru cevap: <b>${esc(ans(sc,target))}</b></div>
+    <div class="tc-guess">${guess==null?'Nöron henüz görmedi':`Nöron: <b>${esc(ans(sc,guess))}</b> ${guess===target?'✓':'✗'}`}</div>
+  </div>`;
+}
+let lastCardKey='';
+function renderCard(rec,st,T){
+  const wrap=$('#tcard');let html,key;
+  if(rec.last){const r=rec.last,sc=SCENARIOS[r.key]||scnOf(st);html=cardHTML(sc,r.x,r.target,r.out,'Öğretmenin kartı');key='c'+(rec.cardSeq||0)+(r.key||'');}
+  else if(T){const i=rec.cursor%4,sc=scnOf(st);html=cardHTML(sc,COMBOS[i],T[i],null,'Sıradaki kart');key='n'+i+st.targetKey;}
+  else{wrap.innerHTML='';return;}
+  wrap.innerHTML=html;
+  if(key!==lastCardKey&&!auto&&!reducedMotion){const c=wrap.firstElementChild;c.classList.add('deal');}
+  lastCardKey=key;
 }
 function learnStage(lv,rec){
   if(lv.key!=='learn')return 2;
@@ -479,14 +539,15 @@ function learnStage(lv,rec){
 function updateLearn(lv,rec){
   const st=rec.st,T=targetOf(st),stage=learnStage(lv,rec);
   if(stage>(rec.stage||0)&&lv.key==='learn'){
-    setTimeout(()=>toast(stage===1?'Bir tur bitti. Artık bir turu tek seferde ya da otomatik oynatabilirsin; tur başına hata grafiği de açıldı.':'Öğrendi! Şimdi öğrenme hızı, başka davranışlar ve öğrenme defteri de açıldı.'),stage===2?2200:0);
+    setTimeout(()=>toast(stage===1?'Bir tur bitti. Artık bir turu tek seferde ya da otomatik oynatabilirsin; tur başına hata grafiği de açıldı.':'Öğrendi! Şimdi öğrenme hızı, başka durumlar ve öğrenme defteri de açıldı.'),stage===2?2200:0);
   }
   rec.stage=stage;
   const box=$('#learn');box.classList.toggle('stage1',stage>=1);box.classList.toggle('stage2',stage>=2);
   document.querySelectorAll('#tsel button').forEach(b=>b.setAttribute('aria-pressed',st.targetKey===b.dataset.k?'true':'false'));
   const nx=COMBOS[rec.cursor%4];
-  $('#lNext').textContent=T?`Sıradaki kart: ${exDesc(nx)}. Kartlar hep aynı sırayla gelir; dördü bir tur eder.`:'Önce öğretilecek davranışı seç.';
-  $('#lstep').innerHTML=rec.last?stepHTML(rec.last,!!rec.pendingShown):`<p class="hint">Henüz kart gösterilmedi. “Bir örnek göster”e bas: öğretmen tablodan bir kart gösterir, nöron tahmin eder, yanıldıysa bağlantıları biraz düzeltilir. Her aşama burada yazacak.</p>`;
+  $('#lNext').textContent=T?`Sıradaki kart: ${featTxt(scnOf(st),nx)}. Kartlar hep aynı sırayla gelir; dördü bir tur eder.`:'Önce öğretilecek durumu seç.';
+  renderCard(rec,st,T);
+  $('#lstep').innerHTML=rec.last?stepHTML(rec.last,!!rec.pendingShown):`<p class="hint">Henüz kart gösterilmedi. “Bir örnek göster”e bas: öğretmen soldaki kartı nörona gösterir, nöron tahmin eder, yanıldıysa bağlantıları biraz düzeltilir. Her aşama burada yazacak.</p>`;
   ['lOne','lRound'].forEach(id=>{$('#'+id).disabled=busy;});
   // tur grafiği
   const rs=rec.rounds,svg=$('#rounds'),n=Math.max(20,rs.length),bw=400/n;

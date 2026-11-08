@@ -17,6 +17,36 @@
 ------------------------------------------------------------------- */
 const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy};
 
+// Öğrenme seviyelerinde her istenen davranışın gerçek hayattaki karşılığı.
+// a, b: iki özellik (on: var / 1, off: yok / 0); yes/no: nöron ateşlerse / susarsa cevap.
+// cls: 'dim' (soluk: yok), 'green' (yeşile boyanmış simge)
+const SCENARIOS={
+  and:{short:'Muz olgun mu?',title:'Muz olgun mu?',
+    a:{q:'Kabuğu sarı mı?',on:{icon:'🍌',text:'sarı kabuk'},off:{icon:'🍌',text:'yeşil kabuk',cls:'green'}},
+    b:{q:'Dokununca yumuşak mı?',on:{icon:'🧽',text:'yumuşak'},off:{icon:'🪨',text:'sert'}},
+    yes:'olgun',no:'ham'},
+  or:{short:'Kapıya bakayım mı?',title:'Kapıya bakmalı mıyım?',
+    a:{q:'Zil çaldı mı?',on:{icon:'🔔',text:'zil çaldı'},off:{icon:'🔕',text:'zil sessiz',cls:'dim'}},
+    b:{q:'Kapı vuruldu mu?',on:{icon:'✊',text:'kapı vuruldu'},off:{icon:'🚪',text:'kapı sessiz',cls:'dim'}},
+    yes:'kapıya bak',no:'otur'},
+  aNotB:{short:'Karşıya geçeyim mi?',title:'Karşıya geçebilir miyim?',
+    a:{q:'Yaya ışığı yeşil mi?',on:{icon:'🚶',text:'yaya ışığı yeşil'},off:{icon:'🧍',text:'yaya ışığı kırmızı',cls:'dim'}},
+    b:{q:'Araba geliyor mu?',on:{icon:'🚗',text:'araba geliyor'},off:{icon:'🛣️',text:'yol boş',cls:'dim'}},
+    yes:'karşıya geç',no:'bekle'},
+  nor:{short:'Uyumaya devam mı?',title:'Uyumaya devam etmeli miyim?',
+    a:{q:'Alarm çaldı mı?',on:{icon:'⏰',text:'alarm çaldı'},off:{icon:'⏰',text:'alarm sessiz',cls:'dim'}},
+    b:{q:'Biri seslendi mi?',on:{icon:'🗣️',text:'biri seslendi'},off:{icon:'🤫',text:'ses yok',cls:'dim'}},
+    yes:'uyu',no:'uyan'},
+  xor:{short:'Merdiven lambası',title:'Merdiven lambası yansın mı?',
+    a:{q:'Alttaki anahtar yukarıda mı?',on:{icon:'🔼',text:'alt anahtar yukarı'},off:{icon:'🔽',text:'alt anahtar aşağı'}},
+    b:{q:'Üstteki anahtar yukarıda mı?',on:{icon:'🔼',text:'üst anahtar yukarı'},off:{icon:'🔽',text:'üst anahtar aşağı'}},
+    yes:'yansın',no:'sönsün'},
+  custom:{short:'Kendi tablon',title:'Kendi tablon',
+    a:{q:'A ışığı',on:{icon:'🟡',text:'A yanık'},off:{icon:'⚪',text:'A sönük',cls:'dim'}},
+    b:{q:'B ışığı',on:{icon:'🟡',text:'B yanık'},off:{icon:'⚪',text:'B sönük',cls:'dim'}},
+    yes:'ateşle',no:'sus'}
+};
+
 const PARTS=[
   {id:'A',title:'Algı',sub:'tek bir nöron'},
   {id:'B',title:'Öğrenme',sub:'hatadan düzeltme'},
@@ -124,7 +154,7 @@ const LEVELS=[
 /* ------------------------------ 4 ------------------------------ */
 {
   key:'learn',ver:2,goal:"Doğru bağlantıların kimse elle ayarlamadan, örnekler ve geri bildirimle nasıl ortaya çıktığını görmek. Öğrenmek, bağlantıların ayarlanmasıdır; hafıza, bu ayarın kalıcı olmasıdır.",
-  todo:["Sağdaki tablo öğretmenin elindeki eğitim verisi: 4 kart, her kartta bir girdi ve doğru cevap. Örneğin A = kabuğu sarı mı, B = dokununca yumuşak mı, doğru cevap = muz olgun mu (ikisi birden).", "“Bir örnek göster”e tekrar tekrar bas. Her basışta öğretmen bir kart gösterir; nöron tahmin eder, yanılırsa bağlantıları biraz düzeltilir. Ne değiştiği her adımda yazıyor.", "Hatalar bitene kadar devam et. İlerledikçe yeni düğmeler açılacak."],
+  todo:["Sağdaki tablo öğretmenin elindeki eğitim verisi: 4 kart, her kartta iki özellik ve doğru cevap. İlk durum “Muz olgun mu?”: kabuğu sarı mı (A), dokununca yumuşak mı (B)? Olgun muz ikisi birden.", "“Bir örnek göster”e tekrar tekrar bas. Her basışta öğretmen desteden bir kart gösterir; nöron tahmin eder, yanılırsa bağlantıları biraz düzeltilir. Kartı ve ne değiştiğini öğrenme panelinde görürsün.", "Hatalar bitene kadar devam et. İlerledikçe yeni düğmeler açılacak."],
   part:'B',title:'Öğretmenle öğrenme',
   question:'Kimse bağlantıların kaç olması gerektiğini söylemezse, nöron doğru sayıları kendisi bulabilir mi?',
   kind:'pair',learning:true,
@@ -132,23 +162,23 @@ const LEVELS=[
   init(){return{x:[0,0],w:[0,0],theta:0,targetKey:'and',rate:0.2};},
   targets:['and','or','aNotB','nor','custom'],
   missions:[
-    {id:'learnAnd',target:'and',text:'Makineye <b>VE</b>’yi öğret. “Bir örnek göster”e basarak her adımda ne değiştiğini izle.',
+    {id:'learnAnd',target:'and',text:'Makineye <b>Muz olgun mu?</b> sorusunu öğret. “Bir örnek göster”e basarak her kartta ne değiştiğini izle.',
       check:st=>!!(st.flags.learned&&st.flags.learned.and),
       aha:'Kimse ona bağlantıların kaç olması gerektiğini söylemedi; sadece her örnekte doğru cevabı söyledin. Nöron hatalarından küçük düzeltmeler çıkardı ve bir noktada durdu: artık hata yok, değişiklik de yok.'},
     {id:'zero',text:'Doğru bildiği bir örneği göster. Bağlantılarda ne değişiyor?',
       check:st=>!!st.flags.zeroErr,
-      aha:'Hiçbir şey. Hata yoksa öğrenme de yok: bu kural sadece yanıldığında öğrenir. Ayrıca yanılınca bile sadece o örnekte yanan ışıkların bağlantısı değişir; sönük ışık o hatadan sorumlu değil.'},
-    {id:'other',text:'Başka bir davranış seç (ör. Karanlık ya da kendi tablon) ve onu da öğret.',
+      aha:'Hiçbir şey. Hata yoksa öğrenme de yok: bu kural sadece yanıldığında öğrenir. Ayrıca yanılınca bile sadece o kartta var olan (1 olan) özelliklerin bağlantısı değişir; 0 olan özellik o hatada rol oynamadı.'},
+    {id:'other',text:'Başka bir durum seç (ör. <b>Kapıya bakmalı mıyım?</b> ya da kendi tablon) ve onu da öğret.',
       check:st=>!!st.flags.learned&&Object.keys(st.flags.learned).some(k=>k!=='and'),
-      aha:'Aynı kural, hiç değişmeden, yeni bir davranış öğrendi. Kural genel; öğrenilen şey bağlantılarda saklanıyor.'},
+      aha:'Aynı kural, hiç değişmeden, bambaşka bir şey öğrendi: muz olgunluğu ile kapıya bakmak arasında kural açısından hiçbir fark yok, fark sadece eğitim verisinde. Beyinde de öğrenme mekanizması konudan bağımsız; konuyu deneyim belirliyor. Öğrenilen şey bağlantılarda saklanıyor.'},
     {id:'repair',text:'Öğrendikten sonra bir bağlantıyı elle boz. Sonra yeniden öğret: kendini onarabiliyor mu?',
       check:st=>!!st.flags.repaired,
       aha:'Bozduğun yeri hataları sayesinde yeniden buldu. Öğrenen bir sistem hasarı aynı yoldan onarabilir. Beyindeki iyileşmenin, örneğin felçten sonraki rehabilitasyonun, önemli bir kısmı da yeniden öğrenmedir.'}
   ],
   cards:{
     brain:'Öğrenmenin beyindeki temel izlerinden biri sinapsların güçlenip zayıflamasıdır. Donald Hebb 1949’da birlikte etkin olan nöronlar arasındaki bağlantının güçlendiğini öne sürdü (sonradan “birlikte ateşlenen birlikte bağlanır” diye özetlendi). 1973’te sinapsların tekrarlanan uyarıyla uzun süre güçlendiği gösterildi (uzun süreli güçlenme). Beyin hatadan da öğrenir: beyincik hareket hatalarından, dopamin nöronları ise “beklenenden iyi ya da kötü” sinyallerinden öğrenmeye katkıda bulunuyor gibi görünüyor.',
-    model:'Her örnekte üç şey olur: nöron tahmin eder; tahmin istenenle karşılaştırılır; fark varsa yanan ışıkların bağlantıları ve eşik küçük bir adım düzeltilir. Buna algılayıcı (perceptron) kuralı denir. Çözümü olan bir tablo için bir noktada durmayı garanti eder.',
-    limit:'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli.',
+    model:'Her kartta üç şey olur: nöron tahmin eder; tahmin doğru cevapla karşılaştırılır; fark varsa o kartta var olan özelliklerin bağlantıları ve eşik küçük bir adım düzeltilir. Buna algılayıcı (perceptron) kuralı denir. Çözümü olan bir tablo için bir noktada durmayı garanti eder. Bu seviyede girdiler artık ham ışık değil, “sarı mı?”, “yumuşak mı?” gibi özellikler: beyinde de bir nöronun girdileri çoğu zaman, bu özellikleri daha önceki aşamalarda zaten tespit etmiş başka nöronlardan gelir.',
+    limit:'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli. Gerçek bir kararın da iki değil yüzlerce, binlerce girdisi olur: muzun kokusu, lekeleri, sapı…',
     ai:'Tablodaki dört kart, yapay zekâda “etiketli eğitim verisi” diye anılır: her örnek bir girdi ve doğru cevap. Kural 1958’de Frank Rosenblatt’ın algılayıcısıyla ortaya çıktı. Ayrıca eğitimde hiç gösterilmeyen “doğrulama” ya da “sınav” verisiyle modelin ezberleyip ezberlemediği kontrol edilir (“Ezber ve genelleme” seviyesi). Bugünkü bütün yapay sinir ağları aynı fikrin genelleştirilmiş hâliyle eğitilir: tahmin et, hatayı ölç, ağırlıkları hatayı azaltacak yönde biraz değiştir, milyonlarca kez tekrarla.'
   },
   deeper:`<p><b>hata = istenen − çıktı</b>. Üç değer alabilir: <b>+1</b> (sustu ama ateşlemeliydi), <b>−1</b> (boşuna ateşledi), <b>0</b> (doğru).</p>
@@ -167,7 +197,7 @@ const LEVELS=[
   init(){return{x:[0,0],w:[0,0],theta:0.5,targetKey:'xor',rate:0.2};},
   targets:['xor'],
   missions:[
-    {id:'hand',text:'Elle dene: nöron sadece <b>tam olarak biri yanınca</b> ateşlesin. Dört satırın kaçını tutturabiliyorsun?',
+    {id:'hand',text:'Elle dene: <b>merdiven lambası</b> iki anahtar farklı konumdayken yansın, aynı konumdayken sönsün (tam olarak biri yukarıdaysa yanar). Dört satırın kaçını tutturabiliyorsun?',
       check:st=>NN.score(st.w,st.theta,NN.GATES.xor.target)>=3,
       aha:'3 satırı tutturdun. Ama dördüncüsü hep bozuluyor: en fazla 3. Bu senin becerinle ilgili değil; tek bir nöron bunu yapamaz.'},
     {id:'rounds',text:'Makineye öğretmeyi dene: “Otomatik”e bas ve en az 15 tur izle. Tur başına hata sayısı sıfıra iniyor mu?',
@@ -213,4 +243,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS};}

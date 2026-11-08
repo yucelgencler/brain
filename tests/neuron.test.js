@@ -88,4 +88,12 @@ test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[9].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
+test('öğrenme seviyelerinin her hedefi için gerçek hayat durumu var',()=>{
+  const {SCENARIOS}=require('../js/levels.js');
+  for(const l of LEVELS.filter(l=>l.learning))for(const k of l.targets){
+    const sc=SCENARIOS[k];assert.ok(sc,k);
+    for(const f of [sc.a.on,sc.a.off,sc.b.on,sc.b.off])assert.ok(f.icon&&f.text,k);
+    assert.ok(sc.yes&&sc.no&&sc.title&&sc.short,k);
+  }
+});
 console.log(`\n${passed} test geçti.`);
