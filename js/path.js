@@ -13,9 +13,12 @@ const onoff=v=>v?'yanık':'sönük';
 const exDesc=x=>`A ${onoff(x[0])}, B ${onoff(x[1])}`;
 
 /* ---------- Durum ve kayıt ---------- */
-const P={level:1,rec:{}};
-const levelById=id=>LEVELS.find(l=>l.id===id);
-const L=()=>levelById(P.level);
+const P={v:2,level:'light',rec:{}};
+const levelByKey=k=>LEVELS.find(l=>l.key===k);
+const levelByNo=n=>LEVELS.find(l=>l.id===n);
+const L=()=>levelByKey(P.level);
+// İlk sürüm kayıtları seviye numarasıyla tutuyordu
+const LEGACY_NO={light:1,pair:2,inhibit:3,learn:4,xor:5};
 const R=()=>P.rec[P.level];
 function freshRec(lv){
   const st=Object.assign(lv.init(),{flags:{}});
@@ -25,16 +28,17 @@ function freshRec(lv){
 function load(){
   let o=null;try{o=JSON.parse(localStorage.getItem(STORE)||'null');}catch(e){o=null;}
   for(const lv of LEVELS){
-    const f=freshRec(lv),saved=o&&o.rec&&o.rec[lv.id],r=saved&&(saved.ver||1)===(lv.ver||1)?saved:null;
+    const legacy=o&&!o.v,f=freshRec(lv),saved=o&&o.rec&&o.rec[legacy?LEGACY_NO[lv.key]:lv.key],r=saved&&(saved.ver||1)===(lv.ver||1)?saved:null;
     if(saved&&!r)f.notes=saved.notes||'';
-    P.rec[lv.id]=r?Object.assign(f,r,{st:Object.assign(f.st,r.st,{flags:Object.assign({},r.st&&r.st.flags)})}):f;
+    P.rec[lv.key]=r?Object.assign(f,r,{st:Object.assign(f.st,r.st,{flags:Object.assign({},r.st&&r.st.flags)})}):f;
   }
-  if(o&&levelById(o.level))P.level=o.level;
+  const ol=o&&(o.v?o.level:Object.keys(LEGACY_NO).find(k=>LEGACY_NO[k]===o.level));
+  if(ol&&levelByKey(ol))P.level=ol;
   const h=levelFromHash();if(h)P.level=h;
 }
 let saveT=0;
 function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(STORE,JSON.stringify(P));}catch(e){}},200);}
-function levelFromHash(){const m=location.hash.match(/^#seviye-(\d+)$/);const id=m?+m[1]:0;return levelById(id)?id:0;}
+function levelFromHash(){const m=location.hash.match(/^#seviye-(\d+)$/);const lv=m?levelByNo(+m[1]):null;return lv?lv.key:null;}
 
 function targetOf(st){if(!st.targetKey)return null;if(st.targetKey==='custom')return st.custom;return GATES[st.targetKey].target;}
 function inputsOf(st,lv){return lv.kind==='single'?[st.b]:st.x;}
@@ -43,10 +47,10 @@ function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 
 /* ---------- Seviye sayfasını kur ---------- */
 let auto=0,busy=false,lastFire=null,resetArm=0;
-function go(id){
+function go(key){
   stopAuto();busy=false;lastFire=null;
-  P.level=id;
-  if(location.hash!=='#seviye-'+id)history.replaceState(null,'','#seviye-'+id);
+  P.level=key;const no=L().id;
+  if(location.hash!=='#seviye-'+no)history.replaceState(null,'','#seviye-'+no);
   buildLevel();save();
   $('#lv').focus({preventScroll:true});window.scrollTo({top:0,behavior:'auto'});
 }
@@ -99,7 +103,7 @@ function buildLevel(){
       <textarea class="txt" id="notes" placeholder="ör. Eşik yükselince nöron daha seçici oluyor…"></textarea>
     </section>
     <nav class="lv-pn" aria-label="Seviyeler arası">
-      <button class="btn" id="prevLv"${lv.id===1?' hidden':''}>← Önceki seviye</button>
+      <button class="btn" id="prevLv"${LEVELS.indexOf(lv)===0?' hidden':''}>← Önceki seviye</button>
       <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
       ${nextHTML(lv)}
     </nav>`;
@@ -108,20 +112,22 @@ function buildLevel(){
   $('#notes').value=rec.notes||'';
   $('#notes').addEventListener('input',e=>{R().notes=e.target.value;save();});
   $('#deeper').addEventListener('toggle',e=>{if(e.target.open){R().st.flags.openedDeeper=true;refresh();}});
-  const pv=$('#prevLv');if(pv)pv.onclick=()=>go(lv.id-1);
-  const nx=$('#nextLv');if(nx)nx.onclick=()=>go(lv.id+1);
+  const li=LEVELS.indexOf(lv);
+  const pv=$('#prevLv');if(pv)pv.onclick=()=>go(LEVELS[li-1].key);
+  const nx=$('#nextLv');if(nx)nx.onclick=()=>go(LEVELS[li+1].key);
   $('#resetLv').onclick=e=>{
     const b=e.currentTarget;
-    if(resetArm&&Date.now()-resetArm<3500){resetArm=0;const notes=R().notes;P.rec[lv.id]=freshRec(lv);R().notes=notes;buildLevel();save();toast('Seviye baştan başladı. Notların duruyor.');return;}
+    if(resetArm&&Date.now()-resetArm<3500){resetArm=0;const notes=R().notes;P.rec[lv.key]=freshRec(lv);R().notes=notes;buildLevel();save();toast('Seviye baştan başladı. Notların duruyor.');return;}
     resetArm=Date.now();b.textContent='Emin misin? Tekrar bas';setTimeout(()=>{if(b.isConnected)b.textContent='Bu seviyeyi baştan al';},3500);
   };
   if(rec.st.targetKey===undefined)rec.st.targetKey=null;
   refresh();
 }
 function nextHTML(lv){
-  const nxt=levelById(lv.id+1);
-  if(nxt)return`<button class="btn primary" id="nextLv">Sonraki: ${esc(nxt.title)} →</button>`;
-  const up=UPCOMING[0];
+  const nxt=LEVELS[LEVELS.indexOf(lv)+1],skipped=ROADMAP.filter(r=>r.id>lv.id&&(!nxt||r.id<nxt.id));
+  const soonNote=skipped.length?`<span class="soon">${skipped.map(r=>`${r.id}. seviye “${esc(r.title)}” ${r.lab?'laboratuvarda':'yakında'}`).join(', ')}.</span>`:'';
+  if(nxt)return`${soonNote}<button class="btn primary" id="nextLv">Sonraki: ${esc(nxt.title)} →</button>`;
+  const up=skipped[0];
   return`<span class="soon">Sıradaki: <b>${esc(up.title)}</b> (yakında). O zamana kadar <a href="lab.html?task=digits">rakam laboratuvarına</a> göz atabilirsin.</span>`;
 }
 
@@ -264,7 +270,7 @@ function syncSliders(){
 /* ---------- Görevler ---------- */
 function checkMissions(lv,rec){
   const st=rec.st;
-  if(lv.id===2&&solves(st.w,st.theta,GATES.and.target))st.flags.andW=st.w.slice();
+  if(lv.key==='pair'&&solves(st.w,st.theta,GATES.and.target))st.flags.andW=st.w.slice();
   let fresh=[];
   for(const m of lv.missions)if(!rec.done.includes(m.id)&&m.check(st)){rec.done.push(m.id);fresh.push(m);}
   if(fresh.length){
@@ -420,7 +426,7 @@ function learnOne(staged){
   st.x=x.slice();
   if(staged&&!reducedMotion){
     busy=true;rec.last=r;rec.pendingShown=true;refresh();
-    setTimeout(()=>{busy=false;rec.pendingShown=false;if(levelById(P.level)===L()&&R()===rec)applyStep(r);},r.err?1400:900);
+    setTimeout(()=>{busy=false;rec.pendingShown=false;if(R()===rec)applyStep(r);},r.err?1400:900);
     return;
   }
   rec.last=r;applyStep(r);
@@ -466,13 +472,13 @@ function stepHTML(r,pending){
   return`<ol class="steps">${items.map(s=>`<li>${s}</li>`).join('')}</ol>`;
 }
 function learnStage(lv,rec){
-  if(lv.id!==4)return 2;
+  if(lv.key!=='learn')return 2;
   const learned=rec.st.flags.learned&&Object.keys(rec.st.flags.learned).length;
   return learned?2:rec.steps>=4?1:0;
 }
 function updateLearn(lv,rec){
   const st=rec.st,T=targetOf(st),stage=learnStage(lv,rec);
-  if(stage>(rec.stage||0)&&lv.id===4){
+  if(stage>(rec.stage||0)&&lv.key==='learn'){
     setTimeout(()=>toast(stage===1?'Bir tur bitti. Artık bir turu tek seferde ya da otomatik oynatabilirsin; tur başına hata grafiği de açıldı.':'Öğrendi! Şimdi öğrenme hızı, başka davranışlar ve öğrenme defteri de açıldı.'),stage===2?2200:0);
   }
   rec.stage=stage;
@@ -504,12 +510,14 @@ function updateLearn(lv,rec){
 function renderNav(){
   const el=$('#lvnav');
   el.innerHTML=PARTS.map(p=>{
-    const items=[...LEVELS.filter(l=>l.part===p.id).map(l=>{
-      const rec=P.rec[l.id],n=l.missions.length,d=rec.done.length,cur=l.id===P.level;
-      return`<li><a href="#seviye-${l.id}" class="${cur?'cur':''}" ${cur?'aria-current="page"':''}><span class="ln">${l.id}</span><span class="lt">${esc(l.title)}</span><span class="lp ${d===n?'full':''}">${d===n?'✓':d+'/'+n}</span></a></li>`;
-    }),...UPCOMING.filter(u=>u.part===p.id).map(u=>u.lab
-      ?`<li><a href="lab.html?task=${u.lab}" class="lab"><span class="ln">${u.id}</span><span class="lt">${esc(u.title)}</span><span class="lp">${u.note}</span></a></li>`
-      :`<li><span class="soon-i"><span class="ln">${u.id}</span><span class="lt">${esc(u.title)}</span><span class="lp">${u.note}</span></span></li>`)];
+    const items=ROADMAP.filter(r=>r.part===p.id).map(r=>{
+      if(r.level){
+        const l=r.level,rec=P.rec[l.key],n=l.missions.length,d=rec.done.length,cur=l.key===P.level;
+        return`<li><a href="#seviye-${r.id}" class="${cur?'cur':''}" ${cur?'aria-current="page"':''}><span class="ln">${r.id}</span><span class="lt">${esc(l.title)}</span><span class="lp ${d===n?'full':''}">${d===n?'✓':d+'/'+n}</span></a></li>`;
+      }
+      if(r.lab)return`<li><a href="lab.html?task=${r.lab}" class="lab"><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></a></li>`;
+      return`<li><span class="soon-i"${r.about?` title="${esc(r.about)}"`:''}><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></span></li>`;
+    });
     return`<div class="pgroup"><h3>${esc(p.title)}<small>${esc(p.sub)}</small></h3><ol>${items.join('')}</ol></div>`;
   }).join('');
 }
@@ -531,9 +539,9 @@ function refresh(fromSlider){
 let toastT=0;
 function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),3800);}
 
-window.addEventListener('hashchange',()=>{const id=levelFromHash();if(id&&id!==P.level)go(id);});
+window.addEventListener('hashchange',()=>{const k=levelFromHash();if(k&&k!==P.level)go(k);});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){try{localStorage.setItem(STORE,JSON.stringify(P));}catch(e){}}});
 
 load();
-history.replaceState(null,'','#seviye-'+P.level);
+history.replaceState(null,'','#seviye-'+L().id);
 buildLevel();

@@ -6,7 +6,7 @@ const {LEVELS}=require('../js/levels.js');
 
 let passed=0;
 function test(name,fn){fn();passed++;console.log('✓ '+name);}
-const lv=id=>LEVELS.find(l=>l.id===id);
+const lv=k=>LEVELS.find(l=>l.key===k);
 const mission=(l,id)=>lv(l).missions.find(m=>m.id===id);
 const pair=(w,theta,flags)=>({x:[0,0],w,theta,flags:flags||{}});
 function learnUntil(target,rate,maxRounds){
@@ -42,43 +42,50 @@ test('sayı biçimi Türkçe',()=>{assert.strictEqual(N.num(0.5),'0,5');assert.s
 
 // Görevlerin kontrolleri bilinen çözümlerle tamamlanabiliyor mu, başlangıçta tamamlanmış mı?
 test('seviye 1 görevleri',()=>{
-  const st=lv(1).init();
-  assert.ok(!mission(1,'on').check(st));assert.ok(mission(1,'on').check({...st,b:1}));
-  assert.ok(!mission(1,'dim').check(st));assert.ok(mission(1,'dim').check({...st,b:0.4}));
-  assert.ok(!mission(1,'bright').check(st));assert.ok(mission(1,'bright').check({...st,b:1,theta:0.8}));
-  assert.ok(mission(1,'bright').check({...st,w:[0.7],theta:0.55}));
-  assert.ok(!mission(1,'cut').check(st));assert.ok(mission(1,'cut').check({...st,w:[0]}));
+  const st=lv('light').init();
+  assert.ok(!mission('light','on').check(st));assert.ok(mission('light','on').check({...st,b:1}));
+  assert.ok(!mission('light','dim').check(st));assert.ok(mission('light','dim').check({...st,b:0.4}));
+  assert.ok(!mission('light','bright').check(st));assert.ok(mission('light','bright').check({...st,b:1,theta:0.8}));
+  assert.ok(mission('light','bright').check({...st,w:[0.7],theta:0.55}));
+  assert.ok(!mission('light','cut').check(st));assert.ok(mission('light','cut').check({...st,w:[0]}));
 });
 test('seviye 2 görevleri başlangıçta açık, çözümle kapanıyor',()=>{
-  const s0={...lv(2).init(),flags:{}};
-  for(const m of lv(2).missions)assert.ok(!m.check(s0),m.id);
-  assert.ok(mission(2,'and').check(pair([0.6,0.6],1)));
-  assert.ok(mission(2,'or').check(pair([0.6,0.6],0.6)));
-  assert.ok(mission(2,'switch').check(pair([0.6,0.6],0.6,{andW:[0.6,0.6]})));
-  assert.ok(!mission(2,'switch').check(pair([1,1],1,{andW:[0.6,0.6]})));
+  const s0={...lv('pair').init(),flags:{}};
+  for(const m of lv('pair').missions)assert.ok(!m.check(s0),m.id);
+  assert.ok(mission('pair','and').check(pair([0.6,0.6],1)));
+  assert.ok(mission('pair','or').check(pair([0.6,0.6],0.6)));
+  assert.ok(mission('pair','switch').check(pair([0.6,0.6],0.6,{andW:[0.6,0.6]})));
+  assert.ok(!mission('pair','switch').check(pair([1,1],1,{andW:[0.6,0.6]})));
 });
 test('seviye 3 görevleri',()=>{
-  const s0={...lv(3).init(),flags:{}};
-  for(const m of lv(3).missions)assert.ok(!m.check(s0),m.id);
-  assert.ok(mission(3,'aNotB').check(pair([1,-1],0.5)));
-  assert.ok(mission(3,'nor').check(pair([-1,-1],-0.5)));
-  assert.ok(mission(3,'spont').check(pair([0,0],-0.1)));
+  const s0={...lv('inhibit').init(),flags:{}};
+  for(const m of lv('inhibit').missions)assert.ok(!m.check(s0),m.id);
+  assert.ok(mission('inhibit','aNotB').check(pair([1,-1],0.5)));
+  assert.ok(mission('inhibit','nor').check(pair([-1,-1],-0.5)));
+  assert.ok(mission('inhibit','spont').check(pair([0,0],-0.1)));
 });
 test('seviye 1–3 çözümleri kaydırıcı aralığında',()=>{
   const inR=(v,[lo,hi])=>v>=lo-1e-9&&v<=hi+1e-9;
-  assert.ok(inR(0.8,lv(1).ranges.theta));
-  for(const v of [0.6,1])assert.ok(inR(v,lv(2).ranges.w));
-  for(const v of [1,-1,-0.5])assert.ok(inR(v,lv(3).ranges.w)&&inR(v,lv(3).ranges.theta));
+  assert.ok(inR(0.8,lv('light').ranges.theta));
+  for(const v of [0.6,1])assert.ok(inR(v,lv('pair').ranges.w));
+  for(const v of [1,-1,-0.5])assert.ok(inR(v,lv('inhibit').ranges.w)&&inR(v,lv('inhibit').ranges.theta));
 });
 test('seviye 4–5 başlangıçta hiçbir görev tamamlanmamış',()=>{
-  for(const id of [4,5]){const s={...lv(id).init(),flags:{}};for(const m of lv(id).missions)assert.ok(!m.check(s),id+':'+m.id);}
+  for(const id of ['learn','xor']){const s={...lv(id).init(),flags:{}};for(const m of lv(id).missions)assert.ok(!m.check(s),id+':'+m.id);}
 });
 test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
-  const st=lv(4).init(),T=N.GATES.and.target;
+  const st=lv('learn').init(),T=N.GATES.and.target;
   const first=N.learnStep(N.COMBOS[0],st.w,st.theta,T[0],st.rate);
   assert.strictEqual(first.err,-1);assert.deepStrictEqual(first.dw,[0,0]);
   let w=st.w,theta=st.theta,r=0;
   for(;r<50;r++){const o=N.learnRound(w,theta,T,st.rate);w=o.w;theta=o.theta;if(!o.mistakes)break;}
   assert.ok(r>=2&&r<50,'tur sayısı '+r);assert.ok(N.solves(w,theta,T));
+});
+test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
+  const {ROADMAP}=require('../js/levels.js');
+  ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,6]);
+  assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[9].key,'hebb');
+  for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
 console.log(`\n${passed} test geçti.`);

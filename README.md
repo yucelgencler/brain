@@ -13,16 +13,20 @@ Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görev
 | 1 | Algı | Tek bir ışık hücresi | girdi, bağlantı, eşik, ya hep ya hiç | hazır |
 | 2 | Algı | İki ışık, bir karar | sinyalleri toplamak, VE / VEYA, karar haritası | hazır |
 | 3 | Algı | Susturan bağlantı | negatif bağlantı, kendiliğinden ateşleme, karanlık dedektörü | hazır |
-| 4 | Öğrenme | Kendi kendine öğrenme | hatadan düzeltme (algılayıcı kuralı), adım adım | hazır |
-| 5 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
-| 6 | Anlama | İki nöron birlikte | gizli nöron, ara temsil | yakında |
-| 7 | Anlama | Yatay mı dikey mi? | algı alanı, çizgi dedektörleri | yakında |
-| 8 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
-| 9 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
-| 10 | Hafıza | Ezber ve genelleme | eğitim / sınav kartları | yakında |
-| 11 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
-| 12 | Anlam | Kelimeler ve anlam | anlam uzayı | laboratuvarda |
-| 13 | Anlam | Okuma ve kayma sorunu | şekilden okuma, paylaşımlı dedektörler | laboratuvarda |
+| 4 | Öğrenme | Öğretmenle öğrenme | etiketli eğitim verisi, hatadan düzeltme (algılayıcı kuralı) | hazır |
+| 5 | Öğrenme | Tahmin ederek öğrenme | öğretmen yok, cevabı bir sonraki an veriyor; sürpriz = hata | yakında |
+| 6 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
+| 7 | Anlama | İki nöron birlikte | gizli nöron, ara temsil | yakında |
+| 8 | Anlama | Yatay mı dikey mi? | algı alanı, çizgi dedektörleri | yakında |
+| 9 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
+| 10 | Hafıza | Birlikte yanan, birlikte bağlanır | öğretmensiz öğrenme, parçadan bütünü tamamlama | yakında |
+| 11 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
+| 12 | Hafıza | Ezber ve genelleme | eğitim ve doğrulama (sınav) verisi | yakında |
+| 13 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
+| 14 | Anlam | Kelimeler ve anlam | anlam uzayı | laboratuvarda |
+| 15 | Anlam | Okuma ve kayma sorunu | şekilden okuma, paylaşımlı dedektörler | laboratuvarda |
+
+Seviye numaraları `js/levels.js` içindeki `ROADMAP` sırasından hesaplanır; ilerleme her seviyenin sabit `key` adıyla saklandığı için araya yeni seviye eklemek kayıtları bozmaz.
 
 İlkeler: ekranda sadece o seviyenin getirdiği kontroller olur; hesaplar canlı sayılarla gösterilir; beyin benzetmesinin sınırları her seviyede açıkça yazılır.
 
@@ -48,7 +52,7 @@ tests/core.test.js    Laboratuvar çekirdeği testleri
 
 ## Yeni bir seviye eklemek
 
-`js/levels.js` başındaki açıklamada seviye nesnesinin alanları var: `kind` (`single` ya da `pair`), `ranges`, `init()`, `missions` (her biri `check(st)` ve tamamlanınca görünen `aha` metniyle), `cards` ve `deeper`. Öğrenme paneli için `learning: true` ve `targets`. Görevlerin kontrolleri arayüzden bağımsız olduğu için Node ile test edilebilir.
+`js/levels.js` başındaki açıklamada seviye nesnesinin alanları var: `key`, `kind` (`single` ya da `pair`), `ranges`, `init()`, `missions` (her biri `check(st)` ve tamamlanınca görünen `aha` metniyle), `cards` ve `deeper`. Öğrenme paneli için `learning: true` ve `targets`. Görevlerin kontrolleri arayüzden bağımsız olduğu için Node ile test edilebilir. Seviyeyi `ROADMAP` içinde doğru yere de koy.
 
 ## Testler
 
