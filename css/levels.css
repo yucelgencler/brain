@@ -272,3 +272,117 @@
 
 .duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 @media (max-width:900px){.duo{grid-template-columns:1fr}}
+
+/* ================= Tezgâh düzeni ================= */
+.wrap{padding-top:14px}
+/* Üst şerit */
+.bar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px clamp(12px,3vw,32px);background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.logo{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-weight:700;font-size:21px;letter-spacing:-0.02em;color:var(--ink);text-decoration:none}
+.lvswitch{display:flex;align-items:center;gap:4px}
+#barLevel{font-weight:600;font-size:14px;max-width:min(52vw,420px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#barLevel .bl-n{color:var(--accent);margin-right:4px}
+.btn:disabled{opacity:.4;cursor:default}
+.bar-missions{display:flex;align-items:center;gap:5px;margin-left:auto}
+.bm-l{font-size:12.5px;color:var(--ink-2);margin-right:2px}
+.bm{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ink-2);background:var(--surface);font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.bm.done{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.bm.active{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.labbtn{text-decoration:none;color:var(--ink)}
+/* Seviye menüsü (açılır) */
+.lvmenu{position:fixed;z-index:40;top:52px;left:50%;transform:translateX(-50%);width:min(980px,94vw);max-height:76vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(20,10,50,.18);padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.lvmenu[hidden]{display:none}
+/* Başlık */
+.lv-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 22px;margin-bottom:6px}
+.lv-head h2{font-size:clamp(24px,2.6vw,32px)}
+.lv-head .kicker{margin:0}
+.lv-head .lv-q{margin:0;font-size:16px;flex:1 1 320px}
+details.route{margin:6px 0 10px;max-width:none;padding:0;border-left:0;background:none;border:0}
+details.route>summary{cursor:pointer;color:var(--ink-2);font-size:13.5px;display:inline-block}
+details.route[open]{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:8px 14px}
+details.route p{margin:6px 0 2px}
+/* Görev bandı */
+.mission{margin:0 0 12px}
+.mis-cur{display:flex;gap:12px;align-items:baseline;background:color-mix(in srgb,var(--accent) 7%,var(--surface));border:1.5px solid var(--accent);border-radius:12px;padding:10px 16px;font-size:15.5px;line-height:1.45}
+.mis-cur.done{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 8%,var(--surface))}
+.mis-n{font-weight:700;color:var(--accent);white-space:nowrap}
+.mis-cur.done .mis-n{color:var(--ok)}
+.aha-box{background:color-mix(in srgb,var(--ok) 9%,var(--surface));border:1.5px solid var(--ok);border-radius:12px;padding:10px 16px;animation:stepIn .35s ease-out}
+.aha-h{font-weight:600;font-size:15px}
+.aha-box p{margin:4px 0 8px;font-size:14.5px;line-height:1.55;max-width:95ch}
+/* Tezgâh */
+.bench{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}
+.bench.has-card{grid-template-columns:232px minmax(0,1fr) 230px}
+@media (max-width:1150px){.bench.has-card{grid-template-columns:220px minmax(0,1fr)}.bench.has-card .bench-answer{grid-column:1/-1}}
+@media (max-width:760px){.bench,.bench.has-card{grid-template-columns:1fr}}
+.bench-card{display:flex;flex-direction:column;gap:8px}
+.btn.big{padding:12px 14px;font-size:16px;width:100%}
+.bench-more{display:flex;flex-wrap:wrap;gap:5px}
+.bench-more .btn{flex:1 1 auto}
+.bench-card .hint{margin:0;font-size:12.5px}
+.bench-scene{display:flex;flex-direction:column;gap:8px;min-width:0}
+.bench-scene .hint{margin:0}
+.bench-scene .gauge{padding-top:20px}
+.bench-scene .g-scale{margin-top:24px}
+#scene .out-t,#scene .out-s{display:none}
+.sliders{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.sl{padding:6px 10px}
+.bench-answer{display:flex;flex-direction:column;gap:4px;position:sticky;top:64px}
+.ans-l{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.ans-big{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;font-size:30px;font-weight:700;line-height:1.1;color:var(--ink-2);border-radius:8px;padding:0 4px;margin-left:-4px;overflow-wrap:anywhere}
+.ans-big.on{color:var(--node-on)}
+.ans-sub{font-size:13px;color:var(--ink-2)}
+.ans-v{font-size:13.5px;font-weight:500;border-radius:8px;padding:4px 8px;margin-top:4px}
+.ans-v.ok{background:color-mix(in srgb,var(--ok) 14%,var(--surface));color:var(--ok)}
+.ans-v.bad{background:color-mix(in srgb,var(--bad) 12%,var(--surface));color:var(--bad)}
+.bench-answer .calc{margin-top:8px;border:0;border-top:1px dashed var(--line);border-radius:0;background:none;padding:8px 0 0;font-size:14px;line-height:1.7}
+.bench-answer .calc .cl.sum{font-weight:500}
+.dimtxt{color:var(--ink-2);font-size:12.5px}
+.tcard{gap:5px}
+/* Adım şeridi */
+.strip{display:flex;align-items:stretch;gap:6px;margin-top:12px}
+.ph-box{flex:1 1 0;min-width:0;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--line);border-radius:12px;padding:8px 12px;animation:stepIn .35s ease-out backwards;animation-delay:calc(var(--d,0) * .22s)}
+.ph-box.ok{border-top-color:var(--ok)} .ph-box.bad{border-top-color:var(--bad)}
+.ph-box.empty{border-top-color:var(--accent)}
+.ph-t{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.ph-b{font-size:14px;line-height:1.5}
+.ph-arrow{align-self:center;color:var(--ink-2);font-size:14px}
+.chg{font-size:13.5px;margin-top:2px}
+.chg.up b{color:var(--ok)} .chg.down b{color:var(--bad)} .chg.same{color:var(--ink-2)}
+@media (max-width:900px){.strip{flex-direction:column}.ph-arrow{display:none}}
+@media (prefers-reduced-motion: reduce){.ph-box,.aha-box{animation:none}}
+/* Alt sıra */
+.bench-bottom{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;align-items:start}
+.bench-bottom.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:1150px){.bench-bottom.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.bench-bottom,.bench-bottom.three{grid-template-columns:1fr}}
+.learn-side h3{margin-bottom:6px}
+.lset{margin-bottom:10px}
+.lv:not(.stage1) .st1,.lv:not(.stage2) .st2{display:none}
+.lv.stage1 .st0only{display:none}
+/* Okuma kısmı */
+.reading{margin-top:30px;padding-top:6px;border-top:1px solid var(--line)}
+.read-duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;align-items:start}
+@media (max-width:860px){.read-duo{grid-template-columns:1fr}}
+.notes textarea{min-height:120px}
+/* Değişen değerler parlasın */
+.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%,35%{background:color-mix(in srgb,var(--light) 55%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--light) 55%,transparent)}100%{background:transparent;box-shadow:none}}
+text.flash{animation:flashSvg 1.4s ease-out}
+@keyframes flashSvg{0%,35%{stroke:var(--light);stroke-width:9px}100%{stroke:var(--surface);stroke-width:5px}}
+td.wcell.flash{animation:flashCell 1.4s ease-out}
+@keyframes flashCell{0%,35%{box-shadow:inset 0 0 0 3px var(--light)}100%{box-shadow:none}}
+@media (prefers-reduced-motion: reduce){.flash,text.flash,td.wcell.flash{animation:none}}
+.soma-sub{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
+
+#scene{max-height:300px}
+#mscene{max-height:400px}
+.gauge.hide{display:none}
+details.manual>summary{cursor:pointer;color:var(--ink-2);font-size:13.5px;padding:2px 0}
+details.manual[open]>summary{margin-bottom:6px}
+.aha-box{display:flex;gap:14px;align-items:center;padding:8px 14px}
+.aha-main{flex:1;min-width:0}
+.aha-h{font-size:14.5px}
+.aha-box p{margin:2px 0 0;font-size:14px;line-height:1.5}
+.aha-box .btn{flex:none}
+@media (max-width:760px){.aha-box{flex-direction:column;align-items:stretch}}
+#mscene{max-height:340px}

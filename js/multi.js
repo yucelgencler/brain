@@ -6,6 +6,7 @@
    path.js'teki yardımcıları ($, esc, L, R, refresh, toast…) kullanır.
 ------------------------------------------------------------------- */
 let mAuto=0,mLastCard='';
+function multiResetView(){mLastCard='';}
 const MX={fx:150,fy0:42,fdy:52,fs:46,cx:520,cy:[112,252],cr:42};
 
 function multiStop(){
@@ -17,37 +18,29 @@ function answerWord(lv,outs){const on=lv.outs.filter((o,k)=>outs[k]);return on.l
 const deckOk=(lv,st,c)=>multiOutputs(c.x,st.W,st.th).every((o,k)=>o===c.y[k]);
 
 function multiGridHTML(lv){
-  return`<div class="lv-grid">
-    <div class="lv-main">
-      <div class="stage scene-wrap"><svg id="mscene" viewBox="0 0 730 350" role="img" aria-label="Özellik nöronları ve kavram nöronları"></svg></div>
-      <p class="calc" id="mcalc" aria-live="polite"></p>
-      <div class="panel learn" id="mlearn">
-        <div class="ph"><h3>Öğrenme</h3><span class="pc">öğrenme hızı 0,2</span></div>
-        <div class="row">
-          <button class="btn primary" id="mOne">Bir kart göster</button>
-          <button class="btn" id="mRound">Bir tur (6 kart)</button>
-          <button class="btn" id="mAuto" aria-pressed="false">Otomatik ▶</button>
-          <button class="btn ghost" id="mReset">Boş beyinle başla</button>
-        </div>
+  return`<section class="bench has-card">
+      <div class="bench-card">
+        <div class="tcard-wrap" id="mcard"></div>
+        <button class="btn primary big" id="mOne">Bir kart göster</button>
+        <div class="bench-more"><button class="btn small" id="mRound">Bir tur</button><button class="btn small" id="mAuto" aria-pressed="false">Otomatik ▶</button><button class="btn ghost small" id="mReset">Boş beyin</button></div>
         <p class="hint" id="mNext"></p>
-        <div class="lcard-row"><div class="tcard-wrap" id="mcard"></div><div class="lstep" id="mstep" aria-live="polite"></div></div>
-        <div class="lrounds"><div class="ph"><h4>Tur başına yanlış kart</h4><span class="pc" id="mRoundsN"></span></div><svg id="mrounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="mRoundsHint"></p></div>
       </div>
-      <div class="duo">
-        <div class="panel"><h3>Ortak mı, farklı mı?</h3>
+      <div class="bench-scene"><div class="stage scene-wrap"><svg id="mscene" viewBox="0 0 730 350" role="img" aria-label="Özellik nöronları ve kavram nöronları"></svg></div>
+        <p class="hint">Özellik nöronlarına tıklayarak kendi meyveni yapabilirsin.</p></div>
+      <div class="bench-answer panel" id="manswer" aria-live="polite"></div>
+    </section>
+    <section class="strip" id="mstep" aria-live="polite"></section>
+    <section class="bench-bottom three">
+      <div class="panel"><div class="ph"><h3>Eğitim kartları</h3><span class="pc" id="mScore"></span></div>
+        <p class="hint">Bir karta tıklarsan beyne sadece gösterilir; öğretmek için “Bir kart göster”i kullan.</p><div class="mdeck" id="mdeck"></div>
+        <div class="lrounds"><div class="ph"><h3>Tur başına yanlış kart</h3><span class="pc" id="mRoundsN"></span></div><svg id="mrounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="mRoundsHint"></p></div></div>
+      <div class="panel"><h3>Ortak mı, farklı mı?</h3>
         <p class="hint">İki kart seç: hangi özellik nöronları ikisinde de ateşliyor, hangi kavram nöronu hangisinde?</p>
         <div class="row cmp-sel"><select id="cmpA" aria-label="Birinci kart"></select><span class="pc">ile</span><select id="cmpB" aria-label="İkinci kart"></select></div>
         <table class="tt cmp" id="cmpT"></table><p class="cmp-sum" id="cmpSum"></p></div>
-        <div class="panel"><h3>Bağlantı tablosu</h3>
+      <div class="panel"><h3>Bağlantı tablosu</h3>
         <p class="hint">Her özellik nöronundan her kavram nöronuna giden bağlantının gücü. Aynı özellik iki nörona farklı sayılar verebilir.</p><table class="tt wt" id="wtT"></table></div>
-      </div>
-    </div>
-    <aside class="lv-side">
-      <div class="panel"><div class="ph"><h3>Görevler</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></div>
-      <div class="panel"><div class="ph"><h3>Eğitim kartları</h3><span class="pc" id="mScore"></span></div>
-        <p class="hint">Öğretmenin 6 kartı. Bir karta tıklarsan beyne sadece gösterilir; öğretmek için “Bir kart göster”i kullan.</p><div class="mdeck" id="mdeck"></div></div>
-    </aside>
-  </div>`;
+    </section>`;
 }
 
 function wireMulti(lv){
@@ -144,8 +137,12 @@ function updateMulti(lv,rec){
   });
   // gösterilen şey ve cevap
   const c=st.shown>=0?lv.deck[st.shown]:null,fn=featNames(lv,st.x);
-  $('#mcalc').innerHTML=`${c?`Gösterilen kart: <b>${c.icon} ${esc(c.name)}</b>`:'<b>Kendi meyven</b>'} (${fn.length?esc(fn.join(', ')):'hiçbir özellik yok'})
-    <span class="op">→</span> beynin cevabı: <span class="res ${outs.some(Boolean)?'on':''}">${esc(answerWord(lv,outs))}</span>${c?` <span class="op">·</span> doğrusu: <b>${esc(answerWord(lv,c.y))}</b> ${deckOk(lv,st,c)?'<span class="mk-ok">✓</span>':'<span class="mk-bad">✗</span>'}`:''}`;
+  const word=answerWord(lv,outs),right=c?answerWord(lv,c.y):null,ok=c?deckOk(lv,st,c):null;
+  $('#manswer').innerHTML=`<div class="ans-l">Beynin şimdiki cevabı</div><div class="ans-big ${outs.some(Boolean)?'on':''}" data-fl="ans">${esc(word.toLocaleUpperCase('tr-TR'))}</div>
+    <div class="ans-sub">${c?`gösterilen: ${c.icon} ${esc(c.name)}`:'kendi meyven'}</div>
+    ${c?`<div class="ans-v ${ok?'ok':'bad'}">doğru cevap: <b>${esc(right)}</b> ${ok?'✓':'✗'}</div>`:''}
+    <div class="calc">${lv.outs.map((o,k)=>`<div class="cl">${o.icon} ${esc(o.name)}: toplam <b data-fl="ms${k}">${num(sums[k])}</b> ${outs[k]?'≥':'<'} eşik <b>${num(st.th[k])}</b></div>`).join('')}
+      <div class="cl dimtxt">${fn.length?esc(fn.join(', ')):'hiçbir özellik yok'}</div></div>`;
   // eğitim kartları
   const okN=lv.deck.filter(c=>deckOk(lv,st,c)).length;
   $('#mScore').textContent=`${okN}/${lv.deck.length} doğru`;
@@ -180,23 +177,23 @@ function renderWeights(lv,st){
   const cell=w=>{const a=Math.min(Math.abs(w),1),col=w>0?'var(--pos)':'var(--neg)';
     return`<td class="num wcell" style="background:${Math.abs(w)<1e-9?'transparent':`color-mix(in srgb, ${col} ${Math.round(12+a*45)}%, var(--surface))`}">${sgn(w)}</td>`;};
   let h=`<thead><tr><th>özellik</th>${lv.outs.map(o=>`<th>${o.icon} ${esc(o.name)}</th>`).join('')}</tr></thead><tbody>`;
-  lv.features.forEach((f,i)=>{h+=`<tr><td>${f.icon} ${esc(f.name)}</td>${lv.outs.map((o,k)=>cell(st.W[k][i])).join('')}</tr>`;});
-  h+=`<tr class="concept"><td>eşik</td>${lv.outs.map((o,k)=>`<td class="num">${num(st.th[k])}</td>`).join('')}</tr>`;
+  lv.features.forEach((f,i)=>{h+=`<tr><td>${f.icon} ${esc(f.name)}</td>${lv.outs.map((o,k)=>cell(st.W[k][i]).replace('<td ',`<td data-fl="w${k}_${i}" `)).join('')}</tr>`;});
+  h+=`<tr class="concept"><td>eşik</td>${lv.outs.map((o,k)=>`<td class="num" data-fl="t${k}">${num(st.th[k])}</td>`).join('')}</tr>`;
   $('#wtT').innerHTML=h+'</tbody>';
 }
 
 function mStepHTML(lv,r){
-  const c=lv.deck[r.card],act=featNames(lv,r.x),items=[
-    `<b>Öğretmenin kartı:</b> ${c.icon} ${esc(c.name)} (${esc(act.join(', '))}). Doğru cevap: <b>${esc(answerWord(lv,r.y))}</b>.`];
+  const c=lv.deck[r.card],act=featNames(lv,r.x);
+  const boxes=[{t:'Kart',h:`${c.icon} <b>${esc(c.name)}</b><br>${esc(act.join(', '))}<br>doğru cevap: <b>${esc(answerWord(lv,r.y))}</b>`}];
   r.per.forEach((p,k)=>{
-    const o=lv.outs[k],head=`<b>${o.icon} ${esc(o.name)} nöronu:</b> toplam ${num(p.sum)} ${p.out?'≥':'<'} eşik ${num(r.th0[k])} → ${p.out?'ateşledi':'sustu'}`;
-    if(!p.err){items.push(`${head}; doğru <span class="mk-ok">✓</span>. Değişiklik yok.`);return;}
-    const ch=p.err>0?'+':'−',dir=p.err>0?'güçlendi':'zayıfladı';
-    items.push(`${head} ama ${p.err>0?'ateşlemeliydi':'susmalıydı'}. <span class="mk-bad">Hata ${p.err>0?'+1':'−1'}.</span> Bu kartta ateşleyen özelliklerin (${esc(act.join(', '))}) ${esc(o.name)} bağlantıları ${dir} (${ch}0,2); eşik ${sgn(p.dtheta)}.`);
+    const o=lv.outs[k],head=`toplam ${num(p.sum)} ${p.out?'≥':'<'} eşik ${num(r.th0[k])} → ${p.out?'ateşledi':'sustu'}`;
+    if(!p.err){boxes.push({t:`${o.icon} ${esc(o.name)} nöronu`,cls:'ok',h:`${head}<br><span class="mk-ok">doğru ✓</span> → değişiklik yok`});return;}
+    boxes.push({t:`${o.icon} ${esc(o.name)} nöronu`,cls:'bad',h:`${head}<br><span class="mk-bad">hata ${p.err>0?'+1':'−1'}</span>: ${p.err>0?'ateşlemeliydi':'susmalıydı'}
+      <div class="chg ${p.err>0?'up':'down'}">${esc(act.join(', '))} → ${esc(o.name)} bağlantıları <b>${p.err>0?'+':'−'}0,2</b></div>
+      <div class="chg ${p.dtheta<0?'up':'down'}">eşik <b>${num(r.th0[k])} → ${num(p.theta)}</b></div>`});
   });
-  const errs=r.per.filter(p=>p.err).length;
-  if(errs===1)items.push(`<span class="pend">Öbür nöronun bağlantılarına dokunulmadı: her nöron sadece kendi hatasından öğrenir.</span>`);
-  return`<ol class="steps">${items.map(s=>`<li>${s}</li>`).join('')}</ol>`;
+  if(r.per.filter(p=>p.err).length===1)boxes.push({t:'Not',h:'Öbür nöronun bağlantılarına dokunulmadı: her nöron sadece kendi hatasından öğrenir.'});
+  return stripHTML(boxes);
 }
 
 function mCardHTML(lv,c,outs,label){
@@ -206,7 +203,7 @@ function mCardHTML(lv,c,outs,label){
     <div class="tc-fruit"><span class="${c.cls||''}" aria-hidden="true">${c.icon}</span><span class="tc-scn">${esc(c.name)}</span></div>
     <div class="tc-chips">${lv.features.map((f,i)=>c.x[i]?`<span class="chipf">${f.icon} ${esc(f.name)}</span>`:'').join('')}</div>
     <div class="tc-ans">Doğru cevap: <b>${esc(answerWord(lv,c.y))}</b></div>
-    <div class="tc-guess">${outs?`Beyin: <b>${esc(answerWord(lv,outs))}</b> ${ok?'✓':'✗'}`:'Beyin henüz görmedi'}</div>
+    <div class="tc-guess">${outs?`Beyin o an: <b>${esc(answerWord(lv,outs))}</b> ${ok?'✓':'✗'}`:'Beyin henüz görmedi'}</div>
   </div>`;
 }
 
@@ -214,8 +211,8 @@ function updateMultiLearn(lv,rec){
   const n=lv.deck.length,nx=lv.deck[rec.cursor%n],wrap=$('#mcard');
   $('#mNext').textContent=`Sıradaki kart: ${nx.icon} ${nx.name}. Kartlar hep aynı sırayla gelir; altısı bir tur eder.`;
   let key;
-  if(rec.last){const r=rec.last;wrap.innerHTML=mCardHTML(lv,lv.deck[r.card],r.per.map(p=>p.out),'Öğretmenin kartı');$('#mstep').innerHTML=mStepHTML(lv,r);key='c'+rec.cardSeq;}
-  else{wrap.innerHTML=mCardHTML(lv,nx,null,'Sıradaki kart');$('#mstep').innerHTML=`<p class="hint">Henüz kart gösterilmedi. “Bir kart göster”e bas: öğretmen soldaki kartı gösterir, iki kavram nöronu da tahmin eder, yanılan kendi bağlantılarını düzeltir.</p>`;key='n'+rec.cursor;}
+  if(rec.last){const r=rec.last;wrap.innerHTML=mCardHTML(lv,lv.deck[r.card],r.per.map(p=>p.out),'Öğretmenin kartı');key='c'+rec.cardSeq;if(key!==mLastCard)$('#mstep').innerHTML=mStepHTML(lv,r);}
+  else{wrap.innerHTML=mCardHTML(lv,nx,null,'Sıradaki kart');$('#mstep').innerHTML=`<div class="ph-box empty"><div class="ph-b">Henüz kart gösterilmedi. Soldaki <b>“Bir kart göster”</b>e bas: öğretmen kartı gösterir, iki kavram nöronu da tahmin eder, yanılan kendi bağlantılarını düzeltir. Her nöronun ne yaptığı burada yan yana görünecek.</div></div>`;key='n'+rec.cursor;}
   if(key!==mLastCard&&!mAuto&&!reducedMotion)wrap.firstElementChild.classList.add('deal');
   mLastCard=key;
   const rs=rec.rounds,svg=$('#mrounds'),cnt=Math.max(15,rs.length),bw=400/cnt,u=60/n;

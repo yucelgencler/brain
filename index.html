@@ -11,19 +11,19 @@
 <link rel="stylesheet" href="css/levels.css">
 </head>
 <body>
-<div class="wrap">
-  <header class="ptop">
-    <div class="brand">
-      <h1>Boş Beyin</h1>
-      <p>Beyin bir girdiyi nasıl algılar, nasıl cevaba çevirir, nasıl öğrenir? Tek bir nörondan başla, her seviyede bir fikir ekle.</p>
-    </div>
-    <a class="btn ghost labbtn" href="lab.html">Serbest laboratuvar →</a>
-  </header>
-
-  <div class="path">
-    <nav class="lvnav" id="lvnav" aria-label="Seviyeler"></nav>
-    <main class="lv" id="lv" tabindex="-1"></main>
+<header class="bar">
+  <a class="logo" href="#seviye-1" title="Beyin bir girdiyi nasıl algılar, nasıl cevaba çevirir, nasıl öğrenir?">Boş Beyin</a>
+  <div class="lvswitch">
+    <button class="btn small" id="barPrev" aria-label="Önceki seviye">◀</button>
+    <button class="btn small" id="barLevel" aria-haspopup="true" aria-expanded="false" aria-controls="lvnav"></button>
+    <button class="btn small" id="barNext" aria-label="Sonraki seviye">▶</button>
   </div>
+  <div class="bar-missions" id="barMissions"></div>
+  <a class="btn ghost small labbtn" href="lab.html">Laboratuvar →</a>
+</header>
+<nav class="lvmenu" id="lvnav" aria-label="Bütün seviyeler" hidden></nav>
+<div class="wrap">
+  <main class="lv" id="lv" tabindex="-1"></main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

@@ -1,6 +1,6 @@
 "use strict";
 /* ------------------------------------------------------------------
-   ÖĞRENME YOLU ARAYÜZÜ: seviye 1–5
+   ÖĞRENME YOLU ARAYÜZÜ (tezgâh düzeni)
    Model: js/neuron.js, içerik: js/levels.js
 ------------------------------------------------------------------- */
 const $=s=>document.querySelector(s);
@@ -60,59 +60,43 @@ function go(key){
   $('#lv').focus({preventScroll:true});window.scrollTo({top:0,behavior:'auto'});
 }
 function buildLevel(){
-  const lv=L(),rec=R(),part=PARTS.find(p=>p.id===lv.part),pair=lv.kind==='pair';
+  const lv=L(),rec=R(),part=PARTS.find(p=>p.id===lv.part),multi=lv.kind==='multi';
   document.title=`Seviye ${lv.id}: ${lv.title} · Boş Beyin`;
-  const el=$('#lv');
+  flashPrev.clear();lastCardKey='';lastStepKey='';multiResetView();
+  const el=$('#lv');el.className='lv';
+  const routeOpen=!rec.routeSeen;rec.routeSeen=true;
   el.innerHTML=`
     <div class="lv-head">
-      <p class="kicker">Seviye ${lv.id} · ${esc(part.title)}</p>
-      <h2>${esc(lv.title)}</h2>
+      <div><p class="kicker">Seviye ${lv.id} · ${esc(part.title)}</p><h2>${esc(lv.title)}</h2></div>
       <p class="lv-q">${esc(lv.question)}</p>
-      <div class="route">
-        <p><b>Amaç:</b> ${esc(lv.goal)}</p>
-        <p class="route-h"><b>Bu sayfada ne yapacaksın:</b></p>
-        <ol>${lv.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>
-      </div>
     </div>
-    ${lv.kind==='multi'?multiGridHTML(lv):`<div class="lv-grid">
-      <div class="lv-main">
-        <div class="stage scene-wrap"><svg id="scene" viewBox="0 0 730 270" role="img" aria-label="Işık hücresi, bağlantı ve nöron"></svg></div>
-        <div class="gauge" id="gauge" aria-hidden="true">
-          <div class="g-track"><div class="g-fill" id="gFill"></div><div class="g-zero" id="gZero"></div><div class="g-th" id="gTh"><span></span></div><div class="g-sum" id="gSum"><span></span></div></div>
-          <div class="g-scale"><span id="gLo"></span><span>nörona gelen toplam sinyal</span><span id="gHi"></span></div>
-        </div>
-        <p class="calc" id="calc" aria-live="polite"></p>
-        <div class="sliders" id="sliders"></div>
-        ${lv.learning?learnPanelHTML(lv):''}
+    <details class="route"${routeOpen?' open':''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
+      <p><b>Amaç:</b> ${esc(lv.goal)}</p><ol>${lv.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></details>
+    <div class="mission" id="mission" aria-live="polite"></div>
+    ${multi?multiGridHTML(lv):benchHTML(lv)}
+    <section class="reading" aria-label="Okuma">
+      <section class="cards4" aria-label="Beyinde ve modelde">
+        <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
+        <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
+        <article class="icard limit"><h3>Benzetmenin sınırı</h3><p>${esc(lv.cards.limit)}</p></article>
+        <article class="icard ai"><h3>Yapay zekâda</h3><p>${esc(lv.cards.ai)}</p></article>
+      </section>
+      <details class="deeper" id="deeper"><summary>Daha derine: hesabın kendisi</summary><div class="deeper-body">${lv.deeper}</div></details>
+      <div class="read-duo">
+        <section class="panel"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>
+        <section class="panel notes">
+          <h3>Notlarım</h3>
+          <p class="hint">Bu seviyede ne fark ettin? Kendi cümlelerinle yazmak öğrendiğini pekiştirir. Bu tarayıcıda saklanır.</p>
+          <textarea class="txt" id="notes" placeholder="ör. Eşik yükselince nöron daha seçici oluyor…"></textarea>
+        </section>
       </div>
-      <aside class="lv-side">
-        <div class="panel"><div class="ph"><h3>Görevler</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></div>
-        ${pair?`<div class="panel"><div class="ph"><h3>${lv.learning?'Eğitim verisi':'Bütün durumlar'}</h3><span class="pc" id="tScore"></span></div>
-          <p class="hint">${lv.learning?'Öğretmenin elindeki 4 kart. Her satır bir girdi (A, B) ve doğru cevap. Nöron sadece bunlardan öğrenir; şu an hangilerini bildiği “nöron” sütununda.':'İki ışığın dört olası durumu. Bir satıra tıklarsan o durum nörona gösterilir.'}</p><table class="tt" id="tt"></table></div>`:''}
-        <div class="panel"><h3>${pair?'Karar haritası':'Karar çizgisi'}</h3>
-          <svg id="map" class="${pair?'map2':'map1'}" viewBox="${pair?'0 0 260 250':'0 0 300 92'}" role="img" aria-label="${pair?'Karar haritası':'Karar çizgisi'}"></svg>
-          <p class="hint" id="mapHint">${pair?'Her köşe bir durum (sol alt: ikisi de sönük, sağ üst: ikisi de yanık). Boyalı bölgede nöron ateşler; sınırı düz bir çizgi. Dolu daire “ateşlemeli”, boş daire “susmalı” demek.':'Hangi parlaklıklarda ateşlediğini gösterir. Boyalı kısım ateşleme bölgesi, üçgen şu anki parlaklık.'}</p>
-        </div>
-      </aside>
-    </div>`}
-    <section class="cards4" aria-label="Beyinde ve modelde">
-      <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
-      <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
-      <article class="icard limit"><h3>Benzetmenin sınırı</h3><p>${esc(lv.cards.limit)}</p></article>
-      <article class="icard ai"><h3>Yapay zekâda</h3><p>${esc(lv.cards.ai)}</p></article>
-    </section>
-    <details class="deeper" id="deeper"><summary>Daha derine: hesabın kendisi</summary><div class="deeper-body">${lv.deeper}</div></details>
-    <section class="notes">
-      <h3>Notlarım</h3>
-      <p class="hint">Bu seviyede ne fark ettin? Kendi cümlelerinle yazmak öğrendiğini pekiştirir. Bu tarayıcıda saklanır.</p>
-      <textarea class="txt" id="notes" placeholder="ör. Eşik yükselince nöron daha seçici oluyor…"></textarea>
-    </section>
-    <nav class="lv-pn" aria-label="Seviyeler arası">
-      <button class="btn" id="prevLv"${LEVELS.indexOf(lv)===0?' hidden':''}>← Önceki seviye</button>
-      <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
-      ${nextHTML(lv)}
-    </nav>`;
-  if(lv.kind==='multi')wireMulti(lv);
+      <nav class="lv-pn" aria-label="Seviyeler arası">
+        <button class="btn" id="prevLv"${LEVELS.indexOf(lv)===0?' hidden':''}>← Önceki seviye</button>
+        <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
+        ${nextHTML(lv)}
+      </nav>
+    </section>`;
+  if(multi)wireMulti(lv);
   else{buildScene(lv);buildSliders(lv);if(lv.learning)wireLearn(lv);}
   $('#notes').value=rec.notes||'';
   $('#notes').addEventListener('input',e=>{R().notes=e.target.value;save();});
@@ -122,11 +106,55 @@ function buildLevel(){
   const nx=$('#nextLv');if(nx)nx.onclick=()=>go(LEVELS[li+1].key);
   $('#resetLv').onclick=e=>{
     const b=e.currentTarget;
-    if(resetArm&&Date.now()-resetArm<3500){resetArm=0;const notes=R().notes;P.rec[lv.key]=freshRec(lv);R().notes=notes;buildLevel();save();toast('Seviye baştan başladı. Notların duruyor.');return;}
+    if(resetArm&&Date.now()-resetArm<3500){resetArm=0;const notes=R().notes;P.rec[lv.key]=freshRec(lv);R().notes=notes;R().routeSeen=true;buildLevel();save();toast('Seviye baştan başladı. Notların duruyor.');return;}
     resetArm=Date.now();b.textContent='Emin misin? Tekrar bas';setTimeout(()=>{if(b.isConnected)b.textContent='Bu seviyeyi baştan al';},3500);
   };
   if(rec.st.targetKey===undefined)rec.st.targetKey=null;
   refresh();
+}
+// Tezgâh: (kart) → sahne → cevap, altında adım şeridi ve yardımcı paneller
+function benchHTML(lv){
+  const pair=lv.kind==='pair';
+  const card=lv.learning?`<div class="bench-card">
+      <div class="tcard-wrap" id="tcard"></div>
+      <button class="btn primary big" id="lOne">Bir örnek göster</button>
+      <div class="bench-more st1"><button class="btn small" id="lRound">Bir tur</button><button class="btn small" id="lAuto" aria-pressed="false">Otomatik ▶</button><button class="btn ghost small" id="lReset">Boş beyin</button></div>
+      <p class="hint" id="lNext"></p>
+    </div>`:'';
+  const table=pair?`<div class="panel"><div class="ph"><h3>${lv.learning?'Eğitim verisi':'Bütün durumlar'}</h3><span class="pc" id="tScore"></span></div>
+      <p class="hint">${lv.learning?'Öğretmenin 4 kartı ve nöronun şu anki cevapları.':'İki ışığın dört olası durumu. Bir satıra tıklarsan o durum nörona gösterilir.'}</p><table class="tt" id="tt"></table></div>`:'';
+  const map=`<div class="panel"><h3>${pair?'Karar haritası':'Karar çizgisi'}</h3>
+      <svg id="map" class="${pair?'map2':'map1'}" viewBox="${pair?'0 0 260 250':'0 0 300 92'}" role="img" aria-label="${pair?'Karar haritası':'Karar çizgisi'}"></svg>
+      <p class="hint" id="mapHint">${pair?'Her köşe bir durum (sol alt: ikisi de 0, sağ üst: ikisi de 1). Boyalı bölgede nöron ateşler; sınırı düz bir çizgi. Dolu daire “ateşlemeli”, boş daire “susmalı”.':'Hangi parlaklıklarda ateşlediğini gösterir. Boyalı kısım ateşleme bölgesi, üçgen şu anki parlaklık.'}</p></div>`;
+  return`<section class="bench ${lv.learning?'has-card':''}">
+      ${card}
+      <div class="bench-scene">
+        <div class="stage scene-wrap"><svg id="scene" viewBox="0 0 600 270" role="img" aria-label="Girdiler, bağlantılar ve nöron"></svg></div>
+        <div class="gauge${lv.learning?' hide':''}" id="gauge" aria-hidden="true">
+          <div class="g-track"><div class="g-fill" id="gFill"></div><div class="g-zero" id="gZero"></div><div class="g-th" id="gTh"><span></span></div><div class="g-sum" id="gSum"><span></span></div></div>
+          <div class="g-scale"><span id="gLo"></span><span>nörona gelen toplam sinyal</span><span id="gHi"></span></div>
+        </div>
+        ${lv.learning?`<details class="manual" id="manual"><summary>Bağlantıları elle değiştir</summary><div class="sliders" id="sliders"></div></details>`:`<div class="sliders" id="sliders"></div>`}
+      </div>
+      <div class="bench-answer panel" id="answer" aria-live="polite"></div>
+    </section>
+    ${lv.learning?`<section class="strip" id="lstep" aria-live="polite"></section>`:''}
+    <section class="bench-bottom ${lv.learning?'three':''}">${table}${map}${lv.learning?learnSideHTML(lv):''}</section>`;
+}
+// Cevap kutusu: nöron ne diyor, doğru mu, nasıl hesapladı
+function answerHTML(lv,st){
+  const on=firesNow(st,lv),T=lv.kind==='pair'?targetOf(st):null;
+  let big,sub,verdict='';
+  if(lv.learning){
+    const sc=scnOf(st),i=COMBOS.findIndex(c=>c[0]===st.x[0]&&c[1]===st.x[1]);
+    big=ans(sc,on);sub=on?'nöron ateşliyor':'nöron sessiz';
+    if(T)verdict=`<div class="ans-v ${on===T[i]?'ok':'bad'}">doğru cevap: <b>${esc(ans(sc,T[i]))}</b> ${on===T[i]?'✓':'✗'}</div>`;
+  }else{
+    big=on?'ateşliyor':'sessiz';sub=on?(lv.kind==='single'?'beyne: “ışık var”':'darbe beyne gidiyor'):'beyne mesaj yok';
+    if(T){const i=COMBOS.findIndex(c=>c[0]===st.x[0]&&c[1]===st.x[1]);verdict=`<div class="ans-v ${on===T[i]?'ok':'bad'}">istenen: ${T[i]?'ateşlesin':'sussun'} ${on===T[i]?'✓':'✗'}</div>`;}
+  }
+  return`<div class="ans-l">${lv.learning?'Nöronun şimdiki cevabı':'Nöronun cevabı'}</div><div class="ans-big ${on?'on':''}" data-fl="ans">${esc(big.toLocaleUpperCase('tr-TR'))}</div><div class="ans-sub">${sub}</div>${verdict}
+    <div class="calc" id="calc">${calcHTML(lv,st)}</div>`;
 }
 function nextHTML(lv){
   const nxt=LEVELS[LEVELS.indexOf(lv)+1],skipped=ROADMAP.filter(r=>r.id>lv.id&&(!nxt||r.id<nxt.id));
@@ -145,13 +173,13 @@ function buildScene(lv){
     <text class="coltitle" x="80" y="16">${lv.learning?'Özellikler (girdi)':pair?'Işık hücreleri':'Işık hücresi'}</text>
     <text class="coltitle" x="255" y="16">Bağlantı (sinaps)</text>
     <text class="coltitle" x="${NX}" y="16">Nöron</text>
-    <text class="coltitle" x="640" y="16">Akson → beyne</text>`;
+    <text class="coltitle" x="540" y="16">Akson</text>`;
   ins.forEach((p,i)=>{
     const cy=p.y+40,x1=128,x2=NX-NR-6,y2=NY+(pair?(i?16:-16):0),mx=(x1+x2)/2,my=(cy+y2)/2;
     h+=`<line class="syn" id="syn${i}" x1="${x1}" y1="${cy}" x2="${x2}" y2="${y2}"/>
       <line class="flow" id="flow${i}" x1="${x1}" y1="${cy}" x2="${x2}" y2="${y2}"/>
       <circle class="bouton" id="bt${i}" cx="${x2}" cy="${y2}" r="5"/>
-      <text class="wtext" id="wt${i}" x="${mx}" y="${my+(pair?(i?24:-12):-14)}"></text>
+      <text class="wtext" id="wt${i}" data-fl="wt${i}" x="${mx}" y="${my+(pair?(i?24:-12):-14)}"></text>
       <g class="delta-layer" id="dl${i}" data-x="${mx}" data-y="${my+(pair?(i?44:-32):-34)}"></g>
       <g class="inpx" id="in${i}" tabindex="0" role="button" data-i="${i}">
         <rect class="px-cell" id="pxc${i}" x="40" y="${p.y}" width="80" height="80" rx="12"/>
@@ -161,7 +189,7 @@ function buildScene(lv){
   });
   h+=`<circle class="soma" id="soma" cx="${NX}" cy="${NY}" r="${NR}"/>
     <text class="soma-t" id="somaT" x="${NX}" y="${NY+5}">nöron</text>
-    <text class="soma-sub" id="somaTh" x="${NX}" y="${NY+NR+22}"></text>
+    <text class="soma-sub" id="somaTh" data-fl="th" x="${NX}" y="${NY+NR+22}"></text>
     <g class="delta-layer" id="dlT" data-x="${NX}" data-y="${NY+NR+42}"></g>
     <line class="axon" id="axon" x1="${NX+NR}" y1="${NY}" x2="586" y2="${NY}" marker-end="url(#arrow)"/>
     <circle class="ap" id="ap" cx="${NX+NR+8}" cy="${NY}" r="6"/>
@@ -251,13 +279,11 @@ function updateGauge(lv,st){
 }
 function calcHTML(lv,st){
   const ins=inputsOf(st,lv),s=sumOf(st,lv),on=firesNow(st,lv);
-  const terms=ins.map((v,i)=>{
+  const lines=ins.map((v,i)=>{
     const name=lv.kind==='single'?'parlaklık':sceneInputs(lv)[i].name;
-    return`<span class="term">${name} <b>${num(v,lv.kind==='single'?2:0)}</b> × bağlantı <b class="${st.w[i]<0?'neg':'pos'}">${num(st.w[i])}</b></span>`;
+    return`<div class="cl">${i?'+ ':''}${name} <b>${num(v,lv.kind==='single'?2:0)}</b> × bağlantı <b class="${st.w[i]<0?'neg':'pos'}">${num(st.w[i])}</b></div>`;
   });
-  return`${terms.join(' <span class="op">+</span> ')} <span class="op">=</span> <b>${num(s)}</b>
-    <span class="op">${on?'≥':'<'}</span> eşik <b>${num(st.theta)}</b> <span class="op">→</span>
-    <span class="res ${on?'on':''}">${on?'ateşler':'susar'}</span>`;
+  return`${lines.join('')}<div class="cl sum">= toplam <b>${num(s)}</b> ${on?'≥':'<'} eşik <b>${num(st.theta)}</b></div>`;
 }
 
 /* ---------- Kaydırıcılar ---------- */
@@ -267,7 +293,7 @@ function buildSliders(lv){
   (pair?[0,1]:[0]).forEach(i=>defs.push({key:'w'+i,label:pair?`${'AB'[i]} bağlantısı`:'Bağlantı gücü',hint:lv.ranges.w[0]<0?'negatif: susturur':'sinaps ne kadar güçlü',r:lv.ranges.w}));
   defs.push({key:'theta',label:'Eşik',hint:'ateşlemek için gereken toplam',r:lv.ranges.theta});
   el.innerHTML=defs.map(d=>`<label class="sl"><span class="sl-l">${d.label}<small>${d.hint}</small></span>
-    <input type="range" id="sl-${d.key}" min="${d.r[0]}" max="${d.r[1]}" step="${d.r[2]}"><output id="so-${d.key}"></output></label>`).join('');
+    <input type="range" id="sl-${d.key}" min="${d.r[0]}" max="${d.r[1]}" step="${d.r[2]}"><output id="so-${d.key}" data-fl="so-${d.key}"></output></label>`).join('');
   defs.forEach(d=>{
     $('#sl-'+d.key).addEventListener('input',e=>{
       const st=R().st,v=tidy(+e.target.value),T=targetOf(st);
@@ -293,28 +319,48 @@ function checkMissions(lv,rec){
   let fresh=[];
   for(const m of lv.missions)if(!rec.done.includes(m.id)&&m.check(st)){rec.done.push(m.id);fresh.push(m);}
   if(fresh.length){
+    rec.aha=fresh[fresh.length-1].id;
     if(fresh.some(m=>m.id===rec.active)){
       const nx=lv.missions.find(m=>!rec.done.includes(m.id));
       if(nx){rec.active=nx.id;if('target'in nx&&!lv.learning){st.targetKey=nx.target;}else if('target'in nx&&nx.target)setTarget(nx.target,true);}
     }
-    toast(fresh.length===1?'Görev tamamlandı. Açıklaması görev listesinde.':`${fresh.length} görev tamamlandı.`);
-    if(rec.done.length===lv.missions.length)setTimeout(()=>toast('Bu seviyenin bütün görevleri tamam. Kartları okuyup sonraki seviyeye geçebilirsin.'),1800);
+    toast(fresh.length===1?'✓ Görev tamamlandı':`✓ ${fresh.length} görev tamamlandı`);
   }
 }
+const plain=h=>String(h).replace(/<[^>]+>/g,'');
+function pickMission(lv,rec,id){
+  const m=lv.missions.find(x=>x.id===id);rec.active=m.id;rec.aha=null;
+  if('target'in m){if(lv.learning){if(m.target)setTarget(m.target);}else rec.st.targetKey=m.target;}
+  refresh();
+}
 function renderMissions(lv,rec){
+  const n=lv.missions.length,allDone=rec.done.length===n;
+  // üst şerit: görev noktaları
+  $('#barMissions').innerHTML=`<span class="bm-l">Görevler</span>`+lv.missions.map((m,k)=>{
+    const done=rec.done.includes(m.id),act=rec.active===m.id&&!allDone;
+    return`<button class="bm ${done?'done':''} ${act?'active':''}" data-id="${m.id}" title="${esc(plain(m.text))}" aria-label="Görev ${k+1}${done?', tamamlandı':''}">${done?'✓':k+1}</button>`;
+  }).join('');
+  $('#barMissions').querySelectorAll('.bm').forEach(b=>b.onclick=()=>pickMission(lv,rec,b.dataset.id));
+  // tezgâhın üstündeki bant: şimdiki görev ya da az önce tamamlananın açıklaması
+  const act=lv.missions.find(m=>m.id===rec.active),idx=lv.missions.indexOf(act),ahaM=rec.aha&&lv.missions.find(m=>m.id===rec.aha);
+  let h='';
+  if(ahaM)h=`<div class="aha-box"><div class="aha-main"><div class="aha-h">✓ ${ahaM.text}</div><p>${esc(ahaM.aha)}</p></div>
+      <button class="btn small ${allDone?'':'primary'}" id="ahaOk">${allDone?'Tamam':`Sıradaki görev (${idx+1}/${n}) →`}</button></div>`;
+  else if(allDone)h=`<div class="mis-cur done"><span class="mis-n">✓ ${n}/${n}</span><span class="mis-t">Bu seviyenin bütün görevleri tamam. Aşağıdaki kartları okuyabilir ya da sonraki seviyeye geçebilirsin.</span></div>`;
+  else h=`<div class="mis-cur"><span class="mis-n">Görev ${idx+1}/${n}</span><span class="mis-t">${act.text}</span></div>`;
+  $('#mission').innerHTML=h;
+  const ok=$('#ahaOk');if(ok)ok.onclick=()=>{rec.aha=null;refresh();};
+  const man=$('#manual');if(man&&act&&act.id==='repair'&&!allDone&&!man.dataset.auto){man.open=true;man.dataset.auto='1';}
+  // okuma kısmındaki tam liste
   const ol=$('#missions');
-  $('#msCount').textContent=`${rec.done.length}/${lv.missions.length}`;
+  $('#msCount').textContent=`${rec.done.length}/${n}`;
   ol.innerHTML=lv.missions.map((m,k)=>{
-    const done=rec.done.includes(m.id),act=rec.active===m.id;
-    return`<li class="${done?'done':''} ${act?'active':''}"><button class="ms" data-id="${m.id}" aria-pressed="${act}">
+    const done=rec.done.includes(m.id),a=rec.active===m.id;
+    return`<li class="${done?'done':''} ${a?'active':''}"><button class="ms" data-id="${m.id}" aria-pressed="${a}">
       <span class="ms-dot" aria-hidden="true">${done?'✓':k+1}</span><span class="ms-text">${m.text}</span></button>
       ${done?`<p class="aha">${esc(m.aha)}</p>`:''}</li>`;
   }).join('');
-  ol.querySelectorAll('.ms').forEach(b=>b.onclick=()=>{
-    const m=lv.missions.find(x=>x.id===b.dataset.id);rec.active=m.id;
-    if('target'in m){if(lv.learning){if(m.target)setTarget(m.target);}else rec.st.targetKey=m.target;}
-    refresh();
-  });
+  ol.querySelectorAll('.ms').forEach(b=>b.onclick=()=>{pickMission(lv,rec,b.dataset.id);$('#mission').scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'center'});});
 }
 
 /* ---------- Doğruluk tablosu ---------- */
@@ -325,8 +371,8 @@ function renderTable(lv,st){
   COMBOS.forEach((x,i)=>{
     const cur=st.x[0]===x[0]&&st.x[1]===x[1],s=weightedSum(x,st.w),ok=T?out[i]===T[i]:null;
     h+=`<tr class="${cur?'cur':''}" data-i="${i}" tabindex="0">
-      <td>${onoff(x[0])}</td><td>${onoff(x[1])}</td><td class="num">${num(s)}</td>
-      <td><span class="fire ${out[i]?'on':''}">${out[i]?'ateşler':'susar'}</span></td>
+      <td>${onoff(x[0])}</td><td>${onoff(x[1])}</td><td class="num" data-fl="ts${i}">${num(s)}</td>
+      <td><span class="fire ${out[i]?'on':''}" data-fl="to${i}">${out[i]?'ateşler':'susar'}</span></td>
       ${T?`<td>${custom?`<button class="want" data-i="${i}">${T[i]?'ateşlesin':'sussun'}</button>`:(T[i]?'ateşlesin':'sussun')}</td><td class="${ok?'mk-ok':'mk-bad'}">${ok?'✓':'✗'}</td>`:''}</tr>`;
   });
   const tt=$('#tt');tt.innerHTML=h+'</tbody>';
@@ -344,11 +390,11 @@ function renderTable(lv,st){
 function renderTrainTable(lv,st,T,out,custom){
   const sc=scnOf(st);
   const cell=(k,v)=>{const f=feat(sc,k,v);return`<td class="fcell" title="${esc(f.text)}"><span class="ti ${f.cls||''}" aria-hidden="true">${f.icon}</span><span class="sr">${esc(f.text)}</span><small>${v}</small></td>`;};
-  let h=`<caption>A: ${esc(sc.a.q)} · B: ${esc(sc.b.q)}</caption><thead><tr><th>A</th><th>B</th><th>toplam</th><th>nöron der ki</th><th>doğru cevap${custom?' <small>(tıkla)</small>':''}</th><th></th></tr></thead><tbody>`;
+  let h=`<caption>A: ${esc(sc.a.q)} · B: ${esc(sc.b.q)}</caption><thead><tr><th>A</th><th>B</th><th>toplam</th><th>nöron</th><th>doğru cevap${custom?' <small>(tıkla)</small>':''}</th><th></th></tr></thead><tbody>`;
   COMBOS.forEach((x,i)=>{
     const cur=st.x[0]===x[0]&&st.x[1]===x[1],ok=out[i]===T[i];
-    h+=`<tr class="${cur?'cur':''}" data-i="${i}" tabindex="0">${cell(0,x[0])}${cell(1,x[1])}<td class="num">${num(weightedSum(x,st.w))}</td>
-      <td><span class="fire ${out[i]?'on':''}">${esc(ans(sc,out[i]))}</span></td>
+    h+=`<tr class="${cur?'cur':''}" data-i="${i}" tabindex="0">${cell(0,x[0])}${cell(1,x[1])}<td class="num" data-fl="ts${i}">${num(weightedSum(x,st.w))}</td>
+      <td><span class="fire ${out[i]?'on':''}" data-fl="to${i}">${esc(ans(sc,out[i]))}</span></td>
       <td>${custom?`<button class="want" data-i="${i}">${esc(ans(sc,T[i]))}</button>`:esc(ans(sc,T[i]))}</td><td class="${ok?'mk-ok':'mk-bad'}">${ok?'✓':'✗'}</td></tr>`;
   });
   const tt=$('#tt');tt.innerHTML=h+'</tbody>';
@@ -413,25 +459,22 @@ function renderMap1(st){
 }
 
 /* ---------- Öğrenme paneli (seviye 4–5) ---------- */
-function learnPanelHTML(lv){
+function learnSideHTML(lv){
   const sel=lv.targets.length>1
     ?`<div class="seg tsel" id="tsel">${lv.targets.map(k=>`<button data-k="${k}">${esc(SCENARIOS[k].short)}</button>`).join('')}</div>`
     :`<b>${esc(SCENARIOS[lv.targets[0]].title)}</b>`;
-  return`<div class="panel learn" id="learn">
-    <div class="ph"><h3>Öğrenme</h3>
-      <label class="ctl st2">Öğrenme hızı <select id="rate"><option value="0.1">yavaş (0,1)</option><option value="0.2">normal (0,2)</option><option value="0.5">hızlı (0,5)</option></select></label></div>
-    <div class="row st2"><span class="ctl">Öğretilecek durum:</span> ${sel}</div>
-    <div class="row">
-      <button class="btn primary" id="lOne">Bir örnek göster</button>
-      <button class="btn st1" id="lRound">Bir tur (4 örnek)</button>
-      <button class="btn st1" id="lAuto" aria-pressed="false">Otomatik ▶</button>
-      <button class="btn ghost st1" id="lReset">Boş beyinle başla</button>
-    </div>
-    <p class="hint" id="lNext"></p>
-    <div class="lcard-row"><div class="tcard-wrap" id="tcard"></div><div class="lstep" id="lstep" aria-live="polite"></div></div>
-    <div class="lrounds st1"><div class="ph"><h4>Tur başına hata</h4><span class="pc" id="roundsN"></span></div><svg id="rounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="roundsHint"></p></div>
+  return`<div class="panel learn-side">
+    <p class="hint st0only">İlk tur bitince burada tur başına hata grafiği, öğrendikten sonra öğrenme ayarları açılacak.</p>
+    <div class="st2 lset"><h3>Öğrenme ayarları</h3>
+      <div class="row"><span class="ctl">Öğretilecek durum:</span> ${sel}</div>
+      <label class="ctl">Öğrenme hızı <select id="rate"><option value="0.1">yavaş (0,1)</option><option value="0.2">normal (0,2)</option><option value="0.5">hızlı (0,5)</option></select></label></div>
+    <div class="lrounds st1"><div class="ph"><h3>Tur başına hata</h3><span class="pc" id="roundsN"></span></div><svg id="rounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="roundsHint"></p></div>
     <details class="llog st2"><summary>Öğrenme defteri (son 10 adım)</summary><div class="llog-wrap"><table class="tt" id="ltable"></table></div></details>
   </div>`;
+}
+// Adım şeridi: kutular yan yana
+function stripHTML(boxes){
+  return boxes.map((b,i)=>`<div class="ph-box ${b.cls||''}" style="--d:${i}"><div class="ph-t">${b.t}</div><div class="ph-b">${b.h}</div></div>`).join('<div class="ph-arrow" aria-hidden="true">▸</div>');
 }
 function wireLearn(lv){
   const rec=R(),st=rec.st;
@@ -496,26 +539,21 @@ function applyStep(r){
 }
 function stepHTML(r,pending){
   const sc=SCENARIOS[r.key]||SCENARIOS.custom,said=`“${esc(ans(sc,r.out))}”`,right=`“${esc(ans(sc,r.target))}”`;
-  const items=[
-    `<b>Öğretmenin kartı:</b> ${esc(featTxt(sc,r.x))}. Doğru cevap: ${right}.`,
-    `<b>Tahmin:</b> toplam ${num(r.sum)} ${r.out?'≥':'<'} eşik ${num(r.theta0)} → nöron <b>${r.out?'ateşledi':'sustu'}</b>, yani ${said} dedi.`,
-    r.err===0?`<b>Karşılaştırma:</b> doğru bildi. <span class="mk-ok">Hata 0.</span>`
-      :r.err>0?`<b>Karşılaştırma:</b> ${said} dedi ama doğrusu ${right}: sustu, ateşlemeliydi. <span class="mk-bad">Hata +1.</span>`
-      :`<b>Karşılaştırma:</b> ${said} dedi ama doğrusu ${right}: boşuna ateşledi. <span class="mk-bad">Hata −1.</span>`
+  const boxes=[
+    {t:'1 · Tahmin',h:`${esc(featTxt(sc,r.x))}<br>toplam ${num(r.sum)} ${r.out?'≥':'<'} eşik ${num(r.theta0)}<br>→ nöron ${r.out?'ateşledi':'sustu'}: <b>${said}</b>`},
+    {t:'2 · Karşılaştır',cls:r.err?'bad':'ok',h:r.err===0?`Doğrusu da ${right}.<br><span class="mk-ok">Doğru, hata 0.</span>`
+      :`Doğrusu ${right}.<br><span class="mk-bad">Hata ${r.err>0?'+1':'−1'}</span>: ${r.err>0?'sustu, ateşlemeliydi':'boşuna ateşledi'}.`}
   ];
-  const noLit=r.err&&!r.x.some(v=>v);
-  if(pending){items.push(`<span class="pend">Düzeltme hesaplanıyor…</span>`);}
-  else if(r.err===0){items.push(`<b>Düzeltme:</b> hata yok, hiçbir şey değişmedi.`);}
-  else{
-    const th=`eşik <b>${sgn(r.dtheta)}</b> (${num(r.theta0)} → ${num(r.theta)}): artık daha ${r.dtheta<0?'kolay':'zor'} ateşler`;
-    const parts=r.x.map((xi,k)=>{const n='AB'[k],t=esc(feat(sc,k,xi).text);return xi?`${n} = 1 (${t}) → bağlantısı <b class="${r.dw[k]>0?'pos':'neg'}">${sgn(r.dw[k])}</b> (${num(r.w0[k])} → ${num(r.w[k])})`:`${n} = 0 (${t}) → bağlantısı değişmedi, bu hatada rol oynamadı`;});
-    items.push(noLit
-      ?`<b>Düzeltme:</b> kartta A da B de 0’dı (${esc(featTxt(sc,r.x))}), yani hiçbir bağlantı bu hatada rol oynamadı; bağlantılar değişmedi. Sadece ${th}.`
-      :`<b>Düzeltme:</b> ${parts.join('; ')}; ${th}.`);
-    const s2=weightedSum(r.x,r.w),o2=s2>=r.theta-EPS?1:0;
-    items.push(`<b>Şimdi aynı kartta:</b> toplam ${num(s2)} ${o2?'≥':'<'} eşik ${num(r.theta)} → ${o2===r.target?`artık ${right} diyor, <span class="mk-ok">doğru</span>.`:`hâlâ “${esc(ans(sc,o2))}” diyor; tek adım yetmedi. Sıra bu karta tekrar gelince bir adım daha atacak.`}`);
-  }
-  return`<ol class="steps">${items.map(s=>`<li>${s}</li>`).join('')}</ol>`;
+  if(pending){boxes.push({t:'3 · Düzelt',h:'<span class="pend">hesaplanıyor…</span>'},{t:'4 · Şimdi',h:'<span class="pend">…</span>'});return stripHTML(boxes);}
+  if(r.err===0){boxes.push({t:'3 · Düzelt',h:'Hata yok → <b>hiçbir şey değişmedi</b>.'},{t:'4 · Şimdi',h:'Bağlantılar ve eşik aynı. Sıradaki karta geç.'});return stripHTML(boxes);}
+  const lines=r.x.map((xi,k)=>{const n='AB'[k],t=esc(feat(sc,k,xi).text);return xi
+    ?`<div class="chg ${r.dw[k]>0?'up':'down'}">${n} (${t}) <b>${num(r.w0[k])} → ${num(r.w[k])}</b></div>`
+    :`<div class="chg same">${n} (${t}) değişmedi: rol oynamadı</div>`;});
+  lines.push(`<div class="chg ${r.dtheta<0?'up':'down'}">eşik <b>${num(r.theta0)} → ${num(r.theta)}</b> (daha ${r.dtheta<0?'kolay':'zor'} ateşler)</div>`);
+  boxes.push({t:'3 · Düzelt',h:lines.join('')});
+  const s2=weightedSum(r.x,r.w),o2=s2>=r.theta-EPS?1:0;
+  boxes.push({t:'4 · Şimdi',cls:o2===r.target?'ok':'',h:`Aynı kartta toplam ${num(s2)} ${o2?'≥':'<'} eşik ${num(r.theta)}<br>→ ${o2===r.target?`artık ${right} <span class="mk-ok">✓</span>`:`hâlâ “${esc(ans(sc,o2))}”; sıra bu karta yine gelince bir adım daha`}`});
+  return stripHTML(boxes);
 }
 function cardHTML(sc,x,target,guess,label){
   const verdict=guess==null?'':guess===target?'ok':'bad';
@@ -524,10 +562,10 @@ function cardHTML(sc,x,target,guess,label){
     <div class="tc-scn">${esc(sc.title)}</div>
     <div class="tc-feats">${x.map((v,k)=>{const f=feat(sc,k,v);return`<div class="tc-f ${v?'on':'off'}"><span class="tc-i ${f.cls||''}" aria-hidden="true">${f.icon}</span><span class="tc-t">${esc(f.text)}</span><span class="tc-k">${'AB'[k]} = ${v}</span></div>`;}).join('')}</div>
     <div class="tc-ans">Doğru cevap: <b>${esc(ans(sc,target))}</b></div>
-    <div class="tc-guess">${guess==null?'Nöron henüz görmedi':`Nöron: <b>${esc(ans(sc,guess))}</b> ${guess===target?'✓':'✗'}`}</div>
+    <div class="tc-guess">${guess==null?'Nöron henüz görmedi':`Nöron o an: <b>${esc(ans(sc,guess))}</b> ${guess===target?'✓':'✗'}`}</div>
   </div>`;
 }
-let lastCardKey='';
+let lastCardKey='',lastStepKey='';
 function renderCard(rec,st,T){
   const wrap=$('#tcard');let html,key;
   if(rec.last){const r=rec.last,sc=SCENARIOS[r.key]||scnOf(st);html=cardHTML(sc,r.x,r.target,r.out,'Öğretmenin kartı');key='c'+(rec.cardSeq||0)+(r.key||'');}
@@ -548,12 +586,13 @@ function updateLearn(lv,rec){
     setTimeout(()=>toast(stage===1?'Bir tur bitti. Artık bir turu tek seferde ya da otomatik oynatabilirsin; tur başına hata grafiği de açıldı.':'Öğrendi! Şimdi öğrenme hızı, başka durumlar ve öğrenme defteri de açıldı.'),stage===2?2200:0);
   }
   rec.stage=stage;
-  const box=$('#learn');box.classList.toggle('stage1',stage>=1);box.classList.toggle('stage2',stage>=2);
+  const box=$('#lv');box.classList.toggle('stage1',stage>=1);box.classList.toggle('stage2',stage>=2);
   document.querySelectorAll('#tsel button').forEach(b=>b.setAttribute('aria-pressed',st.targetKey===b.dataset.k?'true':'false'));
   const nx=COMBOS[rec.cursor%4];
   $('#lNext').textContent=T?`Sıradaki kart: ${featTxt(scnOf(st),nx)}. Kartlar hep aynı sırayla gelir; dördü bir tur eder.`:'Önce öğretilecek durumu seç.';
   renderCard(rec,st,T);
-  $('#lstep').innerHTML=rec.last?stepHTML(rec.last,!!rec.pendingShown):`<p class="hint">Henüz kart gösterilmedi. “Bir örnek göster”e bas: öğretmen soldaki kartı nörona gösterir, nöron tahmin eder, yanıldıysa bağlantıları biraz düzeltilir. Her aşama burada yazacak.</p>`;
+  const stepKey=rec.last?(rec.cardSeq||0)+(rec.pendingShown?'p':''):'none';
+  if(stepKey!==lastStepKey||!rec.last){$('#lstep').innerHTML=rec.last?stepHTML(rec.last,!!rec.pendingShown):`<div class="ph-box empty"><div class="ph-b">Henüz kart gösterilmedi. Soldaki <b>“Bir örnek göster”</b>e bas: öğretmen kartı nörona gösterir, nöron tahmin eder, yanıldıysa bağlantıları biraz düzeltilir. Dört aşama burada yan yana görünecek.</div></div>`;lastStepKey=stepKey;}
   ['lOne','lRound'].forEach(id=>{$('#'+id).disabled=busy;});
   // tur grafiği
   const rs=rec.rounds,svg=$('#rounds'),n=Math.max(20,rs.length),bw=400/n;
@@ -573,8 +612,11 @@ function updateLearn(lv,rec){
     <td class="num">${e.err?`A ${sgn(e.dw[0])}, B ${sgn(e.dw[1])}, eşik ${sgn(e.dtheta)}`:'—'}</td></tr>`).join('')||'<tr><td colspan="6" class="hint">Henüz adım yok.</td></tr>'}</tbody>`;
 }
 
-/* ---------- Kenar menüsü ---------- */
+/* ---------- Üst şerit ve seviye menüsü ---------- */
 function renderNav(){
+  const lv=L(),li=LEVELS.indexOf(lv);
+  $('#barLevel').innerHTML=`<span class="bl-n">${lv.id}/${ROADMAP.length}</span> ${esc(lv.title)} <span aria-hidden="true">▾</span>`;
+  $('#barPrev').disabled=li<=0;$('#barNext').disabled=li>=LEVELS.length-1;
   const el=$('#lvnav');
   el.innerHTML=PARTS.map(p=>{
     const items=ROADMAP.filter(r=>r.part===p.id).map(r=>{
@@ -588,20 +630,38 @@ function renderNav(){
     return`<div class="pgroup"><h3>${esc(p.title)}<small>${esc(p.sub)}</small></h3><ol>${items.join('')}</ol></div>`;
   }).join('');
 }
+function menuOpen(on){const m=$('#lvnav'),b=$('#barLevel');m.hidden=!on;b.setAttribute('aria-expanded',on?'true':'false');}
+$('#barLevel').onclick=e=>{e.stopPropagation();menuOpen($('#lvnav').hidden);};
+$('#barPrev').onclick=()=>{const i=LEVELS.indexOf(L());if(i>0)go(LEVELS[i-1].key);};
+$('#barNext').onclick=()=>{const i=LEVELS.indexOf(L());if(i<LEVELS.length-1)go(LEVELS[i+1].key);};
+document.addEventListener('click',e=>{if(!$('#lvnav').hidden&&!e.target.closest('#lvnav'))menuOpen(false);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')menuOpen(false);});
+$('#lvnav').addEventListener('click',e=>{if(e.target.closest('a'))menuOpen(false);});
+
+/* ---------- Değişen değerler yerinde parlasın ---------- */
+const flashPrev=new Map();
+function flashScan(){
+  const quiet=reducedMotion||auto||(typeof mAuto!=='undefined'&&mAuto);
+  document.querySelectorAll('[data-fl]').forEach(el=>{
+    const k=el.dataset.fl,t=el.textContent;
+    if(!quiet&&flashPrev.has(k)&&flashPrev.get(k)!==t){el.classList.remove('flash');void el.getBoundingClientRect();el.classList.add('flash');}
+    flashPrev.set(k,t);
+  });
+}
 
 /* ---------- Hepsini güncelle ---------- */
 function refresh(fromSlider){
   const lv=L(),rec=R(),st=rec.st;
   checkMissions(lv,rec);
-  if(lv.kind==='multi'){updateMulti(lv,rec);renderMissions(lv,rec);renderNav();save();return;}
+  if(lv.kind==='multi'){updateMulti(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
   updateScene(lv,st);updateGauge(lv,st);
-  $('#calc').innerHTML=calcHTML(lv,st);
+  $('#answer').innerHTML=answerHTML(lv,st);
   if(!fromSlider)syncSliders();
   else{const set=(k,v)=>{const o=$('#so-'+k);if(o)o.textContent=k==='b'?num(v,2):num(v);};if(lv.kind==='single')set('b',st.b);st.w.forEach((w,i)=>set('w'+i,w));set('theta',st.theta);}
   renderMissions(lv,rec);
   if(lv.kind==='pair'){renderTable(lv,st);renderMap2(st);}else renderMap1(st);
   if(lv.learning)updateLearn(lv,rec);
-  renderNav();save();
+  renderNav();flashScan();save();
 }
 
 let toastT=0;
