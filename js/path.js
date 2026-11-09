@@ -80,6 +80,7 @@ function buildLevel(){
     <div class="mission" id="mission" aria-live="polite"></div>
     ${multi?multiGridHTML(lv):lv.kind==='net'?netGridHTML(lv):lv.kind==='predict'?predictGridHTML(lv):benchHTML(lv)}
     <section class="reading" aria-label="Okuma">
+      ${lv.daily?`<section class="daily" aria-label="Bunu sen de yaşadın"><h3>Bunu sen de yaşadın: beyin her an tahmin ediyor</h3><div class="daily-row">${lv.daily.map(d=>`<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>`:''}
       <section class="cards4" aria-label="Beyinde ve modelde">
         <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
         <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>

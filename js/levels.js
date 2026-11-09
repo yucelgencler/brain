@@ -55,38 +55,45 @@ const NET_PATTERNS={'0000':'hiç ateşlemiyor','1111':'her durumda ateşliyor','
 // Rastgele başlangıçlardan takılmadan öğrenenler (hız 2 ile 300 turun altında)
 const NET_SEEDS=[7,1,12,13,18,20,22,25,5,10,11,15];
 
-// Seviye 5: tahmin ederek öğrenme. İki işaret (fırın ışığı, fırın zili) ve bir an sonra gelen (ya da gelmeyen) kurabiye.
+// Seviye 5: tahmin ederek öğrenme. Kedi Pamuk ve mama: sen bir ses çıkarırsın (poşet hışırtısı, “pisi pisi”),
+// Pamuk ne kadar mama beklediğini gösterir, sonra sen mama verirsin ya da vermezsin.
 const PREDICT={
-  cues:[{icon:'💡',name:'fırın ışığı',short:'ışık'},{icon:'🔔',name:'fırın zili',short:'zil'}],
-  yes:{icon:'🍪',name:'kurabiye geldi'},no:{icon:'🍽️',name:'kurabiye gelmedi'},
-  rules:{
-    always:{x:[0,1],p:1,label:'🔔 → hep 🍪',text:'Zil çalınca hep kurabiye geliyor'},
-    never:{x:[0,1],p:0,label:'🔔 → hiç 🍪',text:'Zil çalıyor ama kurabiye artık hiç gelmiyor'},
-    half:{x:[0,1],p:0.5,label:'🔔 → bazen 🍪',text:'Zil çalınca yarı yarıya kurabiye geliyor'},
-    light:{x:[1,0],p:1,label:'💡 → hep 🍪',text:'Fırın ışığı yanınca hep kurabiye geliyor'},
-    both:{x:[1,1],p:1,label:'💡+🔔 → hep 🍪',text:'Işık ve zil birlikte, sonra hep kurabiye'}
-  },
-  order:['always','never','half','light','both']
+  cat:'Pamuk',rate:0.3,
+  cues:[
+    {icon:'🛍️',name:'poşet sesi',short:'poşet',btn:'Poşeti hışırdat',sound:'hışır hışır'},
+    {icon:'🗣️',name:'“pisi pisi”',short:'pisi pisi',btn:'“Pisi pisi” de',sound:'pisi pisi!'}
+  ],
+  yes:{icon:'🐟',name:'mama verildi'},no:{icon:'🚫',name:'mama verilmedi'}
 };
-// Bir an: dünya kuralına göre işaretleri ve kurabiyeyi seçer (durumu değiştirmez)
-function predictPlan(st,rand){
-  const R=PREDICT.rules[st.rule],reward=R.p>=1?1:R.p<=0?0:(rand()<R.p?1:0);
-  const r=NN.predictStep(R.x,st.w,reward,st.rate);r.rule=st.rule;return r;
+const pKey=x=>x.join('');
+// 1. adım: ses çıkar. Pamuk o an ne kadar bekliyor? (Durumu değiştirmez, sadece anı başlatır.)
+function predictCue(st,x){
+  const V=NN.tidy(NN.weightedSum(x,st.w)),f=st.flags;st.pend={x:x.slice(),V};
+  // engelleme / kontrol deneyinin sonunda “sadece pisi pisi” denemesi
+  if(pKey(x)==='01'){if(f.lastExp==='block'){f.blockProbed=true;f.blockProbeV=V;}if(f.lastExp==='control'){f.controlProbed=true;f.controlProbeV=V;}}
+  return st.pend;
 }
-// Anı yaşanmış say: bağlantıları güncelle, kaydı tut, görev bayraklarını koy
+// 2. adım: mama ver (1) ya da verme (0). Sürpriz kadar öğrenir.
+function predictGive(st,reward){
+  const x=st.pend?st.pend.x:[1,0];st.pend=null;
+  return predictCommit(st,NN.predictStep(x,st.w,reward,st.rate));
+}
+function predictNewBrain(st){st.w=[0,0];st.pend=null;st.runKey=null;st.run=0;st.runStart=[0,0];st.hist=[];st.flags.lastExp=null;}
+// Anı yaşanmış say: bağları güncelle, kaydı tut, görev bayraklarını koy
 function predictCommit(st,r){
-  const f=st.flags;
-  if(st.runRule!==r.rule){st.runRule=r.rule;st.run=0;st.runStart=r.w0.slice();}
+  const f=st.flags,k=pKey(r.x)+r.r;
+  if(st.runKey!==k){st.runKey=k;st.run=0;st.runStart=r.w0.slice();}
   st.run++;st.n=(st.n||0)+1;st.w=r.w.slice();
-  st.hist=(st.hist||[]).concat([{k:r.rule,x:r.x,V:r.V,r:r.r,d:r.d}]).slice(-60);
-  const bell=NN.weightedSum([0,1],st.w);
-  if(r.rule==='always'&&st.w[1]>=0.9-1e-9)f.bell90=true;
-  if(r.x[1]&&!r.r&&r.d<=-0.5)f.miss=true;
-  if(f.miss&&r.rule==='never'&&bell<0.2)f.extinct=true;
-  if(r.rule==='half'&&st.run>=20)f.half=true;
-  if(r.rule==='both'&&st.run>=8){
-    if(st.runStart[0]>=0.85&&st.runStart[1]<=0.1){f.blocked=true;f.blockBell=st.w[1];}
-    if(st.runStart[0]<=0.1&&st.runStart[1]<=0.1){f.control=true;f.controlBell=st.w[1];}
+  st.hist=(st.hist||[]).concat([{x:r.x,V:r.V,r:r.r,d:r.d}]).slice(-60);
+  const pos=NN.weightedSum([1,0],st.w);
+  if(k==='101'&&pos>=0.9-1e-9)f.learned=true;
+  if(r.x[0]&&!r.r&&r.d<=-0.5)f.miss=true;
+  if(f.miss&&k==='100'&&pos<0.2)f.extinct=true;
+  const h20=st.hist.slice(-20);
+  if(h20.length===20&&h20.every(e=>pKey(e.x)==='10')){const g=h20.filter(e=>e.r).length;if(g>=6&&g<=14)f.half=true;}
+  if(k==='111'&&st.run>=8){
+    if(st.runStart[0]>=0.85&&st.runStart[1]<=0.1){f.blocked=true;f.blockBell=st.w[1];f.lastExp='block';}
+    if(st.runStart[0]<=0.1&&st.runStart[1]<=0.1){f.control=true;f.controlBell=st.w[1];f.lastExp='control';}
   }
   return r;
 }
@@ -235,43 +242,49 @@ const LEVELS=[
 },
 /* ------------------------------ 5: tahmin ederek öğrenme ------------------------------ */
 {
-  key:'predict',goal:"Öğretmen olmadan, sadece tahmin edip bir an sonra ne olduğunu görerek öğrenmeyi görmek: beyin, beklediği ile olan arasındaki farktan (sürprizden) öğrenir; sürpriz yoksa öğrenecek bir şey de yoktur.",
-  todo:["Soldan dünyanın kuralını seç (başta: 🔔 fırın zili çalınca hep 🍪 kurabiye gelir) ve “Bir an yaşat”a bas: zil çalar, nöron ne kadar beklediğini söyler, bir an sonra kurabiyenin gelip gelmediği görülür.","Kimse nörona doğru cevabı söylemiyor. Tahminini, bir an sonra olanla kendisi karşılaştırıyor ve aradaki fark (sürpriz) kadar öğreniyor.","Alttaki grafikte beklentinin ve sürprizin an an nasıl değiştiğini izle. Görevlerde kuralı değiştirip beyni şaşırt."],
+  key:'predict',ver:2,goal:"Öğretmen olmadan öğrenmeyi görmek: beyin her an bir sonrakini tahmin eder, sonra olanla karşılaştırır. Aradaki fark (sürpriz) kadar öğrenir; sürpriz yoksa öğrenecek bir şey de yoktur.",
+  todo:["Sen kedi Pamuk’un sahibisin. Önce bir ses çıkar (🛍️ poşeti hışırdat). Pamuk duyduğu sese göre ne kadar mama beklediğini gösterir: beklediği kadar kabına doğru koşar.","Sonra karar ver: 🐟 mama ver ya da 🚫 verme. Pamuk’un beklediği ile olan arasındaki fark sürprizdir; beynindeki bağ, sürpriz kadar değişir.","Sahnenin alt yarısında Pamuk’un beynini, en altta da an an beklenti ve sürpriz grafiğini izle. Ne yapacağını her an soldaki ipucu ve parlayan düğme söyler."],
   part:'B',title:'Tahmin ederek öğrenme',
-  question:'Kimse doğru cevabı söylemezse beyin nasıl öğrenir? Fırın zili çalınca kurabiye geleceğini ona kim öğretti?',
+  question:'Kimse ona öğretmedi: kedi, mama poşetinin sesini duyunca neden mutfağa koşar? Beyin, doğru cevabı söyleyen bir öğretmen olmadan nasıl öğrenir?',
   kind:'predict',
-  init(){return{w:[0,0],rule:'always',rate:0.3,hist:[],n:0,run:0,runRule:null,runStart:[0,0]};},
+  init(){return{w:[0,0],rate:PREDICT.rate,pend:null,hist:[],n:0,run:0,runKey:null,runStart:[0,0]};},
+  daily:[
+    {icon:'📱',title:'Bildirim sesi',text:'Telefonunun bildirim sesini duyunca elin kendiliğinden telefona gider. Kimse öğretmedi: o ses ile ilginç bir mesaj sık sık arka arkaya geldi ve beynin bunu tahmin etmeyi öğrendi. Pamuk’un poşet sesine koşmasıyla aynı şey.'},
+    {icon:'🪜',title:'Eksik basamak',text:'Karanlıkta merdiven inerken bir basamak daha var sanıp boşluğa basınca sarsılırsın. Ayağın basamağı bekliyordu; beklenen gelmeyince oluşan bu sarsıntı, eksi sürprizin ta kendisi.'},
+    {icon:'🥛',title:'Boş süt kutusu',text:'Dolu sandığın kutuyu kaldırırken kolun havaya fırlar. Beyin ağırlığı önceden tahmin edip kaslarını ona göre hazırlamıştı; tahmin tutmayınca hareket de şaşar.'},
+    {icon:'🎵',title:'Yanlış nota',text:'Çok iyi bildiğin bir şarkıda tek bir nota yanlış çalınsa hemen fark edersin. Beynin her notayı önceden bekliyor; uymayan nota bir sürpriz olarak dikkatini çekiyor.'}
+  ],
   missions:[
-    {id:'learn',rule:'always',text:'Kural <b>🔔 → hep 🍪</b>. “Bir an yaşat”a bas ve beklenti <b>%90’ı geçene</b> kadar devam et. Her seferinde sürprize bak.',
-      check:st=>!!st.flags.bell90,
-      aha:'Kimse “zil, kurabiye demek” demedi; doğru cevabı bir sonraki an verdi. İlk seferde sürpriz en büyüktü (+1: hiç beklemiyordu, kurabiye geldi) ve bağlantı sürprizin 0,3’ü kadar arttı. Sonra her seferinde sürpriz küçüldü, bağlantı da daha az arttı. Grafiğe bak: öğrenme başta hızlı, sonra yavaş.'},
-    {id:'miss',rule:'never',text:'Eksik basamak: beklenti yüksekken kural <b>🔔 → hiç 🍪</b> olsun. Bir an yaşat: zil çalıyor ama kurabiye gelmiyor.',
+    {id:'learn',text:'<b>🛍️ Poşeti hışırdat</b>, Pamuk’un ne yaptığına bak, sonra <b>🐟 mama ver</b>. Pamuk poşet sesini duyar duymaz kabının başına koşana kadar (beklenti <b>%90</b>) tekrarla.',
+      check:st=>!!st.flags.learned,
+      aha:'Kimse Pamuk’a “poşet sesi, mama demek” demedi; doğru cevabı bir sonraki an verdi. İlk seferde hiç beklemiyordu, mama gelince sürpriz en büyüktü (+1) ve bağ bir anda 0,3 arttı. Sonra her seferinde sürpriz küçüldü, bağ da daha az arttı. Grafiğe bak: öğrenme başta hızlı, sonra yavaş. Senin telefonunun bildirim sesine uzanman da böyle öğrenildi.'},
+    {id:'miss',text:'Eksik basamak: Pamuk artık poşet sesine koşuyor. Bu sefer <b>🛍️ poşeti hışırdat</b> ama <b>🚫 mama verme</b>.',
       check:st=>!!st.flags.miss,
-      aha:'Sürpriz eksi çıktı: beklenti yüksekti, olan sıfır. Dopamin nöronu bu an sustu; normal, sakin atışı bile durdu. Bağlantı aynı kuralla azaldı. Merdivende olmayan basamağa basınca sarsılman da bu: beyin bir şey bekliyordu ve gelmedi. Bu sarsıntı, beklentinin orada olduğunun kanıtı.'},
-    {id:'extinct',rule:'never',text:'Aynı kuralla devam et: zil artık kurabiye getirmiyor. Beklenti <b>%20’nin altına</b> insin.',
+      aha:'Pamuk koştu, kap boş: sürpriz eksi çıktı. Dopamin nöronu o an sustu; normal, sakin atışı bile durdu. Bağ aynı kuralla azaldı. Karanlıkta olmayan basamağa basınca sarsılman da bu: beyin bir şey bekliyordu ve gelmedi. O sarsıntı, beklentinin orada olduğunun kanıtı.'},
+    {id:'extinct',text:'Poşeti hışırdatmaya devam et ama mama verme (<b>↻ Son anı 5 kez tekrarla</b> da olur). Pamuk poşet sesine koşmayı bıraksın: beklenti <b>%20’nin altına</b> insin.',
       check:st=>!!st.flags.extinct,
-      aha:'Beklenti söndü; buna söndürme denir. Modelde bağlantı gerçekten küçüldü. Gerçek beyinde ise eski öğrenme silinmez: üstüne “artık gelmiyor” diye yeni bir öğrenme eklenir. Bir süre sonra ya da başka bir ortamda zil yine beklenti uyandırabilir. Pavlov bunu köpeklerde gördü: söndürülen tepki ertesi gün kendiliğinden geri gelebiliyordu.'},
-    {id:'half',rule:'half',text:'Kural <b>🔔 → bazen 🍪</b> (yarı yarıya). Arka arkaya en az <b>20 an</b> yaşat. Beklenti nerede duruyor, sürpriz bitiyor mu?',
+      aha:'Pamuk artık poşet sesine kalkmıyor; buna söndürme denir. Modelde bağ gerçekten küçüldü. Gerçek beyinde ise eski öğrenme silinmez: üstüne “artık mama gelmiyor” diye yeni bir öğrenme eklenir. Bir süre sonra ya da başka bir odada poşet sesi yine Pamuk’u kaldırabilir. Pavlov bunu köpeklerde gördü: söndürülen tepki ertesi gün kendiliğinden geri gelebiliyordu.'},
+    {id:'half',text:'Bazen ver, bazen verme: <b>🎲 Yazı-tura × 10</b> düğmesine iki kez bas (ya da elle, arka arkaya 20 kez poşeti hışırdatıp yarısında mama ver). Pamuk ne kadar bekliyor, sürpriz bitiyor mu?',
       check:st=>!!st.flags.half,
-      aha:'Beklenti %50 civarında dolaşıyor ve sürpriz hiç bitmiyor: kurabiye gelince yaklaşık +0,5 sevinç, gelmeyince −0,5 hayal kırıklığı. Nöron olasılığı öğrendi: beklentisi, ortalama sonuç. Ama tek tek anları bilemediği için sürpriz hiç sıfırlanmıyor. Dopamin nöronlarının, ödül en belirsizken (yarı yarıya) en uzun süreli etkinliği gösterdiği bulundu (Fiorillo ve arkadaşları, 2003); şans oyunlarının bu kadar çekici olmasının bir nedeninin bu olduğu düşünülüyor.'},
-    {id:'block',rule:'light',text:'Engelleme deneyi: <b>“Boş beyin”</b>e bas. Önce <b>💡 → hep 🍪</b> ile ışığı öğret (%85 üstü), sonra kuralı <b>💡+🔔 → hep 🍪</b> yapıp en az <b>8 an</b> yaşat. Zil ne kadar öğrendi?',
-      check:st=>!!st.flags.blocked,
-      aha:'Zil neredeyse hiçbir şey öğrenmedi, oysa 8 kez kurabiyeyle birlikte geldi! Işık kurabiyeyi zaten tahmin ediyordu: sürpriz yoktu, öğrenecek bir şey de kalmadı. Öğrenme “birlikte gelme”yle değil, sürprizle oluyor. Bu, Kamin’in 1969’daki engelleme deneyi: hayvanlarda gösterildi ve öğrenmenin tahmin hatasıyla olduğuna dair en güçlü kanıtlardan biri.'},
-    {id:'control',rule:'both',text:'Kontrol deneyi: <b>“Boş beyin”</b>e bas ve doğrudan <b>💡+🔔 → hep 🍪</b> ile en az <b>8 an</b> yaşat. Zil bu sefer ne kadar öğrendi?',
-      check:st=>!!st.flags.control,
-      aha:'Bu sefer zil de öğrendi (yaklaşık yarısını): ışık ve zil sürprizi paylaştı. Aynı sayıda an, aynı kurabiye; tek fark, ışığın önceden bilinmesiydi. Kontrol deneyi, engellemenin gerçekten “zaten biliyordum”dan kaynaklandığını gösteriyor. Beyin, yeni bir işarete ancak eski bilgisi yetmediğinde dikkat eder.'}
+      aha:'Pamuk’un beklentisi %50 civarında dolaşıyor ve sürpriz hiç bitmiyor: mama gelince yaklaşık +0,5 sevinç, gelmeyince −0,5 hayal kırıklığı. Pamuk olasılığı öğrendi; beklentisi, ortalama sonuç. Ama tek tek anları bilemediği için sürpriz hiç sıfırlanmıyor. Dopamin nöronlarının ödül en belirsizken (yarı yarıya) en uzun süreli etkinliği gösterdiği bulundu (Fiorillo ve arkadaşları, 2003). Şans oyunlarının ve “belki bir mesaj gelmiştir” diye telefona bakmanın bu kadar çekici olmasının bir nedeninin bu olduğu düşünülüyor.'},
+    {id:'block',text:'Engelleme deneyi: <b>🐣 Yeni yavru kedi</b> al. Önce poşet + mama ile öğret (%85 üstü). Sonra <b>🛍️+🗣️ ikisini birden</b> yap ve mama ver (en az 8 kez). En sonda <b>sadece 🗣️ “pisi pisi”</b> de: Pamuk geliyor mu?',
+      check:st=>!!(st.flags.blocked&&st.flags.blockProbed),
+      aha:'Pamuk “pisi pisi”ye neredeyse hiç kalkmıyor, oysa bu ses 8 kez mamayla birlikte geldi! Poşet sesi mamayı zaten haber veriyordu: sürpriz yoktu, öğrenecek bir şey de kalmadı. Öğrenme “birlikte gelme”yle değil, sürprizle oluyor. Bu, Kamin’in 1969’daki engelleme deneyi; öğrenmenin tahmin hatasıyla olduğunun en güçlü kanıtlarından biri. Evde bir kediyle sen de deneyebilirsin.'},
+    {id:'control',text:'Kontrol deneyi: yine <b>🐣 Yeni yavru kedi</b> al ve baştan <b>🛍️+🗣️ ikisini birden</b> yapıp mama ver (en az 8 kez). Sonra <b>sadece 🗣️ “pisi pisi”</b> de. Bu sefer geliyor mu?',
+      check:st=>!!(st.flags.control&&st.flags.controlProbed),
+      aha:'Bu sefer Pamuk “pisi pisi”ye de yarı yola kadar koşuyor: iki ses sürprizi paylaştı. Aynı sayıda an, aynı mama; tek fark, poşet sesinin önceden bilinmesiydi. Kontrol deneyi, engellemenin gerçekten “zaten biliyordum”dan kaynaklandığını gösteriyor. Beyin yeni bir işarete ancak eski bilgisi yetmediğinde dikkat eder.'}
   ],
   cards:{
-    brain:'Beynin orta kısmındaki dopamin nöronları ödülün kendisine değil, sürprize tepki verir (Schultz ve arkadaşları, 1997). Beklenmedik ödülde ani bir atış patlaması olur. Ödül tahmin edilir hâle gelince ödüle değil, onu haber veren işarete tepki verirler. Beklenen ödül gelmezse o an susarlar. Beyin her an bir sonrakini tahmin eder: ayağın basamağı, kulağın bir sonraki heceyi. Bebekler bile hecelerin hangi sırayla geldiğini dinleyerek kelimeleri ayırmayı öğrenir (Saffran ve arkadaşları, 1996). Kendini gıdıklayamaman da bundan: beyin kendi dokunuşunu önceden tahmin edip etkisini azaltır (Blakemore ve arkadaşları, 1998).',
-    model:'Tahmin nöronu ya hep ya hiç çalışmıyor: ne kadar beklediğini 0 ile 1 arasında söylüyor (beklenti = o an gelen işaretlerin bağlantılarının toplamı). Sürpriz = olan − beklenti. Kural 4. seviyedekinin neredeyse aynısı: bağlantı += hız × sürpriz × işaret. Tek fark, doğru cevabı öğretmenin değil, bir an sonra dünyanın vermesi.',
-    limit:'Bu model (Rescorla ve Wagner, 1972) her denemeyi tek bir an sayıyor; gerçek beyin kurabiyenin ne zaman geleceğini de tahmin eder. Söndürme burada bağlantıyı siliyor; hayvanlarda ve insanda eski öğrenme silinmez, bastırılır ve geri dönebilir. Dopamin de yalnızca bir sürpriz sinyali değil; harekette ve isteklendirmede de rol oynar.',
+    brain:'Beynin orta kısmındaki dopamin nöronları ödülün kendisine değil, sürprize tepki verir (Schultz ve arkadaşları, 1997). Beklenmedik ödülde ani bir atış patlaması olur. Ödül tahmin edilir hâle gelince ödüle değil, onu haber veren işarete (poşet sesine) tepki verirler. Beklenen ödül gelmezse o an susarlar. Pamuk’un mama sesine koşması, Pavlov’un köpeklerinin zil sesiyle salya salgılamasıyla aynı türden bir öğrenme. Beyin bunu sadece ödül için değil, her an her şey için yapar: bebekler bile hecelerin hangi sırayla geldiğini dinleyerek kelimeleri ayırmayı öğrenir (Saffran ve arkadaşları, 1996); kendini gıdıklayamaman da beynin kendi dokunuşunu önceden tahmin etmesinden (Blakemore ve arkadaşları, 1998).',
+    model:'Pamuk’un beyninde iki ses nöronu (poşet sesi, “pisi pisi”) bir tahmin nöronuna bağlı. Tahmin nöronu ya hep ya hiç çalışmıyor: ne kadar beklediğini 0 ile 1 arasında söylüyor (beklenti = o an duyulan seslerin bağlarının toplamı). Sürpriz = olan − beklenti. Bağ += 0,3 × sürpriz (sadece o an duyulan sesin bağı). Bu, 4. seviyedeki kuralın neredeyse aynısı; tek fark, doğru cevabı öğretmenin değil, bir an sonranın vermesi.',
+    limit:'Bu model (Rescorla ve Wagner, 1972) her anı tek bir an sayıyor; gerçek bir kedi mamanın ne zaman geleceğini de tahmin eder. Söndürme burada bağı siliyor; hayvanlarda ve insanda eski öğrenme silinmez, bastırılır ve geri dönebilir. Gerçek kediyi koşturan sadece tek bir tahmin nöronu değil, binlercesi; dopamin de yalnızca bir sürpriz sinyali değil, harekette ve isteklendirmede de rol oynar.',
     ai:'Öğretmensiz, “bir sonrakini tahmin et” diye öğrenmeye kendi kendine denetimli öğrenme denir: dil modelleri metindeki bir sonraki kelimeyi tahmin ederek eğitilir, doğru cevap metnin kendisindedir. Ödül tahmin hatası ise pekiştirmeli öğrenmede (zamansal fark öğrenmesi) birebir kullanılır; Schultz’un dopamin bulgusu bu algoritmayla örtüştüğü için ünlü oldu.'
   },
-  deeper:`<p><b>Beklenti:</b> o an gelen işaretlerin bağlantılarının toplamı. Sadece zil çaldıysa beklenti = zil bağlantısı; ışık ve zil birlikteyse ışık + zil.</p>
-    <p><b>Sürpriz:</b> olan − beklenti. Kurabiye geldiyse olan 1, gelmediyse 0.</p>
-    <p><b>Düzeltme:</b> o an gelen her işaretin bağlantısı += hız × sürpriz (hız 0,3). Gelmeyen işaretin bağlantısı değişmez.</p>
-    <p><b>Örnek:</b> zil bağlantısı 0 → 0,3 → 0,51 → 0,66 → 0,76 → 0,83 → 0,88 → 0,92. Her seferinde kalan yolun %30’u kapanıyor; yol kısaldıkça adım da kısalıyor.</p>
-    <p><b>Engelleme:</b> ışık 0,92’yi öğrendikten sonra ışık + zil birlikte gelince sürpriz 1 − 0,92 = 0,08. Zilin payı 0,3 × 0,08 = 0,02. Sekiz an sonra zil ancak 0,04’e çıkıyor. Kontrolde ikisi boş başlarsa sürprizi eşit paylaşıp ikisi de 0,5’e yaklaşıyor.</p>
+  deeper:`<p><b>Beklenti:</b> o an duyulan seslerin bağlarının toplamı. Sadece poşet hışırdadıysa beklenti = poşet bağı; poşet ve “pisi pisi” birlikteyse ikisinin toplamı. Pamuk beklentisi kadar kabına doğru koşar.</p>
+    <p><b>Sürpriz:</b> olan − beklenti. Mama verildiyse olan 1, verilmediyse 0.</p>
+    <p><b>Öğrenme:</b> o an duyulan her sesin bağı += 0,3 × sürpriz. Duyulmayan sesin bağı değişmez.</p>
+    <p><b>Örnek:</b> poşet bağı 0 → 0,3 → 0,51 → 0,66 → 0,76 → 0,83 → 0,88 → 0,92. Her seferinde kalan yolun %30’u kapanıyor; yol kısaldıkça adım da kısalıyor.</p>
+    <p><b>Engelleme:</b> poşet 0,92’yi öğrendikten sonra iki ses birlikte gelince sürpriz 1 − 0,92 = 0,08; “pisi pisi”nin payı 0,3 × 0,08 = 0,02. Sekiz an sonra ancak 0,04’e çıkıyor. Kontrolde ikisi boş başlarsa sürprizi eşit paylaşıp ikisi de 0,5’e yaklaşıyor.</p>
     <p><b>4. seviyeyle bağ:</b> orada hata = doğru − tahmin, burada sürpriz = olan − beklenti. Aynı “delta kuralı” (Widrow ve Hoff, 1960); farkı, tahminin ya hep ya hiç değil dereceli olması.</p>`
 },
 /* ------------------------------ 6: XOR ------------------------------ */
@@ -418,4 +431,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictPlan,predictCommit};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain};}

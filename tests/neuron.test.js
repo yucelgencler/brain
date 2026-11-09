@@ -157,39 +157,46 @@ test('seviye 8: başlangıç 7 senden farklı bir çözüm buluyor (görev açı
   assert.notStrictEqual(pats,['0010','0100'].join('|'));
 });
 
-/* ---------- Seviye 5: tahmin ederek öğrenme ---------- */
-const {PREDICT,predictPlan,predictCommit}=require('../js/levels.js');
+/* ---------- Seviye 5: tahmin ederek öğrenme (kedi Pamuk) ---------- */
+const {PREDICT,predictCue,predictGive,predictNewBrain}=require('../js/levels.js');
 const pFresh=()=>Object.assign(lv('predict').init(),{flags:{}});
-const pRun=(st,rule,n,rand)=>{st.rule=rule;const out=[];for(let i=0;i<n;i++)out.push(predictCommit(st,predictPlan(st,rand||Math.random)));return out;};
+// x: hangi ses(ler), rew: mama verildi mi (sayı ya da fonksiyon)
+const pRun=(st,x,rew,n)=>{const out=[];for(let i=0;i<n;i++){predictCue(st,x);out.push(predictGive(st,typeof rew==='function'?rew(i):rew));}return out;};
 const pDone=st=>lv('predict').missions.filter(m=>m.check(st)).map(m=>m.id);
-test('seviye 5: sürpriz = olan − beklenti; sadece o an gelen işaretin bağlantısı değişir',()=>{
+const POS=[1,0],PISI=[0,1],BOTH=[1,1];
+test('seviye 5: sürpriz = olan − beklenti; sadece o an duyulan sesin bağı değişir',()=>{
   const s=N.predictStep([0,1],[0.4,0.5],1,0.3);
   assert.strictEqual(s.V,0.5);assert.strictEqual(s.d,0.5);assert.deepStrictEqual(s.w,[0.4,0.65]);
   const z=N.predictStep([1,0],[0.4,0.5],0.4,0.3);assert.strictEqual(z.d,0);assert.deepStrictEqual(z.w,[0.4,0.5]);
 });
-test('seviye 5: sürpriz her anda küçülüyor, 7 anda %90’ı geçiyor (deeper’daki sayılar)',()=>{
-  const st=pFresh(),rs=pRun(st,'always',7);
-  for(let i=1;i<rs.length;i++)assert.ok(rs[i].d<rs[i-1].d);
-  assert.deepStrictEqual(rs.slice(0,4).map(r=>Math.round(r.w[1]*100)/100),[0.3,0.51,0.66,0.76]);
-  assert.ok(st.w[1]>=0.9&&rs[5].w[1]<0.9);assert.deepStrictEqual(pDone(st),['learn']);
+test('seviye 5: ses çıkarmak tek başına bir şey değiştirmez; beklentiyi gösterir',()=>{
+  const st=pFresh();st.w=[0.6,0.1];const p=predictCue(st,BOTH);
+  assert.strictEqual(p.V,0.7);assert.deepStrictEqual(st.w,[0.6,0.1]);assert.ok(st.pend);
+  predictGive(st,1);assert.strictEqual(st.pend,null);assert.ok(Math.abs(st.w[0]-0.69)<1e-9&&Math.abs(st.w[1]-0.19)<1e-9);
 });
-test('seviye 5: görevler sırayla tamamlanabiliyor; engellemede zil öğrenmiyor, kontrolde öğreniyor',()=>{
-  const st=pFresh();let k=0;const alt=()=>(k++%2)?0.9:0.1;
-  pRun(st,'always',7);pRun(st,'never',1);assert.ok(pDone(st).includes('miss'));
-  pRun(st,'never',4);assert.ok(pDone(st).includes('extinct'));
-  pRun(st,'half',20,alt);assert.ok(pDone(st).includes('half'));assert.ok(st.w[1]>0.3&&st.w[1]<0.7);
-  st.w=[0,0];st.runRule=null;pRun(st,'light',7);pRun(st,'both',8);
-  assert.ok(pDone(st).includes('block'));assert.ok(st.flags.blockBell<0.06,'zil '+st.flags.blockBell);
-  st.w=[0,0];st.runRule=null;pRun(st,'both',8);
-  assert.ok(pDone(st).includes('control'));assert.ok(Math.abs(st.flags.controlBell-0.5)<0.01);
+test('seviye 5: sürpriz her anda küçülüyor, 7 anda %90’ı geçiyor (deeper’daki sayılar)',()=>{
+  const st=pFresh(),rs=pRun(st,POS,1,7);
+  for(let i=1;i<rs.length;i++)assert.ok(rs[i].d<rs[i-1].d);
+  assert.deepStrictEqual(rs.slice(0,4).map(r=>Math.round(r.w[0]*100)/100),[0.3,0.51,0.66,0.76]);
+  assert.ok(st.w[0]>=0.9&&rs[5].w[0]<0.9);assert.deepStrictEqual(pDone(st),['learn']);
+});
+test('seviye 5: altı görev sırayla; engellemede “pisi pisi” öğrenilmiyor, kontrolde öğreniyor',()=>{
+  const st=pFresh();
+  pRun(st,POS,1,7);pRun(st,POS,0,1);assert.ok(pDone(st).includes('miss'));
+  pRun(st,POS,0,4);assert.ok(pDone(st).includes('extinct'));
+  pRun(st,POS,i=>i%2,20);assert.ok(pDone(st).includes('half'));assert.ok(st.w[0]>0.3&&st.w[0]<0.7);
+  predictNewBrain(st);pRun(st,POS,1,7);pRun(st,BOTH,1,8);
+  assert.ok(st.flags.blocked&&!pDone(st).includes('block'),'deneme yapılmadan bitmemeli');
+  const pb=predictCue(st,PISI);assert.ok(pDone(st).includes('block'));assert.ok(pb.V<0.06,'pisi '+pb.V);predictGive(st,0);
+  predictNewBrain(st);pRun(st,BOTH,1,8);
+  const pc=predictCue(st,PISI);assert.ok(pDone(st).includes('control'));assert.ok(Math.abs(pc.V-0.5)<0.01);
   assert.strictEqual(pDone(st).length,6);
 });
 test('seviye 5: temiz başlamayan engelleme denemesi sayılmıyor',()=>{
-  const st=pFresh();pRun(st,'always',5);pRun(st,'light',7);pRun(st,'both',10);
-  assert.ok(!st.flags.blocked&&!st.flags.control);
+  const st=pFresh();pRun(st,PISI,1,5);pRun(st,POS,1,7);pRun(st,BOTH,1,10);predictCue(st,PISI);
+  assert.ok(!st.flags.blocked&&!st.flags.control&&!pDone(st).includes('block'));
 });
-test('seviye 5: görevlerdeki kurallar tanımlı',()=>{
-  for(const m of lv('predict').missions)assert.ok(PREDICT.rules[m.rule],m.id);
-  assert.deepStrictEqual(PREDICT.order.slice().sort(),Object.keys(PREDICT.rules).sort());
+test('seviye 5: hep mama verilen 20 an “yarı yarıya” sayılmıyor',()=>{
+  const st=pFresh();pRun(st,POS,1,25);assert.ok(!st.flags.half);
 });
 console.log(`\n${passed} test geçti.`);

@@ -480,3 +480,35 @@ details.manual[open]>summary{margin-bottom:6px}
 .pwt-bar i{display:block;height:100%;background:var(--pos);border-radius:5px;transition:width .3s}
 .pwt-bar i.neg{background:var(--neg)}
 @media (prefers-reduced-motion: reduce){.dopa.burst,.teach.on{animation:none}}
+/* seviye 5: kedi Pamuk */
+.pact{gap:7px}
+.pstep-h{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+.pdot{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:700}
+.pbtns{display:flex;flex-direction:column;gap:5px}
+.pbtns.two{flex-direction:row}.pbtns.two .btn{flex:1 1 0}
+.pbtns .btn{text-align:left;justify-content:flex-start;font-size:14.5px;padding:8px 12px}
+.pbtns .btn:disabled{opacity:.45;cursor:default}
+.btn.psug{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 28%,transparent);animation:psug 1.6s ease-in-out infinite}
+@keyframes psug{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 12%,transparent)}}
+.pnext{margin:2px 0;font-size:13.5px;line-height:1.45;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border-left:3px solid var(--accent)}
+.pquick{margin-top:2px}
+.proom{fill:color-mix(in srgb,var(--light) 8%,var(--surface));stroke:var(--line)}
+.pfloor{stroke:var(--line);stroke-width:1.5}
+.pemo{text-anchor:middle}
+.psound{font-size:16px;font-weight:700;text-anchor:middle;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:5px}
+.pcat{transition:transform .9s cubic-bezier(.3,.7,.3,1)}
+.pthink{font-size:16px;font-weight:700;text-anchor:middle;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:5px}
+.prow{display:grid;grid-template-columns:92px 1fr 40px;align-items:center;gap:6px;font-size:13.5px;margin:3px 0}
+.prow b{text-align:right}
+.pbar{height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--light);border-radius:5px;transition:width .4s}
+.daily{margin-bottom:14px}
+.daily h3{margin:0 0 8px;font-size:17px}
+.daily-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.daily-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.daily-row{grid-template-columns:1fr}}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.dc-i{font-size:28px;line-height:1}
+.dcard h4{margin:6px 0 4px;font-size:14.5px}
+.dcard p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
+@media (prefers-reduced-motion: reduce){.pcat{transition:none}.btn.psug{animation:none}}

@@ -14,7 +14,7 @@ Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görev
 | 2 | Algı | İki ışık, bir karar | sinyalleri toplamak, VE / VEYA, karar haritası | hazır |
 | 3 | Algı | Susturan bağlantı | negatif bağlantı, kendiliğinden ateşleme, karanlık dedektörü | hazır |
 | 4 | Öğrenme | Öğretmenle öğrenme | etiketli eğitim verisi, hatadan düzeltme (algılayıcı kuralı), unutma | hazır |
-| 5 | Öğrenme | Tahmin ederek öğrenme | öğretmen yok, cevabı bir sonraki an veriyor; sürpriz, dopamin, söndürme, engelleme | hazır |
+| 5 | Öğrenme | Tahmin ederek öğrenme | kedi Pamuk ve mama: öğretmen yok, cevabı bir sonraki an veriyor; sürpriz, dopamin, söndürme, engelleme | hazır |
 | 6 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
 | 7 | Anlama | Muz ve armut: ortak nöronlar | birden çok nöron ve çıktı, ortak özellikler, desen | hazır |
 | 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, yumuşak eşik, geri yayılım (suç paylaştırma), simetri | hazır |
@@ -47,7 +47,7 @@ js/levels.js          Seviyelerin içeriği: sorular, görevler ve kontrolleri, 
 js/path.js            Öğrenme yolu arayüzü: sahne, gösterge, tablo, karar haritası, öğrenme paneli
 js/multi.js           Seviye 7 arayüzü: birden çok nöron, karşılaştırma, bağlantı tablosu
 js/net.js             Seviye 8 arayüzü: iki ara nöron + lamba, elle kur / makine öğrensin
-js/predict.js         Seviye 5 arayüzü: işaret → tahmin → bir an sonra → sürpriz (dopamin) → düzelt
+js/predict.js         Seviye 5 arayüzü: oda (Pamuk koşar) + Pamuk’un beyni; ses çıkar → tahmin → mama ver/verme → sürpriz → öğren
 js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
 js/app.js             Laboratuvar arayüzü
 tests/neuron.test.js  Tek nöron ve seviye görevleri testleri
