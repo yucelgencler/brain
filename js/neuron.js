@@ -106,6 +106,24 @@ function eyeLook(x,W){
 }
 function eyeLearn(x,w,rate){const xn=unitVec(x);return unitVec(w.map((wi,j)=>(1-rate)*wi+rate*xn[j]));}
 
+/* Hebb: birlikte yanan, birlikte bağlanır. Her nöron her nörona bağlı (simetrik).
+   Yaşarken: aynı anda yanan her ikilinin bağı += hız (en çok 1).
+   Hatırlarken: ipucu yanar; her adımda bir nöron, o an yanan ÖTEKİ nöronlardan
+   gelen bağların ortalaması eşiği geçerse yanar. İlk adımda ipucu yanık kalır,
+   sonra o da öbürleri gibi destek ister. Durulana kadar (en çok 8 adım). */
+function hebbLearn(x,W,rate){
+  return W.map((row,i)=>row.map((w,j)=>i!==j&&x[i]&&x[j]?Math.min(1,tidy(w+rate)):w));
+}
+function hebbNext(a,W,thr){
+  return a.map((_,i)=>{let s=0,n=0;for(let j=0;j<a.length;j++)if(j!==i&&a[j]){s+=W[i][j];n++;}return n&&s/n>=thr-EPS?1:0;});
+}
+function hebbRecall(cue,W,thr){
+  const steps=[cue.slice()];let a=cue.slice();
+  for(let t=0;t<8;t++){const n=hebbNext(a,W,thr),b=t?n:n.map((v,i)=>v||cue[i]);steps.push(b);if(b.join('')===a.join(''))break;
+    if(steps.slice(0,-1).some(s=>s.join('')===b.join(''))){break;}a=b;}
+  return steps;
+}
+
 // Tek bir nöronun bu tabloyu en fazla kaç doğruyla yapabildiği (kaba arama). XOR için 3 çıkar.
 function bestScore(target,lo=-2,hi=2,step=0.1){
   let best=0;
@@ -123,5 +141,5 @@ function num(v,d=1){
 
 if(typeof module!=='undefined'&&module.exports){
   module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num,multiOutputs,multiStep,
-    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep,predictStep,unitVec,eyeInit,eyeLook,eyeLearn};
+    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep,predictStep,unitVec,eyeInit,eyeLook,eyeLearn,hebbLearn,hebbNext,hebbRecall};
 }

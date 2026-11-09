@@ -15,7 +15,7 @@
 
    Durum (st): single -> {b, w:[w], theta}; pair -> {x:[a,b], w:[w1,w2], theta, targetKey, target, flags}
 ------------------------------------------------------------------- */
-const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves,predictStep,weightedSum,unitVec,eyeInit,eyeLook,eyeLearn,rng};
+const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves,predictStep,weightedSum,unitVec,eyeInit,eyeLook,eyeLearn,rng,hebbLearn,hebbRecall};
 
 // Öğrenme seviyelerinde her istenen davranışın gerçek hayattaki karşılığı.
 // a, b: iki özellik (on: var / 1, off: yok / 0); yes/no: nöron ateşlerse / susarsa cevap.
@@ -151,6 +151,37 @@ function eyeGrow(st,world){
   while(st.age<EYE.age){const ord=pool.slice().sort(()=>r()-0.5);for(const i of ord){if(st.age>=EYE.age)break;last=eyeShow(st,EYE.lines[i].x);}}
   return last;
 }
+
+/* ---------- Seviye 11: birlikte yanan, birlikte bağlanır (Ela, limon ve çilek) ---------- */
+const HEBB={rate:0.25,thr:0.6,who:'Ela',
+  feats:[{icon:'🟡',name:'sarı renk'},{icon:'😖',name:'ekşi tat'},{icon:'👃',name:'keskin koku'},{icon:'✋',name:'pürüzlü kabuk'},
+         {icon:'🔴',name:'kırmızı renk'},{icon:'😋',name:'tatlı tat'},{icon:'🌸',name:'tatlı koku'},{icon:'🧸',name:'yumuşak'}],
+  things:{lim:{icon:'🍋',name:'limon',x:[1,1,1,1,0,0,0,0]},cil:{icon:'🍓',name:'çilek',x:[0,0,0,0,1,1,1,1]},mix:{icon:'🍋🍓',name:'çilekli limonata',x:[1,1,1,1,1,1,1,1]}}};
+const hZero=()=>Array.from({length:8},()=>Array(8).fill(0));
+const hKey=a=>a.join('');
+// Bir grubun içindeki bütün bağların en zayıfı / iki grup arasındaki en zayıf bağ
+function hebbMinIn(W,x){let m=1;x.forEach((a,i)=>x.forEach((b,j)=>{if(a&&b&&i!==j)m=Math.min(m,W[i][j]);}));return m;}
+function hebbMinCross(W,x,y){let m=1;x.forEach((a,i)=>y.forEach((b,j)=>{if(a&&b&&i!==j)m=Math.min(m,W[i][j]);}));return m;}
+function hebbLive(st,x){
+  if(!x.some(v=>v))return null;
+  const W0=st.W;st.W=NN.hebbLearn(x,st.W,HEBB.rate);st.n=(st.n||0)+1;
+  const r={type:'live',x:x.slice(),W0,W:st.W,seq:st.n};st.last=r;
+  st.hist=(st.hist||[]).concat([{type:'live',x:x.slice(),n:st.n}]).slice(-30);
+  return r;
+}
+function hebbCue(st,cue){
+  if(!cue.some(v=>v))return null;
+  const steps=NN.hebbRecall(cue,st.W,HEBB.thr),fin=steps[steps.length-1];st.n=(st.n||0)+1;
+  const r={type:'recall',cue:cue.slice(),steps,fin,seq:st.n};st.last=r;
+  st.hist=(st.hist||[]).concat([{type:'recall',x:cue.slice(),fin,n:st.n}]).slice(-30);
+  const T=HEBB.things,cnt=cue.filter(v=>v).length,inL=cue.filter((v,i)=>v&&T.lim.x[i]).length,inC=cue.filter((v,i)=>v&&T.cil.x[i]).length;
+  if(cnt===1&&inL===1&&hKey(fin)===hKey(T.lim.x))st.flags.complete=true;
+  if(cnt===1&&inC===1&&hKey(fin)===hKey(T.cil.x)&&hebbMinIn(st.W,T.lim.x)>=0.99)st.flags.two=true;
+  if(inL>=2&&inC>=1&&hKey(fin)===hKey(T.lim.x))st.flags.clean=true;
+  if(cnt===1&&fin.every(v=>v))st.flags.mix=true;
+  return r;
+}
+function hebbNewBaby(st){st.W=hZero();st.last=null;st.hist=[];st.sel=[0,0,0,0,0,0,0,0];}
 
 const PARTS=[
   {id:'A',title:'Algı',sub:'tek bir nöron'},
@@ -506,6 +537,50 @@ const LEVELS=[
     <p><b>Örnek sayılar:</b> bulanık bir nöron her çizgiye %50–70 kadar benzer. Keskinleşmiş bir nöron kendi çizgisine %99, bir noktası eksik çizgiye yaklaşık %81, ortak tek noktası olan çizgiye yaklaşık %33 benzer. Pamuk %75’in altında “net göremiyor”.</p>
     <p><b>Öğrenme (yalnızca kazanan, yalnızca yavruyken):</b> yeni bağlar = 0,4 × eski bağlar + 0,6 × gördüğü resim, sonra yine ölçeklenir. Bir bakışta %60 civarından %90’ın üstüne çıkar.</p>
     <p><b>Neden tek bir nöron “her yerde yatay” diyemez?</b> Üç yatay çizginin bağ toplamları ile üç dikey çizginin bağ toplamları aynı 9 bağdan oluşur: ikisinin ortalaması da “bütün bağların toplamı ÷ 3”. Bu yüzden üç yatayın hepsi eşiğin üstünde, üç dikeyin hepsi altında olamaz. 6. seviyedeki duvarın aynısı; çözüm de aynı: araya her konum için bir dedektör koymak.</p>`
+},
+/* ------------------------------ 11: birlikte yanan, birlikte bağlanır (Ela, limon ve çilek) ------------------------------ */
+{
+  key:'hebb',goal:"Öğretmen, ödül ya da sürpriz olmadan da öğrenilebildiğini görmek: aynı anda gelen hisler birbirine bağlanır ve bir “şey” olur. Sonra o şeyin tek bir parçası, bütününü geri çağırır.",
+  todo:["Ela iki yaşında ve mutfakta ilk kez meyve tadıyor. Beyninde sekiz his nöronu var (renk, tat, koku, dokunma). Soldaki 🍋 Limon düğmesi Ela’ya bir limon yaşatır: dört his aynı anda yanar.","Aynı anda yanan iki nöronun arasındaki bağ güçlenir; sahnede çizgiler kalınlaşır. Etiket yok, öğretmen yok.","Sonra bir ipucu ver (ör. sadece koku) ve Ela’nın beyninin neyi tamamladığını izle. Ne yapacağını her an soldaki ipucu ve parlayan düğme söyler."],
+  part:'D',title:'Birlikte yanan, birlikte bağlanır',
+  question:'Limonu sadece düşünmek bile neden ağzını sulandırır? Bir koku, yıllar önceki bir anıyı nasıl bütünüyle geri getirir?',
+  kind:'hebb',
+  init(){return{W:hZero(),sel:[0,0,0,0,0,0,0,0],last:null,hist:[],n:0};},
+  dailyTitle:'Bunu sen de yaşadın: bir parça, bütünü çağırır',
+  daily:[
+    {icon:'🍋',title:'Limon düşünmek',text:'Bir limonu dilimleyip ağzına attığını düşün. Ağzın sulandı mı? Limonun tadı yok ama görüntüsü ve kokusu, onlarla hep birlikte gelen ekşi tadı da uyandırdı.'},
+    {icon:'🎵',title:'Şarkının ilk notaları',text:'Bildiğin bir şarkının ilk iki notasını duyunca devamı kafanda çalmaya başlar. Notalar hep aynı sırayla birlikte geldiği için birbirine bağlandı.'},
+    {icon:'🫖',title:'Bir koku, bir anı',text:'Bir kokuyu (ıhlamur, sobada kestane, bir parfüm) duyunca birden çocukluğundaki bir ev, bir mevsim, bir insan gözünün önüne gelir. Tek bir parça bütün anıyı çağırdı.'},
+    {icon:'😷',title:'Maskeli yüz',text:'Yüzünün yarısı maskeyle kapalı bir arkadaşını yine de tanırsın. Gözler ve saç, yüzün geri kalanını tamamlamaya yetiyor.'}
+  ],
+  missions:[
+    {id:'wire',text:'Ela limonla tanışıyor: <b>🍋 Limon</b> düğmesine <b>4 kez</b> bas. Her seferinde dört his birlikte gelir: sarı renk, ekşi tat, keskin koku, pürüzlü kabuk.',
+      check:st=>hebbMinIn(st.W,HEBB.things.lim.x)>=0.99,
+      aha:'Dört his her seferinde aynı anda yandı ve aralarındaki altı bağın hepsi güçlendi. Kimse Ela’ya “bunun adı limon” demedi; ödül ya da sürpriz de yoktu. Tek kural şu: aynı anda yanan iki nöronun arasındaki bağ güçlenir. Donald Hebb bunu 1949’da öne sürdü; sonradan “birlikte yanan nöronlar birlikte bağlanır” diye özetlendi. Ela’nın beyninde bu dört his artık birbirine bağlı bir grup, yani bir “şey”.'},
+    {id:'complete',text:'Parçadan bütüne: Ela’ya sadece <b>👃 keskin kokuyu</b> ver (gözleri kapalı, limonu koklatıyorsun). Beyni ne hatırlıyor?',
+      check:st=>!!st.flags.complete,
+      aha:'Sadece koku geldi; ama sarı renk, ekşi tat ve pürüzlü kabuk da yandı. Beyin eksik parçaları bağlar üzerinden tamamladı. Ekşi tat nöronu yanınca Ela’nın tadına bakmadan ağzı sulandı: limonu düşünmek bile ağzını sulandırır. Hipokampusun en önemli işlerinden biri bu: bir parçadan bütün anıyı geri çağırmak (örüntü tamamlama).'},
+    {id:'two',text:'İkinci şey: <b>🍓 Çilek</b> düğmesine <b>4 kez</b> bas. Sonra sadece <b>🔴 kırmızı</b> ipucunu ver. Limon mu geliyor, çilek mi?',
+      check:st=>!!st.flags.two,
+      aha:'Kırmızı yalnızca çileği çağırdı; limona hiç dokunmadı. Aynı sekiz nöronda iki ayrı anı saklanıyor ve bir ipucu yalnızca kendi grubunu uyandırıyor. Bilgisayardaki bir dosyaya adresiyle ulaşılır; beyindeki bir anıya ise içeriğinin bir parçasıyla.'},
+    {id:'clean',text:'Yanlış ipucu: <b>🟡 sarı + 😖 ekşi + 😋 tatlı</b> ver. Tatlı tat limona ait değil. Ela ne hatırlıyor?',
+      check:st=>!!st.flags.clean,
+      aha:'Sarı ve ekşi limonu çağırdı; limonun öbür parçaları da yandı. Tatlı tat ise hiçbir yandan destek almadı ve söndü. Beyin uymayan parçayı atıp en yakın anıya oturdu. Saçını kestirmiş ya da gözlük takmış bir arkadaşını yine tanıman da böyle: uymayan parça bastırılır, uyan anı tamamlanır.'},
+    {id:'mix',text:'Karışan anılar: <b>🍋🍓 Çilekli limonata</b> düğmesine <b>3 kez</b> bas (iki meyve hep birlikte). Sonra yine sadece <b>👃 keskin koku</b> ver. Şimdi ne geliyor?',
+      check:st=>!!st.flags.mix,
+      aha:'Keskin koku artık limonla birlikte çileği de çağırıyor: iki ayrı şey, birlikte yaşandıkça tek bir anıya kaynaştı. Hebb kuralı neyin birlikte geldiğine bakar, neyin “aslında” ayrı olduğuna bakmaz. Bir kokunun sana sadece bir yemeği değil, onu yediğin evi, mevsimi ve insanları da hatırlatması bu yüzden. İyi tarafı zengin çağrışımlar; kötü tarafı, benzer anıların birbirine karışabilmesi. Sonraki seviyeler bu soruna bakıyor.'}
+  ],
+  cards:{
+    brain:'İki nöron arasındaki bağ, ikisi neredeyse aynı anda etkin olunca kalıcı olarak güçlenir (uzun süreli güçlenme). Bunu sağlayan NMDA reseptörü bir “aynı anda mı?” dedektörü gibi çalışır: yalnızca gönderen sinyal yollarken alan nöron da etkinse açılır. Hipokampusun CA3 bölgesindeki nöronlar birbirine bol bol bağlıdır; bir anının parçası geldiğinde bütününü tamamladığı düşünülür. Bu bölgede NMDA reseptörü olmayan fareler, bir yeri bütün ipuçlarıyla bulabiliyor ama ipuçlarının çoğu kaldırılınca bulamıyordu (Nakazawa ve arkadaşları, 2002). Bir anıyı taşıyan nöron grubuna “engram” deniyor; farelerde bu nöronlar ışıkla uyarılınca anı geri geldi (Liu ve arkadaşları, 2012).',
+    model:'Ela’nın beyninde sekiz his nöronu var ve her biri ötekilerin hepsine bağlı. Yaşarken: aynı anda yanan her iki nöron arasındaki bağ 0,25 artar (en çok 1). Hatırlarken: verdiğin ipucu yanar; sonra her adımda bir nöron, o an yanan öbür nöronlardan aldığı bağların ortalaması %60’ı geçerse yanar, geçmezse söner. Bu, durum değişmeyene kadar sürer. Öğretmen, ödül ya da sürpriz yok; tek kural “birlikte”.',
+    limit:'Bu modelde bağlar sadece güçleniyor; beyinde bağlar zayıflayabilir de ve nöronlar toplam etkinliklerini dengede tutar. Gerçek bir anı sekiz değil binlerce nörona dağılmıştır ve her nöron birçok anıda yer alır. Beyin, benzer anıların karışmaması için onları hipokampusun bir bölümünde ayrı nöron gruplarına yayar (örüntü ayrıştırma); modelde böyle bir koruma yok. Bağlar burada iki yönde de aynı; gerçek sinapslar tek yönlüdür.',
+    ai:'Bu ağ, Hopfield ağının (1982) küçük bir hâli: Hebb kuralıyla saklanan desenler, bir parçalarından tamamlanır. John Hopfield bu çalışmayla Geoffrey Hinton’la birlikte 2024 Nobel Fizik Ödülü’nü aldı. İçeriğinin bir parçasıyla ulaşılan bu tür belleğe içerikle adreslenen bellek denir. Kelimelerin anlamını, metinde hangi kelimelerle birlikte geçtiklerinden öğrenen kelime vektörleri de aynı fikre dayanır.'
+  },
+  deeper:`<p><b>Yaşarken (Hebb kuralı):</b> aynı anda yanan her iki nöron arasındaki bağ += 0,25 (en çok 1). Yanmayan nöronların bağları değişmez. 🍋 Limonda dört his yanar, aralarındaki 4 × 3 ÷ 2 = 6 bağın her biri 0,25 artar. Dört kerede 1’e ulaşır.</p>
+    <p><b>Hatırlarken:</b> bir nöronun desteği = o an yanan öteki nöronlardan ona gelen bağların ortalaması. Destek %60 ya da üstüyse yanar. İlk adımda ipucu yanık kalır, sonraki adımlarda o da destek ister.</p>
+    <p><b>Neden 3 limon yetiyor?</b> Üç kerede bağlar 0,75 olur. Sadece koku verince sarının desteği 0,75 ≥ 0,6: yanar. İki kerede 0,5 kalır, bir koku yetmez. Az yaşanmış bir anı için daha çok ipucu gerekir.</p>
+    <p><b>Yanlış ipucu:</b> sarı + ekşi + tatlı. 1. adımda keskin koku ve pürüzlü kabuk da yanar (sarı ve ekşiden 1 + 1, tatlıdan 0 alırlar: ortalama 0,67). 2. adımda tatlının desteği 0 (limon nöronlarından ona hiç bağ yok): söner.</p>
+    <p><b>Karışma:</b> çilekli limonata sekiz hissi birden yakar; limon ve çilek nöronları arasındaki 16 bağ da artar. Üç kerede 0,75 olur ve tek bir koku iki meyveyi birden çağırır.</p>`
 }
 ];
 
@@ -519,7 +594,7 @@ const ROADMAP=[
   {key:'two'},
   {key:'lines'},
   {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar',about:'5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'},
-  {key:'hebb',part:'D',title:'Birlikte yanan, birlikte bağlanır',note:'yakında',about:'Etiket yok; hep birlikte gelen özellikler birbirine bağlanıp bir “şey” oluşturuyor. Parçası görülünce bütünü tamamlanıyor.'},
+  {key:'hebb'},
   {key:'where',part:'D',title:'Hafıza nerede?',note:'yakında',about:'Öğrenmiş bir ağdan nöron ya da bağlantı silince ne olur? Bilgi tek bir yerde değil, bağlantılara dağılmış; beyin hasarı da çoğu zaman yavaş yavaş bozulma olarak görülür.'},
   {key:'general',part:'D',title:'Ezber ve genelleme',note:'yakında',about:'Eğitimde hiç gösterilmeyen sınav (doğrulama) kartlarıyla: ağ kuralı mı öğrendi, yoksa örnekleri mi ezberledi?'},
   {key:'sleep',part:'D',title:'Unutma ve uyku',note:'yakında',about:'Yeni bir şey öğrenince eskisinin bozulması ve beynin uykuda yaptığı tekrar oynatmanın bunu nasıl önlediği.'},
@@ -528,4 +603,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain,EYE,eyeNearest,eyeAnswer,eyeTuned,eyeNamedAll,eyeShow,eyeName,eyeNewKitten,eyeGrow};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain,EYE,eyeNearest,eyeAnswer,eyeTuned,eyeNamedAll,eyeShow,eyeName,eyeNewKitten,eyeGrow,HEBB,hebbMinIn,hebbMinCross,hebbLive,hebbCue,hebbNewBaby};}

@@ -547,3 +547,33 @@ details.manual[open]>summary{margin-bottom:6px}
 .eans-pic figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px}
 .eans-pic figcaption{font-size:11.5px;color:var(--ink-2)}
 .eans-pic>span{font-size:20px;color:var(--ink-2)}
+
+/* ---------- Seviye 11: birlikte yanan, birlikte bağlanır ---------- */
+.pbtns.three{flex-direction:row}.pbtns.three .btn{flex:1 1 0;justify-content:center;text-align:center}
+.pbtns .btn small{font-size:12px;margin-left:4px}
+.hgrp{font-size:12px;fill:var(--ink-2);text-anchor:middle;font-style:italic}
+.hnode{cursor:pointer}
+.hsoma{transition:fill .25s,stroke .25s}
+.hsoma.on{fill:color-mix(in srgb,var(--light) 85%,var(--surface));stroke:var(--light-ink);stroke-width:2.5}
+.hsoma.cue{stroke:var(--accent);stroke-width:4}
+.hsoma.added{fill:var(--light);stroke:var(--ok);stroke-width:4}
+.hsel{fill:none;stroke:transparent;stroke-width:2.5;stroke-dasharray:5 4}
+.hsel.on{stroke:var(--accent)}
+.hnode:hover .hsel{stroke:color-mix(in srgb,var(--accent) 45%,transparent)}
+.hsyn{stroke:color-mix(in srgb,var(--pos) 55%,var(--surface));stroke-linecap:round;transition:stroke .25s}
+.hsyn.on{stroke:var(--light);opacity:1!important}
+.hbub{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.hbub-d{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.hbig{font-size:30px;letter-spacing:2px}
+.hbig2{font-size:22px;letter-spacing:2px}
+.hlist{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:13.5px}
+.hlist div{display:flex;justify-content:space-between;gap:8px;padding:4px 8px;border-radius:8px;background:var(--surface-2)}
+.hlist div.ok{background:color-mix(in srgb,var(--ok) 14%,var(--surface))}
+.hlist div.bad{background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.hlist span{color:var(--ink-2)}
+.hmat{border-collapse:separate;border-spacing:3px;margin:4px 0}
+.hmat th{font-weight:400;font-size:16px;padding:0 2px}
+.hmat td{width:42px;height:30px;text-align:center;font-size:11px;border-radius:6px;background:color-mix(in srgb,var(--pos) calc(var(--w) * 75%),var(--surface-2));color:var(--ink)}
+.hmat td.self{background:transparent}
+.hmat td.on{outline:2px solid var(--light)}
+.pbtns.three .btn{white-space:nowrap;padding:6px 6px;font-size:13px}

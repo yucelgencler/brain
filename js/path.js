@@ -58,12 +58,13 @@ function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 /* ---------- Seviye sayfasını kur ---------- */
 // Kendi sahnesi olan seviyeler (9 ve sonrası): html, wire, update, reset
 function viewOf(kind){
-  const V={eye:{html:eyeGridHTML,wire:wireEye,update:updateEye,reset:eyeResetView}};
+  const V={eye:{html:eyeGridHTML,wire:wireEye,update:updateEye,reset:eyeResetView},
+    hebb:{html:hebbGridHTML,wire:wireHebb,update:updateHebb,reset:hebbResetView}};
   return V[kind]||null;
 }
 let auto=0,busy=false,lastFire=null,resetArm=0;
 function go(key){
-  stopAuto();multiStop();netStop();predictStop();busy=false;lastFire=null;
+  stopAuto();hebbResetView();multiStop();netStop();predictStop();busy=false;lastFire=null;
   P.level=key;const no=curRoad().id;
   if(location.hash!=='#seviye-'+no)history.replaceState(null,'','#seviye-'+no);
   if(L())buildLevel();else buildPlaceholder();save();

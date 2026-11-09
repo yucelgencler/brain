@@ -20,7 +20,7 @@ Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görev
 | 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, yumuşak eşik, geri yayılım (suç paylaştırma), simetri | hazır |
 | 9 | Anlama | Yatay mı dikey mi? | yavru Pamuk’un gözü: algı alanı, etiketsiz (rekabetçi) öğrenme, az etiketle ad, kritik dönem (Blakemore) | hazır |
 | 10 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
-| 11 | Hafıza | Birlikte yanan, birlikte bağlanır | öğretmensiz öğrenme, parçadan bütünü tamamlama | yakında |
+| 11 | Hafıza | Birlikte yanan, birlikte bağlanır | Ela, limon ve çilek: Hebb kuralı, örüntü tamamlama, yanlış ipucunu düzeltme, anıların karışması | hazır |
 | 12 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
 | 13 | Hafıza | Ezber ve genelleme | eğitim ve doğrulama (sınav) verisi | yakında |
 | 14 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
@@ -48,6 +48,7 @@ js/path.js            Öğrenme yolu arayüzü: sahne, gösterge, tablo, karar h
 js/multi.js           Seviye 7 arayüzü: birden çok nöron, karşılaştırma, bağlantı tablosu
 js/net.js             Seviye 8 arayüzü: iki ara nöron + lamba, elle kur / makine öğrensin
 js/predict.js         Seviye 5 arayüzü: oda (Pamuk koşar) + Pamuk’un beyni; ses çıkar → tahmin → mama ver/verme → sürpriz → öğren
+js/hebb.js            Seviye 11 arayüzü: 8 his nöronu halkada; an yaşat (Hebb) / ipucu ver (tamamlama), bağ tablosu
 js/eye.js             Seviye 9 arayüzü: 3×3 göz → 6 görme nöronu (resimleriyle) → yatay/dikey adları; büyüt, yeni yavru
 js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
 js/app.js             Laboratuvar arayüzü

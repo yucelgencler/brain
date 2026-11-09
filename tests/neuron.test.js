@@ -84,7 +84,7 @@ test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
 test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   const {ROADMAP}=require('../js/levels.js');
   ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
-  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8,9]);
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8,9,11]);
   assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[10].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
@@ -231,5 +231,27 @@ test('seviye 9: normal büyüyen kedi yatayı görüyor; göremediği şeye ad b
   const r=LV.eyeShow(st,LV.EYE.lines[0].x);assert.ok(r.m>0.95);assert.ok(!st.flags.blake);
   const k=eFresh();LV.eyeShow(k,[1,0,0,0,1,0,0,0,1]);LV.eyeNewKitten(k);LV.eyeGrow(k,'v');LV.eyeShow(k,LV.EYE.lines[0].x);
   assert.strictEqual(LV.eyeName(k,0).err,'blur');
+});
+
+/* ---------- Seviye 11: birlikte yanan, birlikte bağlanır ---------- */
+const hFresh=()=>Object.assign(lv('hebb').init(),{flags:{}});
+const hDone=st=>lv('hebb').missions.filter(m=>m.check(st)).map(m=>m.id);
+const H1=k=>LV.HEBB.feats.map((f,i)=>i===k?1:0),HT=LV.HEBB.things;
+test('seviye 11: sadece birlikte yananlar bağlanır; tek his hiçbir bağı değiştirmez',()=>{
+  const st=hFresh();LV.hebbLive(st,H1(0));assert.ok(st.W.every(r=>r.every(w=>w===0)));
+  LV.hebbLive(st,HT.lim.x);assert.strictEqual(st.W[0][1],0.25);assert.strictEqual(st.W[1][0],0.25);assert.strictEqual(st.W[0][4],0);
+});
+test('seviye 11: 2 limon tek kokuyla tamamlanmaz, 3 limon tamamlar (deeper)',()=>{
+  const st=hFresh();LV.hebbLive(st,HT.lim.x);LV.hebbLive(st,HT.lim.x);
+  assert.deepStrictEqual(LV.hebbCue(st,H1(2)).fin,H1(2));
+  LV.hebbLive(st,HT.lim.x);assert.deepStrictEqual(LV.hebbCue(st,H1(2)).fin,HT.lim.x);
+});
+test('seviye 11: beş görev sırayla',()=>{
+  const st=hFresh();for(let i=0;i<4;i++)LV.hebbLive(st,HT.lim.x);assert.deepStrictEqual(hDone(st),['wire']);
+  LV.hebbCue(st,H1(2));assert.ok(st.flags.complete);
+  for(let i=0;i<4;i++)LV.hebbLive(st,HT.cil.x);assert.deepStrictEqual(LV.hebbCue(st,H1(4)).fin,HT.cil.x);assert.ok(st.flags.two);
+  const r=LV.hebbCue(st,[1,1,0,0,0,1,0,0]);assert.deepStrictEqual(r.fin,HT.lim.x);assert.ok(st.flags.clean);
+  LV.hebbLive(st,HT.mix.x);LV.hebbLive(st,HT.mix.x);LV.hebbCue(st,H1(2));assert.ok(!st.flags.mix,'iki limonata karıştırmamalı');
+  LV.hebbLive(st,HT.mix.x);LV.hebbCue(st,H1(2));assert.ok(st.flags.mix);assert.strictEqual(hDone(st).length,5);
 });
 console.log(`\n${passed} test geçti.`);
