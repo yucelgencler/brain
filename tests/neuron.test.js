@@ -84,7 +84,7 @@ test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
 test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   const {ROADMAP}=require('../js/levels.js');
   ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
-  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8]);
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8,9]);
   assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[10].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
@@ -198,5 +198,38 @@ test('seviye 5: temiz başlamayan engelleme denemesi sayılmıyor',()=>{
 });
 test('seviye 5: hep mama verilen 20 an “yarı yarıya” sayılmıyor',()=>{
   const st=pFresh();pRun(st,POS,1,25);assert.ok(!st.flags.half);
+});
+
+/* ---------- Seviye 9: yavru Pamuk’un gözü ---------- */
+const LV=require('../js/levels.js');
+const eFresh=()=>Object.assign(lv('lines').init(),{flags:{}});
+const eDone=st=>lv('lines').missions.filter(m=>m.check(st)).map(m=>m.id);
+test('seviye 9: benzerlik sayıları (deeper’daki %50–70, %99, %81, %33)',()=>{
+  const W=N.eyeInit(1);const blur=N.eyeLook(LV.EYE.lines[0].x,W);
+  blur.m.forEach(m=>assert.ok(m>0.45&&m<0.75,'bulanık '+m));
+  let w=W[0];for(let i=0;i<3;i++)w=N.eyeLearn(LV.EYE.lines[0].x,w,0.6);
+  const m=x=>N.eyeLook(x,[w]).m[0];
+  assert.ok(m(LV.EYE.lines[0].x)>0.98);assert.ok(Math.abs(m([1,0,1,0,0,0,0,0,0])-0.81)<0.03);assert.ok(Math.abs(m(LV.EYE.lines[3].x)-0.33)<0.04);
+  for(let sd=1;sd<=300;sd++){const o=N.eyeLook(LV.EYE.lines[sd%6].x,N.eyeInit(sd));const w1=N.eyeLearn(LV.EYE.lines[sd%6].x,N.eyeInit(sd)[o.k],0.6);assert.ok(N.eyeLook(LV.EYE.lines[sd%6].x,[w1]).m[0]>0.9);}
+});
+test('seviye 9: her çizgiyi bir kez göstermek altı ayrı keskin nöron yapıyor (çok tohum)',()=>{
+  for(let seed=1;seed<=300;seed++){const st=eFresh();st.seed=seed;st.W=N.eyeInit(seed);
+    LV.EYE.lines.forEach(l=>LV.eyeShow(st,l.x));assert.ok(LV.eyeTuned(st.W),'tohum '+seed);}
+});
+test('seviye 9: beş görev sırayla; dikey dünyada büyüyen yatayı göremiyor',()=>{
+  const st=eFresh();LV.eyeShow(st,LV.EYE.lines[0].x);assert.deepStrictEqual(eDone(st),['first']);
+  LV.EYE.lines.forEach(l=>LV.eyeShow(st,l.x));assert.ok(eDone(st).includes('tuned'));
+  assert.ok(!eDone(st).includes('name'));
+  LV.EYE.lines.forEach(l=>{LV.eyeShow(st,l.x);LV.eyeName(st,l.o);});assert.ok(eDone(st).includes('name'));
+  LV.eyeShow(st,[0,0,0,1,1,1,0,0,1]);assert.ok(st.flags.noisy);
+  LV.eyeNewKitten(st);LV.eyeGrow(st,'v');assert.strictEqual(st.age,LV.EYE.age);assert.strictEqual(st.youth.h,0);
+  const W0=JSON.stringify(st.W);const r=LV.eyeShow(st,LV.EYE.lines[2].x);
+  assert.strictEqual(r.ans,'blur');assert.ok(st.flags.blake);assert.strictEqual(JSON.stringify(st.W),W0,'büyüyünce bağlar değişmemeli');
+});
+test('seviye 9: normal büyüyen kedi yatayı görüyor; göremediği şeye ad bağlanmıyor',()=>{
+  const st=eFresh();LV.eyeGrow(st,'all');assert.ok(LV.eyeTuned(st.W));
+  const r=LV.eyeShow(st,LV.EYE.lines[0].x);assert.ok(r.m>0.95);assert.ok(!st.flags.blake);
+  const k=eFresh();LV.eyeShow(k,[1,0,0,0,1,0,0,0,1]);LV.eyeNewKitten(k);LV.eyeGrow(k,'v');LV.eyeShow(k,LV.EYE.lines[0].x);
+  assert.strictEqual(LV.eyeName(k,0).err,'blur');
 });
 console.log(`\n${passed} test geçti.`);

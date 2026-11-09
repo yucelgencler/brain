@@ -512,3 +512,38 @@ details.manual[open]>summary{margin-bottom:6px}
 .dcard h4{margin:6px 0 4px;font-size:14.5px}
 .dcard p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
 @media (prefers-reduced-motion: reduce){.pcat{transition:none}.btn.psug{animation:none}}
+
+/* ---------- Seviye 9: yavru Pamuk’un gözü ---------- */
+.epic{display:block;flex:none}
+.ebtns{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.btn.eline{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;font-size:13px}
+.ehint{margin:2px 0 0;font-size:12.5px}
+.ecell{fill:var(--surface-2);stroke:var(--line);stroke-width:1.5;cursor:pointer;transition:fill .15s}
+.ecell.on{fill:var(--light);stroke:var(--light-ink)}
+.ecell:hover{stroke:var(--accent)}
+.ecell.psugc{stroke:var(--accent);stroke-width:2.5;animation:psugc 1.6s ease-in-out infinite}
+@keyframes psugc{50%{stroke-width:1}}
+.edet-r{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:stroke .2s,fill .2s}
+.edet.sharp .edet-r{stroke:color-mix(in srgb,var(--pos) 40%,var(--line))}
+.edet.win .edet-r{stroke:var(--accent);stroke-width:2.5;fill:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.edet-n{font-size:12.5px;font-weight:700;fill:var(--ink)}
+.edet-s{font-size:11.5px;fill:var(--ink-2)}
+.edet-m{font-size:11px;text-anchor:middle;fill:var(--ink-2)}
+.ebar-bg{fill:var(--surface-2)}
+.ebar{fill:color-mix(in srgb,var(--ink-2) 55%,var(--surface));transition:width .3s}
+.ebar.win{fill:var(--ok)} .ebar.weak{fill:var(--held)}
+.esyn{stroke:var(--ink-2);stroke-width:1.2;transition:opacity .25s}
+.esyn.win{stroke:var(--accent);stroke-width:3}
+.eword-l{stroke:color-mix(in srgb,var(--pos) 45%,var(--surface));stroke-linecap:round}
+.eword-l.win{stroke:var(--pos)}
+.eans-pic{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:12.5px;line-height:1.35}
+.estep-pic{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.eage{height:12px;border-radius:6px;background:var(--surface-2);overflow:hidden;margin:6px 0}
+.eage i{display:block;height:100%;width:0;background:var(--ok);border-radius:6px;transition:width .4s}
+.eage i.done{background:var(--ink-2)}
+.eworld{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13.5px;color:var(--ink-2)}
+.eworld b{color:var(--ink);font-weight:600}
+@media (prefers-reduced-motion: reduce){.ecell.psugc{animation:none}}
+.eans-pic figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.eans-pic figcaption{font-size:11.5px;color:var(--ink-2)}
+.eans-pic>span{font-size:20px;color:var(--ink-2)}

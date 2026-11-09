@@ -56,6 +56,11 @@ function sumOf(st,lv){return weightedSum(inputsOf(st,lv),st.w);}
 function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 
 /* ---------- Seviye sayfasını kur ---------- */
+// Kendi sahnesi olan seviyeler (9 ve sonrası): html, wire, update, reset
+function viewOf(kind){
+  const V={eye:{html:eyeGridHTML,wire:wireEye,update:updateEye,reset:eyeResetView}};
+  return V[kind]||null;
+}
 let auto=0,busy=false,lastFire=null,resetArm=0;
 function go(key){
   stopAuto();multiStop();netStop();predictStop();busy=false;lastFire=null;
@@ -68,6 +73,7 @@ function buildLevel(){
   const lv=L(),rec=R(),part=PARTS.find(p=>p.id===lv.part),multi=lv.kind==='multi';
   document.title=`Seviye ${lv.id}: ${lv.title} · Boş Beyin`;
   flashPrev.clear();lastCardKey='';lastStepKey='';multiResetView();multiNetReset();predictStop();predictResetView();
+  const vw=viewOf(lv.kind);if(vw)vw.reset();
   const el=$('#lv');el.className='lv';
   const routeOpen=!rec.routeSeen;rec.routeSeen=true;
   el.innerHTML=`
@@ -78,9 +84,9 @@ function buildLevel(){
     <details class="route"${routeOpen?' open':''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
       <p><b>Amaç:</b> ${esc(lv.goal)}</p><ol>${lv.todo.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></details>
     <div class="mission" id="mission" aria-live="polite"></div>
-    ${multi?multiGridHTML(lv):lv.kind==='net'?netGridHTML(lv):lv.kind==='predict'?predictGridHTML(lv):benchHTML(lv)}
+    ${multi?multiGridHTML(lv):lv.kind==='net'?netGridHTML(lv):lv.kind==='predict'?predictGridHTML(lv):vw?vw.html(lv):benchHTML(lv)}
     <section class="reading" aria-label="Okuma">
-      ${lv.daily?`<section class="daily" aria-label="Bunu sen de yaşadın"><h3>Bunu sen de yaşadın: beyin her an tahmin ediyor</h3><div class="daily-row">${lv.daily.map(d=>`<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>`:''}
+      ${lv.daily?`<section class="daily" aria-label="Bunu sen de yaşadın"><h3>${esc(lv.dailyTitle||'Bunu sen de yaşadın: beyin her an tahmin ediyor')}</h3><div class="daily-row">${lv.daily.map(d=>`<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>`:''}
       <section class="cards4" aria-label="Beyinde ve modelde">
         <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
         <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
@@ -105,6 +111,7 @@ function buildLevel(){
   if(multi)wireMulti(lv);
   else if(lv.kind==='net')wireNet(lv);
   else if(lv.kind==='predict'){if(rec.last&&rec.last.pending)rec.last=null;wirePredict(lv);}
+  else if(vw)vw.wire(lv);
   else{buildScene(lv);buildSliders(lv);if(lv.learning)wireLearn(lv);}
   $('#notes').value=rec.notes||'';
   $('#notes').addEventListener('input',e=>{R().notes=e.target.value;save();});
@@ -687,6 +694,7 @@ function refresh(fromSlider){
   if(lv.kind==='multi'){updateMulti(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
   if(lv.kind==='net'){updateNet(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
   if(lv.kind==='predict'){updatePredict(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
+  const vw=viewOf(lv.kind);if(vw){vw.update(lv,rec);renderMissions(lv,rec);renderNav();flashScan();save();return;}
   updateScene(lv,st);updateGauge(lv,st);
   $('#answer').innerHTML=answerHTML(lv,st);
   if(!fromSlider)syncSliders();

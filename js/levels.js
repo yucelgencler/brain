@@ -15,7 +15,7 @@
 
    Durum (st): single -> {b, w:[w], theta}; pair -> {x:[a,b], w:[w1,w2], theta, targetKey, target, flags}
 ------------------------------------------------------------------- */
-const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves,predictStep,weightedSum};
+const NN=(typeof module!=='undefined'&&module.exports)?require('./neuron.js'):{fires,solves,score,GATES,COMBOS,num,tidy,netPattern,netSolves,predictStep,weightedSum,unitVec,eyeInit,eyeLook,eyeLearn,rng};
 
 // Öğrenme seviyelerinde her istenen davranışın gerçek hayattaki karşılığı.
 // a, b: iki özellik (on: var / 1, off: yok / 0); yes/no: nöron ateşlerse / susarsa cevap.
@@ -96,6 +96,60 @@ function predictCommit(st,r){
     if(st.runStart[0]<=0.1&&st.runStart[1]<=0.1){f.control=true;f.controlBell=st.w[1];f.lastExp='control';}
   }
   return r;
+}
+
+/* ---------- Seviye 9: yavru Pamuk’un gözü (rekabetçi öğrenme + kritik dönem) ---------- */
+const EYE={n:6,rate:0.6,age:24,see:0.75,sharp:0.9,
+  lines:[
+    {x:[1,1,1,0,0,0,0,0,0],o:0,short:'üst'},{x:[0,0,0,1,1,1,0,0,0],o:0,short:'orta'},{x:[0,0,0,0,0,0,1,1,1],o:0,short:'alt'},
+    {x:[1,0,0,1,0,0,1,0,0],o:1,short:'sol'},{x:[0,1,0,0,1,0,0,1,0],o:1,short:'orta'},{x:[0,0,1,0,0,1,0,0,1],o:1,short:'sağ'}],
+  words:[{icon:'━',name:'yatay'},{icon:'┃',name:'dikey'}]};
+const eyeLineName=li=>`${EYE.words[EYE.lines[li].o].icon} ${EYE.lines[li].short} ${EYE.words[EYE.lines[li].o].name}`;
+// En yakın temiz çizgi (kaç noktası farklı)
+function eyeNearest(x){
+  let best=null;EYE.lines.forEach((l,li)=>{const d=l.x.reduce((s,v,i)=>s+(v!==x[i]?1:0),0);if(!best||d<best.d)best={li,d};});
+  return best;
+}
+// Pamuk bu resme ne der? 'blur': net göremiyor, 'unknown': tanıyor ama adını bilmiyor, 0/1: yatay/dikey
+function eyeAnswer(st,x){
+  const o=NN.eyeLook(x,st.W),m=o.m[o.k],L=st.L[o.k];
+  const ans=m<EYE.see?'blur':Math.max(L[0],L[1])<0.3?'unknown':L[0]>=L[1]?0:1;
+  return{k:o.k,m,all:o.m,ans};
+}
+function eyeTuned(W){
+  const ks=EYE.lines.map(l=>NN.eyeLook(l.x,W));
+  return new Set(ks.map(o=>o.k)).size===EYE.lines.length&&ks.every(o=>o.m[o.k]>=EYE.sharp);
+}
+function eyeNamedAll(st){return EYE.lines.every(l=>eyeAnswer(st,l.x).ans===l.o);}
+function eyeShow(st,x){
+  if(!x.some(v=>v))return null;
+  const a=eyeAnswer(st,x),young=st.age<EYE.age,w0=st.W[a.k].slice(),near=eyeNearest(x);
+  if(young){st.W=st.W.slice();st.W[a.k]=NN.eyeLearn(x,w0,EYE.rate);st.age++;
+    const y=Object.assign({h:0,v:0,o:0},st.youth);if(near.d===0)y[EYE.lines[near.li].o?'v':'h']++;else y.o++;st.youth=y;}
+  st.n=(st.n||0)+1;st.retina=x.slice();
+  const r={x:x.slice(),k:a.k,m:a.m,all:a.all,ans:a.ans,young,w0,w:st.W[a.k].slice(),near,seq:st.n,mAfter:NN.eyeLook(x,st.W).m[a.k]};
+  st.last=r;st.hist=(st.hist||[]).concat([{x:r.x,k:r.k,m:r.m,ans:r.ans,n:st.n}]).slice(-30);
+  st.flags.first=true;
+  if(near.d===1&&a.m>=EYE.see&&a.ans===EYE.lines[near.li].o)st.flags.noisy=true;
+  if(!young&&near.d===0&&EYE.lines[near.li].o===0&&a.m<EYE.see&&!(st.youth&&st.youth.h)&&st.youth&&st.youth.v>0)st.flags.blake=true;
+  return r;
+}
+// Son gösterilen resmin adını öğret (kazanan nöron → kelime nöronu bağı)
+function eyeName(st,j){
+  const r=st.last;if(!r)return{err:'none'};
+  const a=eyeAnswer(st,r.x);if(a.m<EYE.see)return{err:'blur',m:a.m};
+  const L=st.L.map(l=>l.slice()),l=L[a.k];l[j]=Math.round((l[j]+0.7*(1-l[j]))*1e4)/1e4;l[1-j]=Math.round(l[1-j]*0.3*1e4)/1e4;
+  st.L=L;r.named=j;st.names=(st.names||0)+1;return{k:a.k,j};
+}
+function eyeNewKitten(st){
+  st.seed=(st.seed||1)+1;st.W=NN.eyeInit(st.seed,EYE.n);st.L=Array.from({length:EYE.n},()=>[0,0]);
+  st.age=0;st.youth={h:0,v:0,o:0};st.last=null;st.hist=[];st.retina=[0,0,0,0,0,0,0,0,0];
+}
+// Yavruluk bitene kadar karışık sırayla çizgi göster: 'all' her çizgiden, 'v' sadece dikey
+function eyeGrow(st,world){
+  const pool=EYE.lines.map((l,i)=>i).filter(i=>world==='v'?EYE.lines[i].o===1:true),r=NN.rng(st.seed*97+st.age);let last=null;
+  while(st.age<EYE.age){const ord=pool.slice().sort(()=>r()-0.5);for(const i of ord){if(st.age>=EYE.age)break;last=eyeShow(st,EYE.lines[i].x);}}
+  return last;
 }
 
 const PARTS=[
@@ -409,6 +463,49 @@ const LEVELS=[
     <p><b>Düzeltme:</b> 4. seviyedeki kuralın aynısı: bağlantı += hız × hata (ya da pay) × girdi; eşik −= hız × hata (ya da pay).</p>
     <p><b>Simetri:</b> Bütün bağlantılar aynı başlarsa iki ara nöron hep aynı payı alır ve ikiz kalır; bu yüzden rastgele başlanır.</p>
     <p><b>Takılma:</b> Rastgele başlangıçların bir kısmında ağ hiç çözüme ulaşamadan bir “çukura” takılır (yerel en küçük). Burada “Rastgele başlat” takılmadığı bilinen başlangıçlardan birini seçiyor; gerçekte ağı yeniden başlatmak ya da daha çok ara nöron kullanmak gerekir.</p>`
+},
+/* ------------------------------ 9: yatay mı dikey mi? (yavru Pamuk’un gözü) ------------------------------ */
+{
+  key:'lines',goal:"Gözün neye bakacağını kimseden öğrenmeden, sadece bakarak öğrendiğini görmek: her görme nöronu sık gördüğü bir şekle ayarlanır. Bir nöronun “baktığı” şekil resim olarak çizilebilir.",
+  todo:["Pamuk yeni doğmuş bir yavru kedi; gözü 3×3 noktadan oluşuyor. Soldaki çizgi düğmeleriyle ona çizgi göster. Gözündeki altı nöronun her birinin baktığı şekil, kartının içinde küçük bir resim olarak duruyor.","Her bakışta gördüğüne en çok benzeyen nöron kazanır ve resmi gördüğüne doğru kayar. Başta hepsi bulanık gri; gösterdikçe keskinleşirler.","Sonra öğretmen ol: bir çizgi göster ve “Bu yatay” ya da “Bu dikey” de. Ne yapacağını her an soldaki ipucu ve parlayan düğme söyler."],
+  part:'C',title:'Yatay mı dikey mi?',
+  question:'Yavru bir kedi gözünü açtığında çizgileri nasıl görmeye başlar? Gözündeki nöronlar neye bakacaklarını kimden öğrenir?',
+  kind:'eye',
+  init(){return{seed:1,W:NN.eyeInit(1,EYE.n),L:Array.from({length:EYE.n},()=>[0,0]),age:0,youth:{h:0,v:0,o:0},retina:[0,0,0,0,0,0,0,0,0],last:null,hist:[],n:0};},
+  dailyTitle:'Bunu sen de yaşadın: görme, büyürken ayarlanır',
+  daily:[
+    {icon:'👶',title:'Yeni doğanın dünyası',text:'Yeni doğan bir bebek çok bulanık görür; keskin çizgileri ve kenarları ilk aylarda, baktıkça ayırmaya başlar. Pamuk’un gri, bulanık nöronlarının gösterdikçe keskinleşmesi gibi.'},
+    {icon:'🙈',title:'Tembel göz',text:'Bir çocuğun bir gözü iyi görmezse beyin o gözden gelenlere ayarlanmayı bırakabilir. Bu yüzden göz tembelliği küçük yaşta, sağlam göz bantla kapatılarak tedavi edilir: büyüdükten sonra beyin çok daha zor ayarlanıyor.'},
+    {icon:'🗣️',title:'Ana dilin sesleri',text:'Bebekler ilk aylarda bütün dillerin seslerini ayırabilir; bir yaş civarında yalnızca çevrelerinde duydukları seslere ayarlanırlar. Japoncada “r” ile “l” ayrı ses olmadığı için yetişkin Japonlar bu ikisini zor ayırır.'},
+    {icon:'✍️',title:'Bozuk el yazısı',text:'Yarısı silinmiş bir tabelayı ya da kötü bir el yazısını yine de okursun. Gördüğün şekil tam eşleşmese de en çok benzediği harf “kazanır”.'}
+  ],
+  missions:[
+    {id:'first',text:'Yavru Pamuk’a bir çizgi göster: soldaki <b>━ üst</b> düğmesine bas. Gözündeki altı nöronun hangisi kazandı, resmine ne oldu?',
+      check:st=>!!st.flags.first,
+      aha:'Altı nöronun hepsi başta bulanık griydi: her şeye biraz benziyorlardı. Gördüğü çizgiye en çok benzeyen nöron kazandı ve bağları o çizgiye doğru kaydı; resmi artık o çizgiye benziyor. Kimse Pamuk’a “bu bir çizgi” demedi. Sadece baktı.'},
+    {id:'tuned',text:'Altı çizginin hepsini göster. Her çizginin <b>kendi keskin nöronu</b> olsun (benzerlik %90’ın üstünde).',
+      check:st=>eyeTuned(st.W),
+      aha:'Altı nöron altı çizgiye ayrıldı. Neden hepsi aynı çizgiye kaymadı? Bir nöron bir çizgiye ayarlanınca öteki çizgilere daha az benzemeye başlar; yeni bir çizgi gelince onu hâlâ bulanık olan bir nöron kazanır. Hubel ve Wiesel 1959’da kedinin görme korteksinde tam böyle nöronlar buldu: her biri yalnızca belirli bir yerdeki, belirli açıdaki bir çubuğa tepki veriyordu. Bir nöronun “baktığı” bu desene algı alanı denir.'},
+    {id:'name',text:'Adını öğret: bir çizgi göster, sonra <b>━ Bu yatay</b> ya da <b>┃ Bu dikey</b> de. Pamuk altı çizginin hepsine doğru adı versin.',
+      check:st=>eyeNamedAll(st),
+      aha:'Görmeyi kendi kendine öğrenmişti; ad için her çizgiye bir kez söylemen yetti. Çünkü işin zor kısmını, çizgileri birbirinden ayırmayı, göz zaten yapmıştı. Ad, kazanan nörondan kelime nöronuna giden tek bir bağ. Çocuklar da bir kelimeyi çok az örnekle öğrenir: şekli zaten görebiliyorlar. Bir de dikkat et: “üst yatay”ın adını öğrenince “alt yatay”ı kendiliğinden bilmedi; bu küçük dünyada ikisinin ortak tek noktası yok.'},
+    {id:'noisy',text:'Bozuk çizgi: soldaki bir çizgiyi göster, sonra gözdeki <b>bir noktaya tıklayarak</b> onu boz (bir noktayı söndür ya da fazladan bir nokta yak). Ardından <b>👁 Göster</b>. Pamuk yine doğru adı söylüyor mu?',
+      check:st=>!!st.flags.noisy,
+      aha:'Bozuk çizgi de en çok kendi nöronuna benziyor (%80 civarı). Kazanan değişmedi, ad da değişmedi. Silik bir yazıyı, kötü bir el yazısını, yarısı kapalı bir tabelayı da böyle okursun: tam eşleşme gerekmez, en çok benzeyen desen kazanır.'},
+    {id:'blake',text:'Blakemore deneyi: <b>🐣 Yeni yavru</b> al ve <b>🌱 Sadece dikey dünyada büyüt</b>. Pamuk büyüyünce ona bir <b>yatay</b> çizgi göster. Görebiliyor mu?',
+      check:st=>!!st.flags.blake,
+      aha:'Pamuk yatay çizgiyi net göremiyor: hiçbir nöronu ona ayarlanmadı ve büyüdüğü için artık ayarlanamıyor. Blakemore ve Cooper 1970’te yavru kedileri yalnızca dikey çizgili bir silindirin içinde büyüttü. Kediler büyüyünce yatay şeyleri fark etmekte zorlandı ve görme korteksleri incelendiğinde yatay çizgiye tepki veren nöron neredeyse yoktu. Gözün neye ayarlanacağını büyürken gördükleri belirliyor ve bunun bir zaman penceresi var: kritik dönem. Çocuklarda tembel gözün erken tedavi edilmesi bu yüzden önemli.'}
+  ],
+  cards:{
+    brain:'Gözden gelen sinyaller beynin arka tarafındaki görme korteksine gider. Hubel ve Wiesel (1959, 1981’de Nobel) kedilerde buradaki tek tek nöronları dinledi: bir nöron, ekranın belirli bir yerinde belirli açıda bir ışık çubuğu görününce çıtırdıyor, çubuk dönünce susuyordu. Her nöronun kendi “algı alanı” var. Bu ayar kabaca doğuştan gelir ama ilk haftalarda görülenlerle keskinleşir ve korunur; görmeyen bir göze ya da hiç görülmeyen bir açıya ayrılan nöronlar başka işe kayar. Bu pencere (kritik dönem) kapanınca değişim çok zorlaşır.',
+    model:'Pamuk’un gözü 9 nokta, görme korteksi 6 nöron. Her nöronun 9 bağı var; bu bağları 3×3 resim olarak çizince nöronun neye baktığını görürsün. Bakınca her nöron, gördüğü resme ne kadar benzediğini hesaplar (benzerlik, %0–100). En çok benzeyen kazanır ve Pamuk yavruyken onun bağları gördüğü resme doğru %60 kayar (kazanan hepsini alır). 24 bakıştan sonra Pamuk büyür ve bu bağlar artık değişmez. Etiket yok; adlar ayrı: kazanan nörondan “yatay” ve “dikey” nöronlarına giden bağlar senin söylediğinle güçlenir.',
+    limit:'Gerçek gözde milyonlarca nokta, görme korteksinde yüz milyonlarca nöron var; çizgiler her yerde, her açıda ve kalınlıkta. “Kazanan hepsini alır” beyinde, komşu nöronların birbirini bastırmasıyla kabaca gerçekleşir. Modelde hiç kazanamayan nöronlar bulanık kalıyor; gerçek kedilerde o nöronlar görülen açılara kaydı. Bir de: burada “yatay” adını her çizgi için ayrı öğrendi; gerçek beyin, üst katmanlarda konumdan bağımsız “yatay” diyen nöronlarla genelleştirir.',
+    ai:'Görüntü tanıyan yapay ağların ilk katmanı eğitimden sonra tam da böyle kenar ve çizgi dedektörlerine dönüşür; bu filtreler resim olarak çizilip incelenir. Olshausen ve Field (1996), etiketsiz doğa fotoğraflarından öğrenen bir ağın görme korteksindekilere çok benzeyen algı alanları geliştirdiğini gösterdi. “Önce etiketsiz çok veriyle görmeyi öğren, sonra az etiketle ad öğren” bugünkü yapay zekânın da temel tarifi (ön eğitim, sonra ince ayar).'
+  },
+  deeper:`<p><b>Benzerlik:</b> resim ve nöronun bağları, ikisinin de “uzunluğu” 1 olacak biçimde ölçeklenir; sonra 9 noktanın her biri karşılığıyla çarpılıp toplanır. Aynı resim %100, hiç ortak noktası olmayan resim %0 verir.</p>
+    <p><b>Örnek sayılar:</b> bulanık bir nöron her çizgiye %50–70 kadar benzer. Keskinleşmiş bir nöron kendi çizgisine %99, bir noktası eksik çizgiye yaklaşık %81, ortak tek noktası olan çizgiye yaklaşık %33 benzer. Pamuk %75’in altında “net göremiyor”.</p>
+    <p><b>Öğrenme (yalnızca kazanan, yalnızca yavruyken):</b> yeni bağlar = 0,4 × eski bağlar + 0,6 × gördüğü resim, sonra yine ölçeklenir. Bir bakışta %60 civarından %90’ın üstüne çıkar.</p>
+    <p><b>Neden tek bir nöron “her yerde yatay” diyemez?</b> Üç yatay çizginin bağ toplamları ile üç dikey çizginin bağ toplamları aynı 9 bağdan oluşur: ikisinin ortalaması da “bütün bağların toplamı ÷ 3”. Bu yüzden üç yatayın hepsi eşiğin üstünde, üç dikeyin hepsi altında olamaz. 6. seviyedeki duvarın aynısı; çözüm de aynı: araya her konum için bir dedektör koymak.</p>`
 }
 ];
 
@@ -420,7 +517,7 @@ const ROADMAP=[
   {key:'xor'},
   {key:'fruit'},
   {key:'two'},
-  {key:'lines',part:'C',title:'Yatay mı dikey mi?',note:'yakında',about:'3×3 piksellik çizgiler: gizli nöronların kendiliğinden çizgi dedektörlerine dönüşmesi ve bir nöronun “gördüğü” desen (algı alanı).'},
+  {key:'lines'},
   {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar',about:'5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'},
   {key:'hebb',part:'D',title:'Birlikte yanan, birlikte bağlanır',note:'yakında',about:'Etiket yok; hep birlikte gelen özellikler birbirine bağlanıp bir “şey” oluşturuyor. Parçası görülünce bütünü tamamlanıyor.'},
   {key:'where',part:'D',title:'Hafıza nerede?',note:'yakında',about:'Öğrenmiş bir ağdan nöron ya da bağlantı silince ne olur? Bilgi tek bir yerde değil, bağlantılara dağılmış; beyin hasarı da çoğu zaman yavaş yavaş bozulma olarak görülür.'},
@@ -431,4 +528,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain,EYE,eyeNearest,eyeAnswer,eyeTuned,eyeNamedAll,eyeShow,eyeName,eyeNewKitten,eyeGrow};}

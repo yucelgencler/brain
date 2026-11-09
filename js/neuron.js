@@ -95,6 +95,17 @@ function predictStep(x,w,reward,rate){
   return{x:x.slice(),w0:w.slice(),V,r:reward,d,dw,w:w.map((wi,i)=>tidy(wi+dw[i]))};
 }
 
+/* Görme: rekabetçi öğrenme (kazanan hepsini alır). Etiket yok.
+   benzerlik = iki resim de uzunluğu 1 olacak biçimde ölçeklenip noktadan noktaya çarpılıp toplanır (0..1)
+   kazanan nöronun bağları gördüğü resme yaklaşır: yeni = ölçekle(0,4 × eski + 0,6 × resim) */
+function unitVec(v){let n=0;for(const x of v)n+=x*x;n=Math.sqrt(n)||1;return v.map(x=>x/n);}
+function eyeInit(seed,n=6,size=9){const r=rng(seed);return Array.from({length:n},()=>unitVec(Array.from({length:size},()=>1+0.2*(r()*2-1))));}
+function eyeLook(x,W){
+  const xn=unitVec(x),m=W.map(w=>{let s=0;for(let i=0;i<w.length;i++)s+=w[i]*xn[i];return Math.round(s*1e6)/1e6;});
+  let k=0;m.forEach((v,i)=>{if(v>m[k]+1e-9)k=i;});return{m,k};
+}
+function eyeLearn(x,w,rate){const xn=unitVec(x);return unitVec(w.map((wi,j)=>(1-rate)*wi+rate*xn[j]));}
+
 // Tek bir nöronun bu tabloyu en fazla kaç doğruyla yapabildiği (kaba arama). XOR için 3 çıkar.
 function bestScore(target,lo=-2,hi=2,step=0.1){
   let best=0;
@@ -112,5 +123,5 @@ function num(v,d=1){
 
 if(typeof module!=='undefined'&&module.exports){
   module.exports={EPS,tidy,weightedSum,fires,COMBOS,GATES,outputs,score,solves,learnStep,learnRound,bestScore,num,multiOutputs,multiStep,
-    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep,predictStep};
+    sigmoid,rng,netRandom,netZero,netClone,netForward,netOutputs,netSolves,netPattern,netLearnStep,predictStep,unitVec,eyeInit,eyeLook,eyeLearn};
 }
