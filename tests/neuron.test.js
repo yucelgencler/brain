@@ -84,8 +84,8 @@ test('seviye 4: ilk kart hemen bir hata, VE birkaç turda öğreniliyor',()=>{
 test('yol haritası: numaralar sıralı, hazır seviyeler yerinde',()=>{
   const {ROADMAP}=require('../js/levels.js');
   ROADMAP.forEach((r,i)=>assert.strictEqual(r.id,i+1));
-  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8,9,11]);
-  assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[10].key,'hebb');
+  assert.deepStrictEqual(LEVELS.map(l=>l.id),[1,2,3,4,5,6,7,8,9,10,12]);
+  assert.strictEqual(ROADMAP[4].key,'predict');assert.strictEqual(ROADMAP[6].key,'fruit');assert.strictEqual(ROADMAP[9].key,'senses');assert.strictEqual(ROADMAP[11].key,'hebb');
   for(const r of ROADMAP)assert.ok(r.title&&r.part,r.key);
 });
 test('öğrenme seviyelerinin her hedefi için gerçek hayat durumu var',()=>{
@@ -237,21 +237,46 @@ test('seviye 9: normal büyüyen kedi yatayı görüyor; göremediği şeye ad b
 const hFresh=()=>Object.assign(lv('hebb').init(),{flags:{}});
 const hDone=st=>lv('hebb').missions.filter(m=>m.check(st)).map(m=>m.id);
 const H1=k=>LV.HEBB.feats.map((f,i)=>i===k?1:0),HT=LV.HEBB.things;
-test('seviye 11: sadece birlikte yananlar bağlanır; tek his hiçbir bağı değiştirmez',()=>{
+test('seviye 12: sadece birlikte yananlar bağlanır; tek his hiçbir bağı değiştirmez',()=>{
   const st=hFresh();LV.hebbLive(st,H1(0));assert.ok(st.W.every(r=>r.every(w=>w===0)));
   LV.hebbLive(st,HT.lim.x);assert.strictEqual(st.W[0][1],0.25);assert.strictEqual(st.W[1][0],0.25);assert.strictEqual(st.W[0][4],0);
 });
-test('seviye 11: 2 limon tek kokuyla tamamlanmaz, 3 limon tamamlar (deeper)',()=>{
+test('seviye 12: 2 limon tek kokuyla tamamlanmaz, 3 limon tamamlar (deeper)',()=>{
   const st=hFresh();LV.hebbLive(st,HT.lim.x);LV.hebbLive(st,HT.lim.x);
   assert.deepStrictEqual(LV.hebbCue(st,H1(2)).fin,H1(2));
   LV.hebbLive(st,HT.lim.x);assert.deepStrictEqual(LV.hebbCue(st,H1(2)).fin,HT.lim.x);
 });
-test('seviye 11: beş görev sırayla',()=>{
+test('seviye 12: beş görev sırayla',()=>{
   const st=hFresh();for(let i=0;i<4;i++)LV.hebbLive(st,HT.lim.x);assert.deepStrictEqual(hDone(st),['wire']);
   LV.hebbCue(st,H1(2));assert.ok(st.flags.complete);
   for(let i=0;i<4;i++)LV.hebbLive(st,HT.cil.x);assert.deepStrictEqual(LV.hebbCue(st,H1(4)).fin,HT.cil.x);assert.ok(st.flags.two);
   const r=LV.hebbCue(st,[1,1,0,0,0,1,0,0]);assert.deepStrictEqual(r.fin,HT.lim.x);assert.ok(st.flags.clean);
   LV.hebbLive(st,HT.mix.x);LV.hebbLive(st,HT.mix.x);LV.hebbCue(st,H1(2));assert.ok(!st.flags.mix,'iki limonata karıştırmamalı');
   LV.hebbLive(st,HT.mix.x);LV.hebbCue(st,H1(2));assert.ok(st.flags.mix);assert.strictEqual(hDone(st).length,5);
+});
+
+/* ---------- Seviye 10: beş duyu, tek kavram ---------- */
+const sFresh=()=>Object.assign(lv('senses').init(),{flags:{}});
+const sDone=st=>lv('senses').missions.filter(m=>m.check(st)).map(m=>m.id);
+const sTop=st=>{const r=LV.sensesRun(st);return[LV.SENSES.things[r.top].name,r.p[r.top]];};
+test('seviye 10: her kart, her yazı, her koku ve her ses tek başına doğru tanınıyor (%90+)',()=>{
+  const S=LV.SENSES,T=S.things;
+  T.forEach((t,k)=>{let st=sFresh();st.card=k;let[n,p]=sTop(st);assert.ok(n===t.name&&p>=0.9,'kart '+t.name);
+    st=sFresh();st.word=t.word;[n,p]=sTop(st);assert.ok(n===t.name&&p>=0.9,'yazı '+t.word);});
+  S.smells.forEach((s,k)=>{const st=sFresh();st.smell=k;const[n,p]=sTop(st);assert.ok(T.find(t=>t.smell===k).name===n&&p>=0.9,s.name);});
+  S.sounds.forEach((s,k)=>{const st=sFresh();st.sound=k;const[n,p]=sTop(st);assert.ok(T.find(t=>t.sound===k).name===n&&p>=0.9,s.name);});
+});
+test('seviye 10: tek tat kararsız, tat + koku kesin; acı = kahve mi sabun mu',()=>{
+  let st=sFresh();st.taste=[1,0,0,0,0];let[n,p]=sTop(st);assert.ok(p<0.6);
+  st.smell=1;[n,p]=sTop(st);assert.ok(n==='çilek'&&p>=0.9);
+  st=sFresh();st.taste=[0,0,0,1,0];const r=LV.sensesRun(st);assert.ok(Math.abs(r.p[7]-r.p[8])<1e-9&&r.p[7]>0.4);
+  st=sFresh();st.word='ABC';assert.ok(LV.sensesRun(st).unknown);
+  st=sFresh();st.word='LAME';assert.strictEqual(sTop(st)[0],'elma');
+});
+test('seviye 10: altı görev sırayla',()=>{
+  const st=sFresh(),c=()=>LV.sensesCommit(st);
+  st.card=0;c();st.word='limon';c();assert.deepStrictEqual(sDone(st),['card','word']);
+  LV.sensesClear(st);st.sound=0;c();LV.sensesClear(st);st.taste=[1,0,0,0,0];c();st.smell=1;c();
+  LV.sensesClear(st);st.word='KÖPEG';c();assert.strictEqual(sDone(st).length,6);
 });
 console.log(`\n${passed} test geçti.`);

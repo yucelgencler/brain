@@ -59,7 +59,8 @@ function firesNow(st,lv){return fires(inputsOf(st,lv),st.w,st.theta);}
 // Kendi sahnesi olan seviyeler (9 ve sonrası): html, wire, update, reset
 function viewOf(kind){
   const V={eye:{html:eyeGridHTML,wire:wireEye,update:updateEye,reset:eyeResetView},
-    hebb:{html:hebbGridHTML,wire:wireHebb,update:updateHebb,reset:hebbResetView}};
+    hebb:{html:hebbGridHTML,wire:wireHebb,update:updateHebb,reset:hebbResetView},
+    senses:{html:sensesGridHTML,wire:wireSenses,update:updateSenses,reset:sensesResetView}};
   return V[kind]||null;
 }
 let auto=0,busy=false,lastFire=null,resetArm=0;

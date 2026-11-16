@@ -183,6 +183,64 @@ function hebbCue(st,cue){
 }
 function hebbNewBaby(st){st.W=hZero();st.last=null;st.hist=[];st.sel=[0,0,0,0,0,0,0,0];}
 
+/* ---------- Seviye 10: beş duyu, tek kavram (eğitilmiş, çok duyulu tanıma) ---------- */
+const SENSES={beta:6,tasteW:0.7,
+  things:[
+    {icon:'🍋',name:'limon',word:'LİMON',cat:0,vis:[0,4,7],smell:0,taste:[0,1,0,0,0]},
+    {icon:'🍓',name:'çilek',word:'ÇİLEK',cat:0,vis:[1,6,7],smell:1,taste:[1,0.5,0,0,0]},
+    {icon:'🍌',name:'muz',word:'MUZ',cat:0,vis:[0,5],taste:[1,0,0,0,0]},
+    {icon:'🍎',name:'elma',word:'ELMA',cat:0,vis:[1,4,6],taste:[1,0.3,0,0,0]},
+    {icon:'🐈',name:'kedi',word:'KEDİ',cat:1,vis:[8,9,10],sound:0},
+    {icon:'🐕',name:'köpek',word:'KÖPEK',cat:1,vis:[2,8,9],sound:1},
+    {icon:'🐟',name:'balık',word:'BALIK',cat:1,vis:[5,11],smell:4,taste:[0,0,0.8,0,1]},
+    {icon:'☕',name:'kahve',word:'KAHVE',cat:2,vis:[2,4,12],smell:2,taste:[0,0,0,1,0]},
+    {icon:'🧼',name:'sabun',word:'SABUN',cat:2,vis:[3,12],smell:3,taste:[0,0,0,1,0]},
+    {icon:'⏰',name:'çalar saat',word:'SAAT',cat:2,vis:[1,4,12],sound:2}],
+  cats:[{icon:'🍎',name:'meyve'},{icon:'🐾',name:'hayvan'},{icon:'🧰',name:'nesne'}],
+  vis:['sarı','kırmızı','kahverengi','beyaz','yuvarlak','uzun','yaprak, sap','benekli, pürüzlü','tüylü','dört bacak','sivri kulak, bıyık','pul, yüzgeç','yapılmış eşya'],
+  letters:'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ'.split(''),
+  smells:[{icon:'🍋',name:'limon kokusu',r:[1,1,0,1,0,0]},{icon:'🍓',name:'çilek kokusu',r:[0,1,1,0,0,1]},{icon:'☕',name:'kahve kokusu',r:[0,0,1,0,1,1]},
+          {icon:'🧼',name:'sabun kokusu',r:[1,0,0,1,0,1]},{icon:'🐟',name:'balık kokusu',r:[0,0,0,1,1,0]}],
+  sounds:[{icon:'🐈',name:'miyav',b:[0,0.3,1,0.8,0.3,0]},{icon:'🐕',name:'hav hav',b:[0.6,1,0.5,0,0,0]},{icon:'⏰',name:'zırrr',b:[0,0,0,0.3,1,0.9]}],
+  tastes:[{icon:'😋',name:'tatlı'},{icon:'😖',name:'ekşi'},{icon:'🧂',name:'tuzlu'},{icon:'😣',name:'acı'},{icon:'🍖',name:'umami'}],
+  bands:['en pes','pes','orta','tiz','daha tiz','en tiz']};
+function sCos(a,b){let s=0,na=0,nb=0;for(let i=0;i<a.length;i++){s+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}return na&&nb?s/Math.sqrt(na*nb):0;}
+const sRec=r=>Math.round(Math.min(1,Math.max(0,(r-0.55)/0.45))*1000)/1000;
+const sWordNorm=w=>String(w||'').toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞIİÖŞÜ]/g,'');
+function sLetters(w){const c=SENSES.letters.map(()=>0);for(const ch of sWordNorm(w)){const i=SENSES.letters.indexOf(ch);if(i>=0)c[i]++;}return c;}
+function sVis(k){const v=SENSES.vis.map(()=>0);if(k!=null)SENSES.things[k].vis.forEach(i=>v[i]=1);return v;}
+// Bütün akış: duyu nöronları → duyu alanları → kavram → çıktı
+function sensesRun(st){
+  const T=SENSES.things,inp={vis:sVis(st.card),let:sLetters(st.word),smell:st.smell!=null?SENSES.smells[st.smell].r.slice():[0,0,0,0,0,0],
+    sound:st.sound!=null?SENSES.sounds[st.sound].b.slice():[0,0,0,0,0,0],taste:(st.taste||[0,0,0,0,0]).slice()};
+  const rec={vis:T.map(t=>sRec(sCos(inp.vis,sVis(T.indexOf(t))))),word:T.map(t=>sRec(sCos(inp.let,sLetters(t.word)))),
+    smell:SENSES.smells.map(s=>sRec(sCos(inp.smell,s.r))),sound:SENSES.sounds.map(s=>sRec(sCos(inp.sound,s.b)))};
+  const parts=T.map((t,k)=>({vis:rec.vis[k],word:rec.word[k],smell:t.smell!=null?rec.smell[t.smell]:0,sound:t.sound!=null?rec.sound[t.sound]:0,
+    taste:t.taste?Math.round(SENSES.tasteW*sCos(inp.taste,t.taste)*1000)/1000:0}));
+  const c=parts.map(p=>Math.round((p.vis+p.word+p.smell+p.sound+p.taste)*1000)/1000);
+  const mx=Math.max(...c),e=c.map(v=>Math.exp(SENSES.beta*(v-mx))),z=e.reduce((a,b)=>a+b,0),p=e.map(v=>v/z);
+  const order=p.map((v,k)=>k).sort((a,b)=>p[b]-p[a]),cat=SENSES.cats.map((x,j)=>T.reduce((s,t,k)=>s+(t.cat===j?p[k]:0),0));
+  const given={vis:st.card!=null,word:!!sWordNorm(st.word),smell:st.smell!=null,sound:st.sound!=null,taste:inp.taste.some(v=>v)};
+  return{inp,rec,parts,c,p,order,top:order[0],cat,unknown:mx<0.25,given,nGiven:Object.values(given).filter(v=>v).length};
+}
+// Her girdi değişikliğinden sonra: sonucu kaydet, görevleri işaretle
+function sensesCommit(st){
+  const r=sensesRun(st),g=r.given,T=SENSES.things,top=r.top,pt=r.p[top],only=k=>g[k]&&r.nGiven===1;
+  if(!r.nGiven){st.last=null;return r;}
+  st.n=(st.n||0)+1;
+  st.hist=(st.hist||[]).concat([{n:st.n,card:st.card,word:sWordNorm(st.word),smell:st.smell,sound:st.sound,taste:(st.taste||[]).slice(),top,pt,unknown:r.unknown}]).slice(-30);
+  if(!r.unknown){
+    if(only('vis')&&top===st.card&&pt>=0.9)st.flags.card=true;
+    if(g.word&&T[top].word===sWordNorm(st.word)&&pt>=0.9)st.flags.word=true;
+    if(only('sound')&&T[top].sound===st.sound&&pt>=0.9)st.flags.sound=true;
+    if(only('taste')&&pt<0.6)st.flags.ambig=true;
+    if(g.taste&&g.smell&&r.nGiven===2&&pt>=0.9&&T[top].smell===st.smell)st.flags.combine=true;
+    if(only('word')&&!T.some(t=>t.word===sWordNorm(st.word))&&pt>=0.5)st.flags.typo=true;
+  }
+  return r;
+}
+function sensesClear(st){st.card=null;st.word='';st.taste=[0,0,0,0,0];st.smell=null;st.sound=null;st.last=null;}
+
 const PARTS=[
   {id:'A',title:'Algı',sub:'tek bir nöron'},
   {id:'B',title:'Öğrenme',sub:'hatadan düzeltme'},
@@ -538,7 +596,54 @@ const LEVELS=[
     <p><b>Öğrenme (yalnızca kazanan, yalnızca yavruyken):</b> yeni bağlar = 0,4 × eski bağlar + 0,6 × gördüğü resim, sonra yine ölçeklenir. Bir bakışta %60 civarından %90’ın üstüne çıkar.</p>
     <p><b>Neden tek bir nöron “her yerde yatay” diyemez?</b> Üç yatay çizginin bağ toplamları ile üç dikey çizginin bağ toplamları aynı 9 bağdan oluşur: ikisinin ortalaması da “bütün bağların toplamı ÷ 3”. Bu yüzden üç yatayın hepsi eşiğin üstünde, üç dikeyin hepsi altında olamaz. 6. seviyedeki duvarın aynısı; çözüm de aynı: araya her konum için bir dedektör koymak.</p>`
 },
-/* ------------------------------ 11: birlikte yanan, birlikte bağlanır (Ela, limon ve çilek) ------------------------------ */
+/* ------------------------------ 10: beş duyu, tek kavram ------------------------------ */
+{
+  key:'senses',goal:"Eğitilmiş bir ağın bir girdiyi cevaba nasıl çevirdiğini baştan sona izlemek: her duyu kendi yolundan gelir, kavram katmanında buluşur ve ağ ne olduğunu söyler.",
+  todo:["Bu beyin eğitilmiş hâlde geliyor: 10 şeyi (4 meyve, 3 hayvan, 3 eşya) tanıyor. Senin işin ona bir şey sunmak: 🃏 bir kart göster, 📖 bir kelime yaz, 👅 tat ver, 👃 koklat ya da 🔊 bir ses çal.","Sahnede akışı soldan sağa izle: 1) duyu nöronları, 2) her duyunun kendi tanıyıcıları, 3) kavram nöronları, 4) çıktı. Yanan nöronlar ve yollar parlar.","Girdileri birleştirebilirsin (ör. tat + koku). Ne yapacağını her an soldaki ipucu ve parlayan düğme söyler."],
+  part:'C',title:'Beş duyu, tek kavram',
+  question:'Bir kedinin resmini görünce de, “kedi” yazısını okuyunca da, miyavlamasını duyunca da aklına aynı şey gelir. Bu kadar farklı yol beyinde nasıl aynı yerde buluşur?',
+  kind:'senses',
+  init(){return{card:null,word:'',taste:[0,0,0,0,0],smell:null,sound:null,last:null,hist:[],n:0};},
+  dailyTitle:'Bunu sen de yaşadın: duyular buluşur',
+  daily:[
+    {icon:'🤧',title:'Burnun tıkalıyken',text:'Nezleyken yemekler tatsız gelir. Dil sadece beş temel tadı ayırır; “çilek tadı” sandığımızın çoğu aslında burundan gelir. Duyulardan biri susunca kavram eksik kalır.'},
+    {icon:'📞',title:'Telefondaki ses',text:'Telefonu açıp “alo” sesini duyar duymaz kim olduğunu bilirsin. Yüzünü görmedin, adını okumadın; o kişinin kavramına sadece sesinden ulaştın.'},
+    {icon:'🍿',title:'Patlamış mısır kokusu',text:'Bir yerden patlamış mısır kokusu gelince ortada mısır görmeden aklına sinema gelir. Koku, öbür duyuların da bağlı olduğu kavramı uyandırdı.'},
+    {icon:'👄',title:'Gürültüde dudak okumak',text:'Kalabalık bir yerde konuşan birinin yüzüne bakınca onu daha iyi anlarsın. Görme ve işitme aynı kavramda buluşunca, ikisi de tek başına eksikken birlikte yetiyor.'}
+  ],
+  missions:[
+    {id:'card',text:'Bir kart göster: soldan <b>🃏 🍋</b> kartını seç. Akışı soldan sağa izle: hangi nöronlar yanıyor, sonunda ne diyor?',
+      check:st=>!!st.flags.card,
+      aha:'Kart önce görme nöronlarında özelliklerine ayrıldı: sarı, yuvarlak, pürüzlü. Görsel tanıyıcılardan biri bu üçlüye en çok benziyordu; o da limon kavram nöronunu yaktı ve çıktı “limon” dedi. Beyin bir resmi tek parça olarak değil, parçalarıyla görür; tanımak, parçaların bilinen bir birleşimle eşleşmesidir.'},
+    {id:'word',text:'Aynı şeyi yazıyla göster: yazı kutusuna <b>LİMON</b> yaz ve <b>Göster</b>’e bas. Bu sefer bambaşka nöronlardan geçiyor; sonunda hangi kavram nöronu yanıyor?',
+      check:st=>!!st.flags.word,
+      aha:'Yazı, resimle hiç ortak nöronu olmayan bir yoldan geldi: harf dedektörleri, sonra kelime tanıyıcı. Ama sonunda kartın yaktığı kavram nöronunun ta kendisini yaktı. Quiroga ve arkadaşları (2005, 2009) ameliyat için beynine elektrot yerleştirilen hastalarda bunu gördü: tek bir nöron, ünlü bir oyuncunun fotoğrafına da, yazılı adına da, söylenen adına da tepki veriyordu. Bu nöronlara kavram hücresi deniyor.'},
+    {id:'sound',text:'Gözler kapalı: önce <b>🧹 Hepsini temizle</b>, sonra sadece bir ses çal (ör. <b>🔊 miyav</b>). Ses kulakta nasıl ayrılıyor?',
+      check:st=>!!st.flags.sound,
+      aha:'Ses, kulağın iç kısmında (koklea) pesten tize frekanslara ayrıldı; miyav orta ve tiz bantları yaktı. Ses tanıyıcı bu deseni tanıdı ve kedi kavram nöronu yandı: aynı kavrama üçüncü bir yoldan ulaşıldı. Bir kediyi görmeden, sesinden tanıman bu.'},
+    {id:'ambig',text:'Tek bir duyu yetmeyebilir: temizle ve sadece <b>😋 tatlı</b> tat ver. Ne diyor?',
+      check:st=>!!st.flags.ambig,
+      aha:'Tatlı tat muza, elmaya ve çileğe uyuyor; beyin kararsız kaldı (%39, %32, %25). Gözün kapalıyken tadına baktığın bir şeyin ne olduğunu bilmek çoğu zaman zordur. Dil yalnızca beş temel tadı ayırır; meyvelerin farkını büyük ölçüde koku yapar.'},
+    {id:'combine',text:'Şimdi tatlıya bir koku ekle: <b>👃 🍓 çilek kokusu</b>. Kararsızlık bitiyor mu?',
+      check:st=>!!st.flags.combine,
+      aha:'İki belirsiz ipucu birleşince kesinleşti: tatlı tat üç meyveye uyuyordu, koku başka şeylere de biraz benziyordu; ikisinin kesiştiği tek kavram çilek. Kavram nöronu farklı duyulardan gelen desteği topluyor. Beyin de duyuları böyle birleştirir: konuşan birinin dudaklarını görmek, gürültüde onu anlamayı belirgin biçimde kolaylaştırır.'},
+    {id:'typo',text:'Yanlış yazılmış kelime: temizle ve yazı kutusuna <b>KÖPEG</b> yaz (ya da ELNA, kedı…). Yine tanıyor mu?',
+      check:st=>!!st.flags.typo,
+      aha:'Harflerin çoğu tuttuğu için kelime tanıyıcı yine doğru kelimeyi seçti; tam eşleşme gerekmiyor, en çok benzeyen kazanıyor (yatay-dikey seviyesindeki bozuk çizgi gibi). Ama bu ağın bir zaafı var: harflerin sırasına bakmıyor. LAME yaz: “elma” der! Gerçek okuma harflerin sırasını da kullanır; son seviye bu soruna bakıyor.'}
+  ],
+  cards:{
+    brain:'Duyular beyinde ayrı yerlerden başlar: görme arkada, işitme yanlarda, koku beynin alt-ön kısmında, tat ise dilden gelen sinirlerle. Her duyu önce kendi alanında işlenir; sonra şakak lobunun ön kısmı ve hipokampus çevresi gibi birleştirme bölgelerinde buluşur. Orada bir kavrama hangi yoldan gelinirse gelinsin tepki veren nöronlar bulundu (kavram hücreleri). Şakak lobunun ön kısmı hasar görünce (semantik demans) hastalar bir nesnenin ne olduğunu ister resmini görsün, ister adını duysun, ister eline alsın bilemez hâle gelir: buluşma noktası kaybolmuştur.',
+    model:'59 duyu nöronu: görme 13 özellik, okuma 29 harf, koku 6 reseptör türü, işitme 6 frekans bandı, tat 5. Sonra 28 duyu alanı nöronu: 10 görsel nesne, 10 kelime, 5 koku ve 3 ses tanıyıcı. Bir tanıyıcı, gelen desenin tanıdığı desene benzerliği %55’i geçince yanar. Sonra 10 kavram nöronu: her biri kendi tanıyıcılarından ve tat nöronlarından gelen desteği toplar (tat daha hafif sayılır). Çıktıda kavramlar yarışır; en güçlüsü payın çoğunu alır ve ad (10) ile tür (meyve, hayvan, nesne) söylenir. Ağ eğitilmiş hâlde gelir: her tanıyıcının bağları, tanıdığı şeyin deseni.',
+    limit:'Buradaki görme nöronları hazır özellikler (sarı, yuvarlak, tüylü); gerçek göz ham ışık noktaları görür ve bu özellikleri katman katman kendisi çıkarır (yatay-dikey seviyesi bunun ilk adımıydı). Okuma yolu harflerin sırasına bakmıyor. İnsanda yaklaşık 400 koku reseptörü türü, on binlerce kavram var ve bir kavram tek bir nöronda değil, birçok nöronun birlikte yanmasında saklı; kavram hücreleri bunun görünen ucu. Bu ağ donmuş: yeni bir şey öğrenemiyor.',
+    ai:'Çok kipli (multimodal) yapay zekâ modelleri resmi, metni ve sesi ayrı kodlayıcılarla işleyip ortak bir uzayda buluşturur; bir köpek fotoğrafı ile “köpek” kelimesi orada birbirine yakın düşer (ör. CLIP, 2021). Buradaki duyu alanları kodlayıcılara, kavram katmanı o ortak uzaya benziyor. Eğitilmiş bir modeli eğitmeden kullanmaya çıkarım denir: telefonundaki yüz tanıma her seferinde eğitilmez, eğitilmiş bağlarla sadece hesaplar.'
+  },
+  deeper:`<p><b>1 · Duyu nöronları:</b> kart, görme özelliklerini yakar (limon: sarı, yuvarlak, pürüzlü). Yazı, harf dedektörlerini yakar (SAAT: S bir kez, A iki kez, T bir kez). Koku 6 reseptörden 2–3’ünü, ses 6 frekans bandından birkaçını yakar. Tat, 5 tat nöronundan seçtiklerini yakar.</p>
+    <p><b>2 · Duyu alanları:</b> her tanıyıcı, gelen deseni kendi deseniyle karşılaştırır (benzerlik 0–1, yatay-dikey seviyesindeki gibi). Benzerlik %55’in altındaysa susar, %100’e yaklaştıkça tam yanar: yanma = (benzerlik − 0,55) ÷ 0,45.</p>
+    <p><b>3 · Kavram:</b> her kavram nöronu = görsel tanıyıcısı + kelime tanıyıcısı + koku tanıyıcısı + ses tanıyıcısı + 0,7 × tat benzerliği. Tat daha hafif sayılır: dil yalnızca beş tadı ayırdığı için tat tek başına az şey söyler. Örnek: tatlı + çilek kokusu → çilek = 0,7 × 0,89 (tat) + 1 (koku) = 1,63; muz = 0,7 × 1 = 0,7.</p>
+    <p><b>4 · Çıktı:</b> kavramlar yarışır. Her kavramın payı, toplamından en büyüğünü çıkarıp 6 ile çarptığın sayının üstel değeriyle orantılı. Toplam 0,25’in altındaysa “bilmiyorum” der. Tür (meyve, hayvan, nesne), o türdeki kavramların paylarının toplamı.</p>
+    <p><b>Yazım hatası:</b> KÖPEG ile KÖPEK’in 5 harfinden 4’ü ortak: benzerlik 0,85, yanma 0,66. Başka hiçbir kelime yaklaşamadığı için köpek yine kazanır. LAME ile ELMA’nın harfleri aynı, sırası farklı: bu ağ için ikisi aynı kelime.</p>`
+},
+/* ------------------------------ 12: birlikte yanan, birlikte bağlanır (Ela, limon ve çilek) ------------------------------ */
 {
   key:'hebb',goal:"Öğretmen, ödül ya da sürpriz olmadan da öğrenilebildiğini görmek: aynı anda gelen hisler birbirine bağlanır ve bir “şey” olur. Sonra o şeyin tek bir parçası, bütününü geri çağırır.",
   todo:["Ela iki yaşında ve mutfakta ilk kez meyve tadıyor. Beyninde sekiz his nöronu var (renk, tat, koku, dokunma). Soldaki 🍋 Limon düğmesi Ela’ya bir limon yaşatır: dört his aynı anda yanar.","Aynı anda yanan iki nöronun arasındaki bağ güçlenir; sahnede çizgiler kalınlaşır. Etiket yok, öğretmen yok.","Sonra bir ipucu ver (ör. sadece koku) ve Ela’nın beyninin neyi tamamladığını izle. Ne yapacağını her an soldaki ipucu ve parlayan düğme söyler."],
@@ -593,6 +698,7 @@ const ROADMAP=[
   {key:'fruit'},
   {key:'two'},
   {key:'lines'},
+  {key:'senses'},
   {key:'digits',part:'C',title:'Rakamları tanıma',lab:'digits',note:'laboratuvar',about:'5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'},
   {key:'hebb'},
   {key:'where',part:'D',title:'Hafıza nerede?',note:'yakında',about:'Öğrenmiş bir ağdan nöron ya da bağlantı silince ne olur? Bilgi tek bir yerde değil, bağlantılara dağılmış; beyin hasarı da çoğu zaman yavaş yavaş bozulma olarak görülür.'},
@@ -603,4 +709,4 @@ const ROADMAP=[
 ];
 ROADMAP.forEach((r,i)=>{r.id=i+1;const lv=LEVELS.find(l=>l.key===r.key);if(lv){lv.id=r.id;r.level=lv;r.part=lv.part;r.title=lv.title;}});
 
-if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain,EYE,eyeNearest,eyeAnswer,eyeTuned,eyeNamedAll,eyeShow,eyeName,eyeNewKitten,eyeGrow,HEBB,hebbMinIn,hebbMinCross,hebbLive,hebbCue,hebbNewBaby};}
+if(typeof module!=='undefined'&&module.exports){module.exports={PARTS,LEVELS,ROADMAP,SCENARIOS,NET_PATTERNS,NET_SEEDS,PREDICT,predictCue,predictGive,predictCommit,predictNewBrain,EYE,eyeNearest,eyeAnswer,eyeTuned,eyeNamedAll,eyeShow,eyeName,eyeNewKitten,eyeGrow,HEBB,hebbMinIn,hebbMinCross,hebbLive,hebbCue,hebbNewBaby,SENSES,sCos,sLetters,sWordNorm,sensesRun,sensesCommit,sensesClear};}
