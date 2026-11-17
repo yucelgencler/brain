@@ -32,6 +32,22 @@ Seviye numaraları `js/levels.js` içindeki `ROADMAP` sırasından hesaplanır; 
 
 İlkeler: ekranda sadece o seviyenin getirdiği kontroller olur; hesaplar canlı sayılarla gösterilir; beyin benzetmesinin sınırları her seviyede açıkça yazılır.
 
+## Beyne yolculuk (3B)
+
+`beyin3d.html`, yaklaştıkça ayrıntıya inen üç boyutlu bir beyin. Tekerlek ya da iki parmakla yaklaşılır, sürükleyerek döndürülür; alttaki ölçek şeridinden durağa atlanabilir. Beş durak var, her biri kendi ölçeğinde ayrı bir sahne; aralarında iki sahne üst üste karıştırılarak geçilir:
+
+| Durak | Ölçek | Ne görülür |
+|---|---|---|
+| Beyin | ~15 cm | kodla üretilmiş kıvrımlar (gürültünün sıfır çizgileri oluk olur), yan yarık ve merkez oluk, loblar (üzerine gel / tıkla → “Buraya yaklaş”), beyincik, beyin sapı; “İçini göster” ile talamus |
+| Bölge | ~1 cm | kabuktan kesilmiş blok: kıvrım ve oluk, gri madde (yüzeyden ~2,6 mm) ve beyaz madde, damarlar; ense lobunda Gennari çizgisi |
+| Kolon | ~1 mm | altı katman, ~2.900 temsilî nöron; “Girdi gönder” ile talamustan gelen sinyal IV → II/III → V → VI sırasıyla yayılır |
+| Devre | ~100 µm | dendritli, aksonlu nöronlar; zar gerilimi ışıltı olarak, sinyaller akson boyunca ilerleyen darbeler olarak görünür. Nörona tıklayınca gerilim izi; “Sinyali takip et” ile kamera bir darbenin peşine düşer, varınca “Bu sinapsa yaklaş” |
+| Sinaps | ~1 µm | akson ucu, kesecikler, kalsiyum kapıları, glutamat/GABA, alıcılar, iyon akışı; uyarıcı ve susturan sinaps |
+
+**Limonun yolculuğu** (8 adım): göz → talamus → görme alanı (V1 devresinde “eğri kenar” ve “sarı leke” nöronları ateşler) → şakak lobu (özellik nöronları → LİMON kavram nöronu, susturan rakipleri bastırır) → Broca → hareket kabuğu → “Limon!”. Devredeki akım `js/b3d/sim.js` içindeki sızdıran topla-ateşle modeliyle hesaplanır (ms, mV, µm); ağır çekim kaydırıcısı simülasyon hızını değiştirir. `beyin3d.html?yolculuk` yolculuğu doğrudan açar.
+
+Three.js (r149, MIT) `vendor/` içinde; internet gerekmez.
+
 ## Laboratuvar
 
 `lab.html`, çok katmanlı sinir ağıyla serbest deney sayfası (rakamlar, kelimeleri duyarak ve okuyarak öğrenme). `lab.html?task=digits|words|read` doğrudan bir bölgeyi açar. Toplama ve çarpma bölgeleri kodda duruyor ama kapalı; açmak için `js/core.js` içindeki `TASKS` dizisine `addTask` ve `mulTask` eklenmeli.
@@ -54,8 +70,20 @@ js/hebb.js            Seviye 12 arayüzü: 8 his nöronu halkada; an yaşat (Heb
 js/eye.js             Seviye 9 arayüzü: 3×3 göz → 6 görme nöronu (resimleriyle) → yatay/dikey adları; büyüt, yeni yavru
 js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
 js/app.js             Laboratuvar arayüzü
+beyin3d.html          Beyne yolculuk (3B)
+css/b3d.css           3B sayfanın görünümü
+js/b3d/util.js        Gürültü, ikosfer, incelen tüp, parlayan noktalar, etiketler
+js/b3d/sim.js         Devre simülasyonu (sızdıran topla-ateşle) ve devre tarifleri: serbest, V1, şakak lobu. Arayüzden bağımsız.
+js/b3d/brain.js       Durak 1: beyin, loblar, yolculuk yolları
+js/b3d/region.js      Durak 2: kabuk kesiti
+js/b3d/column.js      Durak 3: altı katman ve kolon
+js/b3d/micro.js       Durak 4: nöron devresi, darbeler, takip
+js/b3d/synapse.js     Durak 5: sinaps
+js/b3d/main.js        Kamera, sürekli yakınlaştırma ve geçiş, kartlar, limonun yolculuğu
+vendor/three.min.js   Three.js r149 (MIT, lisans: vendor/THREE-LICENSE)
 tests/neuron.test.js  Tek nöron ve seviye görevleri testleri
 tests/core.test.js    Laboratuvar çekirdeği testleri
+tests/b3d.test.js     3B sayfanın devre simülasyonu testleri
 ```
 
 ## Yeni bir seviye eklemek
@@ -67,4 +95,7 @@ tests/core.test.js    Laboratuvar çekirdeği testleri
 ```
 node tests/neuron.test.js
 node tests/core.test.js
+node tests/b3d.test.js
 ```
+
+3B sayfa `file://` ile de açılır; tarayıcı eski dosyayı gösterirse Cmd+Shift+R.
