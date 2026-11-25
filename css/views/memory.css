@@ -196,3 +196,190 @@
   background: color-mix(in srgb, var(--ink-2) 45%, var(--surface-2));
   transition: width 0.25s;
 }
+
+/* ---------- 14 ---------- */
+.gn-bench {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 1020px) {
+  .gn-bench {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gn-eye {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .gn-bench {
+    grid-template-columns: 1fr;
+  }
+}
+.gn-bench > .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gn-how {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.gn-say {
+  font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+  font-size: 22px;
+  line-height: 1.2;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.gn-say.sure {
+  background: color-mix(in srgb, var(--ok) 14%, var(--surface));
+}
+.gn-say.unk {
+  background: color-mix(in srgb, var(--held) 16%, var(--surface));
+}
+.gn-book {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.gn-panel .sh-bar.top .sh-bt i {
+  background: var(--accent);
+}
+.gn-bottom {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 860px) {
+  .gn-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+.gn-score {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 8px 0;
+}
+.gn-score > div {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+.gn-score small {
+  color: var(--ink-2);
+}
+.gn-score b {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 30px;
+}
+.gn-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gn-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-style: normal;
+}
+.gn-card i {
+  font-style: normal;
+  font-size: 10px;
+  line-height: 1;
+}
+.gn-card i.no {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+#gnLog td.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+#gnLog td.bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+/* ---------- 15 ---------- */
+.sl-bench {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.8fr) minmax(220px, 0.9fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 1020px) {
+  .sl-bench {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sl-chart {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+@media (max-width: 640px) {
+  .sl-bench {
+    grid-template-columns: 1fr;
+  }
+}
+.sl-bench > .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sl-ctl .btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+.sl-ctl .btn small {
+  font-weight: 400;
+  opacity: 0.85;
+  font-size: 12.5px;
+}
+.sl-sleep {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, #14183c 10%, var(--surface));
+}
+.sl-sleep output {
+  font-size: 12.5px;
+}
+#slCanvas {
+  width: 100%;
+  display: block;
+}
+.sl-mem {
+  display: grid;
+  grid-template-columns: auto 52px minmax(0, 1fr) 40px;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+.sl-res {
+  margin-top: 14px;
+}
+#slLog td.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+#slLog td.bad {
+  color: var(--bad);
+  font-weight: 600;
+}

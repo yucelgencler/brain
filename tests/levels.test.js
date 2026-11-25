@@ -130,6 +130,51 @@ test('seviye 13: ağır hasar anıyı birden değil, yavaş yavaş bozar', () =>
   assert.ok(b < a && c < b, `azalıyor: ${a} ${b} ${c}`);
   assert.ok(c > 0.6, 'ağır hasarda bile tamamen kaybolmuyor: ' + c);
 });
+const G14 = require('../js/levels/14-general.js');
+const S15 = require('../js/levels/15-sleep.js');
+test('seviye 14: tek örnekte ezberci "hatırlamıyorum", kavrayan aşırı genelliyor; sınavı kavrayan kazanır', () => {
+  const st = fresh(G14.level),
+    net = G14.genNet();
+  assert.strictEqual(G14.level.id, 14);
+  G14.genTeach(st, net, G14.GEN.protos[0], 0);
+  const r = G14.genAsk(st, net, G14.GEN.protos[2], 2);
+  assert.strictEqual(r.memo, null);
+  assert.strictEqual(r.cortex, 0, 'kareye de artı der');
+  assert.ok(st.flags.over);
+  const rnd = C.mulberry32(4);
+  for (let y = 0; y < 3; y++)
+    for (let k = 0; k < 2; k++)
+      if (y || k) G14.genTeach(st, net, C.noisyBits(G14.GEN.protos[y], k, rnd), y);
+  G14.genAsk(st, net, C.noisyBits(G14.GEN.protos[1], 3, rnd), 1);
+  assert.ok(st.flags.newGen);
+  const e = G14.genExam(st, net, 99);
+  assert.ok(e.cortex >= 27 && e.memo <= 3, `ezberci ${e.memo}, kavrayan ${e.cortex}`);
+  assert.deepStrictEqual(check(G14.level, st), ['one', 'over', 'all', 'new', 'exam']);
+});
+test('seviye 15: uykusuz unutur, uykulu (az tekrarla bile) hepsini hatırlar', () => {
+  assert.strictEqual(S15.level.id, 15);
+  const live = (sleep, replay, seed) => {
+    const st = fresh(S15.level);
+    st.sleep = sleep;
+    st.replay = replay;
+    const net = S15.slNet(),
+      data = S15.slData(9),
+      rnd = C.mulberry32(seed);
+    for (const ph of S15.slPlan(1)) S15.slRunPhase(net, data, ph, rnd, replay);
+    S15.slRecord(st, 1, S15.slAcc(net, data));
+    for (const ph of S15.slPlan(2, sleep)) S15.slRunPhase(net, data, ph, rnd, replay);
+    S15.slRecord(st, 2, S15.slAcc(net, data));
+    return st;
+  };
+  for (const seed of [1, 2, 3]) {
+    const a = live(false, 4, seed),
+      b = live(true, 4, seed),
+      c = live(true, 1, seed);
+    assert.ok(a.flags.day1 && a.flags.forgot, 'uykusuz unutmalı: ' + a.acc);
+    assert.ok(b.flags.slept, 'uykulu hatırlamalı: ' + b.acc);
+    assert.ok(c.flags.little, 'az tekrar yetmeli: ' + c.acc);
+  }
+});
 test('model hiçbir yerde “küçük beyin” diye anılmaz (Türkçede beyincik demek)', () => {
   const fs = require('fs'),
     path = require('path');
