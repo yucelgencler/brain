@@ -118,7 +118,13 @@ function viewOf(kind) {
       update: updateSenses,
       reset: sensesResetView
     },
-    shapes: { html: shapesGridHTML, wire: wireShapes, update: updateShapes, reset: shapesResetView }
+    shapes: {
+      html: shapesGridHTML,
+      wire: wireShapes,
+      update: updateShapes,
+      reset: shapesResetView
+    },
+    where: { html: whereGridHTML, wire: wireWhere, update: updateWhere, reset: whereResetView }
   };
   return V[kind] || null;
 }
@@ -129,6 +135,7 @@ let auto = 0,
 function go(key) {
   stopAuto();
   shapesStop();
+  whereResetView();
   hebbResetView();
   multiStop();
   netStop();
@@ -1457,6 +1464,7 @@ function routeOf(h) {
 function leaveLevel() {
   stopAuto();
   shapesStop();
+  whereResetView();
   hebbResetView();
   multiStop();
   netStop();

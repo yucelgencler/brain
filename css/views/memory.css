@@ -1,0 +1,198 @@
+/* Bölüm 4 seviyeleri: 13 hafıza nerede, 14 ezber mi anlamak mı, 15 unutma ve uyku */
+
+/* ---------- 13 ---------- */
+.wh-bench {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.9fr) minmax(280px, 1.1fr) minmax(250px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 1020px) {
+  .wh-bench {
+    grid-template-columns: 1fr 1fr;
+  }
+  .wh-ans {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .wh-bench {
+    grid-template-columns: 1fr;
+  }
+}
+.wh-bench > .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wh-qbtns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.wh-grid {
+  display: grid;
+  grid-template-columns: repeat(6, var(--wc, 34px));
+  gap: 4px;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 10px;
+}
+.wh-ngrid {
+  --wc: 40px;
+}
+.wh-grid.psugc {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.wh-c,
+.wh-n {
+  width: var(--wc, 34px);
+  height: var(--wc, 34px);
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+}
+.wh-c {
+  border-radius: 6px;
+}
+.wh-n {
+  border-radius: 50%;
+  transition:
+    background 0.25s,
+    transform 0.25s;
+}
+.wh-c.on,
+.wh-n.on {
+  background: var(--node-on);
+  border-color: var(--node-on);
+}
+.wh-n.on {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.wh-c.unk,
+.wh-n.unk {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface),
+    var(--surface) 4px,
+    var(--surface-2) 4px,
+    var(--surface-2) 8px
+  );
+}
+.wh-n.dead {
+  background: var(--surface-2);
+  border-style: dashed;
+  position: relative;
+}
+.wh-n.dead::after {
+  content: '✕';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--bad);
+  font-weight: 700;
+}
+.wh-ngrid.killing .wh-n {
+  cursor: crosshair;
+}
+.wh-stepline {
+  margin: 0;
+  min-height: 1.4em;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.wh-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.wh-cut {
+  justify-content: center;
+}
+.wh-cut.psug,
+.ctl.psug {
+  border-radius: 10px;
+  padding: 4px 8px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.wh-verdict {
+  font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+  font-size: 26px;
+  line-height: 1.15;
+}
+.wh-verdict.ok {
+  color: var(--ok);
+}
+.wh-verdict.bad {
+  color: var(--bad);
+}
+.wh-sub {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.wh-mems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wh-mem {
+  display: grid;
+  grid-template-columns: auto 92px minmax(0, 1fr) 40px;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 10px;
+}
+.wh-mem.top {
+  background: var(--surface-2);
+}
+.wh-mem.top .sh-bt i {
+  background: var(--accent);
+}
+.wh-mv {
+  text-align: right;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.wh-pic rect {
+  fill: color-mix(in srgb, var(--ink-2) 18%, var(--surface));
+}
+.wh-pic rect.on {
+  fill: var(--node-on);
+}
+.wh-logp {
+  margin-top: 14px;
+}
+#whLog td.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+#whLog td.bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+/* paylaşılan çubuk (seviye 10 ile aynı görünüm) */
+.wh-mem .sh-bt,
+.gn-panel .sh-bt,
+.sl-mem .sh-bt {
+  height: 11px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.wh-mem .sh-bt i,
+.gn-panel .sh-bt i,
+.sl-mem .sh-bt i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink-2) 45%, var(--surface-2));
+  transition: width 0.25s;
+}

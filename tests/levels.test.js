@@ -88,6 +88,48 @@ test('gelişmiş mod: görev bayrakları ve kendi şeklin', () => {
   assert.strictEqual(ds.train.length, 11 * 24);
 });
 
+const W13 = require('../js/levels/13-where.js');
+test('seviye 13: yarım ipucundan anı geri gelir; nöron ve bağlantı kaybına dayanıklı', () => {
+  const st = fresh(W13.level);
+  assert.strictEqual(W13.level.id, 13);
+  W13.memRun(st);
+  assert.ok(st.flags.recalled, 'Pamuk’un yarısından Pamuk');
+  st.dead = [3, 9, 14, 20, 27, 33];
+  for (const k of [0, 1, 2]) {
+    st.cue = W13.memHalf(k);
+    st.cueOf = k;
+    W13.memRun(st);
+  }
+  assert.ok(st.flags.oneDead);
+  assert.deepStrictEqual(st.flags.many.slice().sort(), [0, 1, 2]);
+  st.dead = [];
+  st.cut = 0.5;
+  st.cue = W13.memHalf(1);
+  st.cueOf = 1;
+  W13.memRun(st);
+  assert.ok(st.flags.cutHalf, 'bağlantıların yarısı kopsa da hatırlar');
+  assert.deepStrictEqual(check(W13.level, st), ['recall', 'one', 'many', 'cut']);
+});
+test('seviye 13: ağır hasar anıyı birden değil, yavaş yavaş bozar', () => {
+  const avg = cut => {
+    let s = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const mask = W13.memMask(cut, seed),
+        dead = new Uint8Array(36);
+      for (let k = 0; k < 3; k++) {
+        const steps = W13.memRecall(W13.memHalf(k), dead, mask, seed);
+        s += W13.memSim(steps[steps.length - 1], W13.MEM.pats[k], dead);
+      }
+    }
+    return s / 18;
+  };
+  const a = avg(0),
+    b = avg(0.7),
+    c = avg(0.9);
+  assert.ok(a === 1, 'hasarsız tam: ' + a);
+  assert.ok(b < a && c < b, `azalıyor: ${a} ${b} ${c}`);
+  assert.ok(c > 0.6, 'ağır hasarda bile tamamen kaybolmuyor: ' + c);
+});
 test('model hiçbir yerde “küçük beyin” diye anılmaz (Türkçede beyincik demek)', () => {
   const fs = require('fs'),
     path = require('path');
