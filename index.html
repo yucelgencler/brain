@@ -1,41 +1,55 @@
 <!doctype html>
 <html lang="tr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Boş Beyin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/levels.css">
-</head>
-<body>
-<header class="bar">
-  <a class="logo" href="#seviye-1" title="Beyin bir girdiyi nasıl algılar, nasıl cevaba çevirir, nasıl öğrenir?">Boş Beyin</a>
-  <div class="lvswitch">
-    <button class="btn small" id="barPrev" aria-label="Önceki seviye">◀</button>
-    <button class="btn small" id="barLevel" aria-haspopup="true" aria-expanded="false" aria-controls="lvnav"></button>
-    <button class="btn small" id="barNext" aria-label="Sonraki seviye">▶</button>
-  </div>
-  <div class="bar-missions" id="barMissions"></div>
-  <a class="btn ghost small labbtn" href="beyin3d.html">3B beyin →</a>
-  <a class="btn ghost small labbtn" href="lab.html">Laboratuvar →</a>
-</header>
-<nav class="lvmenu" id="lvnav" aria-label="Bütün seviyeler" hidden></nav>
-<div class="wrap">
-  <main class="lv" id="lv" tabindex="-1"></main>
-</div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Boş Beyin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/levels.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <a
+        class="logo"
+        href="#seviye-1"
+        title="Beyin bir girdiyi nasıl algılar, nasıl cevaba çevirir, nasıl öğrenir?"
+        >Boş Beyin</a
+      >
+      <div class="lvswitch">
+        <button class="btn small" id="barPrev" aria-label="Önceki seviye">◀</button>
+        <button
+          class="btn small"
+          id="barLevel"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="lvnav"
+        ></button>
+        <button class="btn small" id="barNext" aria-label="Sonraki seviye">▶</button>
+      </div>
+      <div class="bar-missions" id="barMissions"></div>
+      <a class="btn ghost small labbtn" href="beyin3d.html">3B beyin →</a>
+      <a class="btn ghost small labbtn" href="lab.html">Laboratuvar →</a>
+    </header>
+    <nav class="lvmenu" id="lvnav" aria-label="Bütün seviyeler" hidden></nav>
+    <div class="wrap">
+      <main class="lv" id="lv" tabindex="-1"></main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/neuron.js"></script>
-<script src="js/levels.js"></script>
-<script src="js/multi.js"></script>
-<script src="js/net.js"></script>
-<script src="js/predict.js"></script>
-<script src="js/eye.js"></script>
-<script src="js/hebb.js"></script>
-<script src="js/senses.js"></script>
-<script src="js/path.js"></script>
-</body>
+    <script src="js/neuron.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/multi.js"></script>
+    <script src="js/net.js"></script>
+    <script src="js/predict.js"></script>
+    <script src="js/eye.js"></script>
+    <script src="js/hebb.js"></script>
+    <script src="js/senses.js"></script>
+    <script src="js/path.js"></script>
+  </body>
 </html>

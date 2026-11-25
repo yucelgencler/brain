@@ -1,49 +1,61 @@
 <!doctype html>
 <html lang="tr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Beyne Yolculuk</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/b3d.css">
-</head>
-<body class="b3">
-<canvas id="gl" aria-label="Üç boyutlu beyin. Yaklaşmak için kaydır, döndürmek için sürükle."></canvas>
-<div id="labels" aria-hidden="true"></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Beyne Yolculuk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/b3d.css" />
+  </head>
+  <body class="b3">
+    <canvas
+      id="gl"
+      aria-label="Üç boyutlu beyin. Yaklaşmak için kaydır, döndürmek için sürükle."
+    ></canvas>
+    <div id="labels" aria-hidden="true"></div>
 
-<header class="b3bar">
-  <a class="btn ghost small" href="index.html">← Öğrenme yolu</a>
-  <h1>Beyne yolculuk</h1>
-  <span class="hint">kaydır: yaklaş · sürükle: döndür</span>
-  <button class="btn small" id="xray" aria-pressed="false">İçini göster</button>
-</header>
+    <header class="b3bar">
+      <a class="btn ghost small" href="index.html">← Öğrenme yolu</a>
+      <h1>Beyne yolculuk</h1>
+      <span class="hint">kaydır: yaklaş · sürükle: döndür</span>
+      <button class="btn small" id="xray" aria-pressed="false">İçini göster</button>
+    </header>
 
-<section class="b3card" id="card" aria-live="polite"></section>
+    <section class="b3card" id="card" aria-live="polite"></section>
 
-<div class="b3ctl">
-  <button class="btn small" id="pause" aria-pressed="false">⏸ Duraklat</button>
-  <label class="slow">Ağır çekim <input type="range" id="speed" min="0" max="4" step="1" value="2"> <output id="speedOut"></output></label>
-  <span id="simclock" hidden></span>
-</div>
+    <div class="b3ctl">
+      <button class="btn small" id="pause" aria-pressed="false">⏸ Duraklat</button>
+      <label class="slow"
+        >Ağır çekim <input type="range" id="speed" min="0" max="4" step="1" value="2" />
+        <output id="speedOut"></output
+      ></label>
+      <span id="simclock" hidden></span>
+    </div>
 
-<nav class="b3strip" aria-label="Ölçek">
-  <div class="track" id="strip"><span class="marker" id="marker"></span></div>
-  <span class="fov" id="fov"></span>
-</nav>
+    <nav class="b3strip" aria-label="Ölçek">
+      <div class="track" id="strip"><span class="marker" id="marker"></span></div>
+      <span class="fov" id="fov"></span>
+    </nav>
 
-<div class="b3load" id="loading"><div class="spin"></div><p id="loadmsg">Hazırlanıyor…</p></div>
+    <div class="b3load" id="loading">
+      <div class="spin"></div>
+      <p id="loadmsg">Hazırlanıyor…</p>
+    </div>
 
-<script src="vendor/three.min.js"></script>
-<script src="js/b3d/util.js"></script>
-<script src="js/b3d/sim.js"></script>
-<script src="js/b3d/brain.js"></script>
-<script src="js/b3d/region.js"></script>
-<script src="js/b3d/column.js"></script>
-<script src="js/b3d/micro.js"></script>
-<script src="js/b3d/synapse.js"></script>
-<script src="js/b3d/main.js"></script>
-</body>
+    <script src="vendor/three.min.js"></script>
+    <script src="js/b3d/util.js"></script>
+    <script src="js/b3d/sim.js"></script>
+    <script src="js/b3d/brain.js"></script>
+    <script src="js/b3d/region.js"></script>
+    <script src="js/b3d/column.js"></script>
+    <script src="js/b3d/micro.js"></script>
+    <script src="js/b3d/synapse.js"></script>
+    <script src="js/b3d/main.js"></script>
+  </body>
 </html>
