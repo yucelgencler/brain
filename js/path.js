@@ -195,14 +195,7 @@ function buildLevel() {
         <article class="icard limit"><h3>Modelin basitleştirdiği</h3><p>${esc(lv.cards.limit)}</p></article>
       </section>
       <details class="deeper" id="deeper"><summary>Daha derine: hesabın kendisi</summary><div class="deeper-body">${lv.deeper}</div></details>
-      <div class="read-duo">
-        <section class="panel"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>
-        <section class="panel notes">
-          <h3>Notlarım</h3>
-          <p class="hint">Bu seviyede ne fark ettin? Kendi cümlelerinle yazmak öğrendiğini pekiştirir. Bu tarayıcıda saklanır.</p>
-          <textarea class="txt" id="notes" placeholder="ör. Eşik yükselince nöron daha seçici oluyor…"></textarea>
-        </section>
-      </div>
+      <section class="panel all-missions"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>
       <nav class="lv-pn" aria-label="Seviyeler arası">
         <button class="btn" id="prevLv"${roadNeighbors()[0] ? '' : ' hidden'}>← Önceki seviye</button>
         <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
@@ -220,11 +213,6 @@ function buildLevel() {
     buildSliders(lv);
     if (lv.learning) wireLearn(lv);
   }
-  $('#notes').value = rec.notes || '';
-  $('#notes').addEventListener('input', e => {
-    R().notes = e.target.value;
-    save();
-  });
   $('#deeper').addEventListener('toggle', e => {
     if (e.target.open) {
       R().st.flags.openedDeeper = true;
@@ -236,13 +224,11 @@ function buildLevel() {
     const b = e.currentTarget;
     if (resetArm && Date.now() - resetArm < 3500) {
       resetArm = 0;
-      const notes = R().notes;
       P.rec[lv.key] = freshRec(lv);
-      R().notes = notes;
       R().routeSeen = true;
       buildLevel();
       save();
-      toast('Seviye baştan başladı. Notların duruyor.');
+      toast('Seviye baştan başladı.');
       return;
     }
     resetArm = Date.now();
@@ -1322,7 +1308,7 @@ function renderNav() {
   el.innerHTML =
     `<div class="pgroup extra"><h3><small>Başlangıç</small>Beynin içine bir bak</h3><ol><li><a href="beyin3d.html"><span class="ln">3B</span><span class="lt">Beyinden nörona kısa tur</span><span class="lp">5 dk</span></a></li></ol></div>` +
     groups.join('') +
-    `<div class="pgroup extra"><h3><small>Final</small>Hepsi bir arada</h3><ol><li><a href="beyin3d.html?yolculuk"><span class="ln">3B</span><span class="lt">Limonun yolculuğu</span><span class="lp">8 adım</span></a></li></ol></div>`;
+    `<div class="pgroup extra"><h3><small>Final</small>Hepsi bir arada</h3><ol><li><a href="beyin3d.html?yolculuk"><span class="ln">3B</span><span class="lt">Gözden kelimeye yolculuk</span><span class="lp">8 adım</span></a></li></ol></div>`;
 }
 function menuOpen(on) {
   const m = $('#lvnav');

@@ -413,7 +413,82 @@
     lemon.rotation.z = 0.25;
     lemon.visible = false;
     scene.add(lemon);
+    // çilek: aşağı doğru sivrilen kırmızı gövde, sarı çekirdekler, yeşil yapraklar
+    const straw = new THREE.Group();
+    {
+      const g = B3.shapedGeometry(4, function (dx, dy, dz, o) {
+        const k = 1 - 0.55 * Math.max(0, -dy);
+        o[0] = dx * 1.8 * k;
+        o[1] = dy * 2.1 - (dy < 0 ? 0.4 * dy * dy : 0);
+        o[2] = dz * 1.8 * k;
+      });
+      straw.add(
+        new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xd8283e, roughness: 0.45 }))
+      );
+      const seeds = [],
+        pos = g.attributes.position,
+        nrm = g.attributes.normal;
+      for (let i = 0; i < pos.count; i += 23) {
+        if (pos.getY(i) > 1.6) continue;
+        const sg = new THREE.SphereGeometry(0.07, 5, 4);
+        sg.translate(
+          pos.getX(i) + nrm.getX(i) * 0.05,
+          pos.getY(i) + nrm.getY(i) * 0.05,
+          pos.getZ(i) + nrm.getZ(i) * 0.05
+        );
+        seeds.push(sg);
+      }
+      straw.add(
+        new THREE.Mesh(B3.merge(seeds), new THREE.MeshStandardMaterial({ color: 0xf3d04a }))
+      );
+      for (let k = 0; k < 5; k++) {
+        const leaf = new THREE.Mesh(
+          new THREE.ConeGeometry(0.35, 1.4, 6),
+          new THREE.MeshStandardMaterial({ color: 0x3f9b4a })
+        );
+        const a = (k / 5) * Math.PI * 2;
+        leaf.position.set(Math.cos(a) * 0.55, 2.05, Math.sin(a) * 0.55);
+        leaf.rotation.set(Math.sin(a) * 1.2, 0, -Math.cos(a) * 1.2);
+        straw.add(leaf);
+      }
+    }
+    straw.position.copy(P.lemon);
+    straw.visible = false;
+    scene.add(straw);
+    // dondurma: krem top, külah
+    const icecream = new THREE.Group();
+    {
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(1.25, 3.4, 18, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0xc98a48, roughness: 0.8, side: THREE.DoubleSide })
+      );
+      cone.rotation.x = Math.PI;
+      cone.position.y = -1.2;
+      icecream.add(cone);
+      const sn = B3.makeNoise(31);
+      const scoop = new THREE.Mesh(
+        B3.shapedGeometry(
+          4,
+          (dx, dy, dz, o) => {
+            o[0] = dx * 1.45;
+            o[1] = dy * 1.25 + 1.0;
+            o[2] = dz * 1.45;
+          },
+          (x, y, z) => 0.08 * sn(x * 2, y * 2, z * 2)
+        ),
+        new THREE.MeshStandardMaterial({ color: 0xf6ead2, roughness: 0.7 })
+      );
+      icecream.add(scoop);
+    }
+    icecream.position.copy(P.lemon);
+    icecream.visible = false;
+    scene.add(icecream);
+    const objs = { lemon, straw, icecream };
     st.lemon = lemon;
+    st.objs = objs;
+    st.showObject = function (k) {
+      for (const n in objs) objs[n].visible = n === k;
+    };
 
     /* parlayan darbeler ve bölge ışıkları */
     const glow = new B3.GlowPoints(800);
@@ -547,7 +622,7 @@
       journey.visible = on;
       for (const k in curves) curves[k].mesh.visible = false;
       if (!on) {
-        lemon.visible = false;
+        for (const n in objs) objs[n].visible = false;
         st.pulses.length = 0;
         st.spots = {};
         for (const k in st.spotLabels) st.spotLabels[k].on = false;
@@ -612,7 +687,7 @@
         const pulse = 0.75 + 0.25 * Math.sin(now * 5);
         glow.add(s.pos.x, s.pos.y, s.pos.z, s.col[0], s.col[1], s.col[2], 4.2 * pulse, 0.85);
       }
-      if (lemon.visible) lemon.rotation.y += dt * 0.4;
+      for (const n in objs) if (objs[n].visible) objs[n].rotation.y += dt * 0.4;
       glow.commit(info.pxScale);
     };
 

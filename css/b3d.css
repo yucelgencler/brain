@@ -565,3 +565,21 @@ body.slowctl .b3ctl .slow {
   translate: 8px -50%;
   text-align: left;
 }
+/* yolculuğun özetinde nesneleri karşılaştıran tablo */
+.b3card .jcmp {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.b3card .jcmp th,
+.b3card .jcmp td {
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.b3card .jcmp th {
+  color: var(--ink-2);
+  font-weight: 500;
+}

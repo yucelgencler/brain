@@ -1,4 +1,4 @@
-/* Beyne yolculuk: sahne yığını, sürekli yakınlaştırma, kartlar ve “limonun yolculuğu”.
+/* Beyne yolculuk: sahne yığını, sürekli yakınlaştırma, kartlar ve “gözden kelimeye” yolculuğu (limon, çilek ya da dondurma).
    Z sürekli bir yakınlık değeri: 0 bütün beyin … 5 sinaps. Her durak kendi sahnesi ve ölçeğiyle çizilir;
    duraklar arasında iki sahne üst üste karıştırılarak geçilir. */
 (function () {
@@ -232,7 +232,16 @@
     if (st.journey) {
       const J = st.journey,
         S = JSTEPS[J.i];
-      html = `<div class="ct"><span class="chip">Limonun yolculuğu · ${J.i + 1}/${JSTEPS.length}</span><h2>${S.title}</h2></div><p>${S.text}</p>`;
+      const O = JO();
+      html = `<div class="ct"><span class="chip">Gözden kelimeye · ${J.i + 1}/${JSTEPS.length}</span><h2>${S.title(O)}</h2></div><p>${S.text(O)}</p>`;
+      if (S.choices)
+        Object.keys(JOBJ).forEach((k, n) =>
+          acts.push({
+            label: `${JOBJ[k].icon} ${cap(JOBJ[k].dat)} bak${st.tried && st.tried[k] ? ' ✓' : ''}`,
+            fn: () => jChoose(k),
+            psug: n === 0 && !(st.tried && Object.keys(st.tried).length)
+          })
+        );
       if (S.btn) acts.push({ label: S.btn, fn: () => jNext(), psug: J.ready, disabled: !J.ready });
       if (S.btn2) acts.push({ label: S.btn2[0], fn: S.btn2[1] });
       acts.push({ label: 'Yolculuktan çık', fn: () => jEnd(), ghost: true });
@@ -271,7 +280,7 @@
           )
         );
       if (c.action2) acts.push(Object.assign({ ghost: true }, c.action2));
-      if (a === brain) acts.push({ label: '🍋 Limonun yolculuğu', fn: () => jStart() });
+      if (a === brain) acts.push({ label: '🍋🍓🍦 Gözden kelimeye yolculuk', fn: () => jStart() });
       // gezinme: geri ve daha yakına
       const prev = stages[i - 1],
         next = stages[i + 1];
@@ -504,30 +513,88 @@
     st.arrive = null;
   }
 
-  /* ---------- limonun yolculuğu ---------- */
+  /* ---------- gözden kelimeye yolculuk (limon, çilek ya da dondurma) ---------- */
   const JZ = -0.1;
   const C_VIS = [1, 0.95, 0.55],
     C_VEN = [0.6, 1, 0.7],
     C_SM = [1, 0.8, 0.4],
     C_SP = [0.75, 0.8, 1];
+  // Yolculukta bakılabilecek nesneler (devre tarifleri B3.sim.OBJECTS ile aynı anahtarlar)
+  const JOBJ = {
+    lemon: {
+      icon: '🍋',
+      name: 'limon',
+      dat: 'limona',
+      word: 'LİMON',
+      say: '“Limon!”',
+      v1: ['curve', 'yellow'],
+      v1txt: 'kıvrık kenarı ve sarı rengi için <b>eğri kenar</b> ve <b>sarı</b> nöronları',
+      smell: 'ekşi kokusu',
+      feats: 'sarı, oval, ekşi koku',
+      rival: 'Hiçbir rakip bu üç özelliği birden taşımıyor; öbür kavram nöronları sessiz kalır.',
+      smellCol: [1, 0.95, 0.4]
+    },
+    straw: {
+      icon: '🍓',
+      name: 'çilek',
+      dat: 'çileğe',
+      word: 'ÇİLEK',
+      say: '“Çilek!”',
+      v1: ['curve', 'tip', 'red', 'dots'],
+      v1txt:
+        'kıvrık kenarı, sivri ucu, kırmızı rengi ve benekli yüzeyi için <b>eğri kenar</b>, <b>sivri uç</b>, <b>kırmızı</b> ve <b>benekli doku</b> nöronları',
+      smell: 'tatlı kokusu',
+      feats: 'kırmızı, benekli, tatlı koku',
+      rival:
+        'Dondurma da tatlı kokar: DONDURMA nöronu biraz destek alır ama kazanamaz, susturan onu bastırır.',
+      smellCol: [1, 0.55, 0.7]
+    },
+    icecream: {
+      icon: '🍦',
+      name: 'dondurma',
+      dat: 'dondurmaya',
+      word: 'DONDURMA',
+      say: '“Dondurma!”',
+      v1: ['curve', 'tip', 'light'],
+      v1txt:
+        'yuvarlak topu, sivri külahı ve açık rengi için <b>eğri kenar</b>, <b>sivri uç</b> ve <b>açık renk</b> nöronları',
+      smell: 'vanilyalı tatlı kokusu',
+      feats: 'krem rengi, külah, tatlı koku',
+      rival:
+        'Çilek de tatlı kokar: ÇİLEK nöronu biraz destek alır ama kazanamaz, susturan onu bastırır.',
+      smellCol: [1, 0.92, 0.75]
+    }
+  };
+  const V1NAMES = {
+    curve: 'eğri kenar',
+    tip: 'sivri uç',
+    yellow: 'sarı',
+    red: 'kırmızı',
+    light: 'açık renk',
+    dots: 'benekli doku'
+  };
+  const JO = () => JOBJ[(st.journey && st.journey.obj) || 'lemon'];
+  const cap = t => t.charAt(0).toLocaleUpperCase('tr-TR') + t.slice(1);
   const JSTEPS = [
     {
-      title: 'Bir limona bak',
-      text: 'Beyni yarı saydam yaptık; önde iki göz var. Bir limonu gözlerin önüne koyalım ve ışığın beyinde nereye gittiğini izleyelim.',
-      btn: '🍋 Limona bak',
+      title: () => 'Neye bakalım?',
+      text: () =>
+        'Beyni yarı saydam yaptık; önde iki göz var. Gözlerin önüne bir şey koyalım ve ışığın beyinde nereye gittiğini izleyelim. Sonra başka bir şeyle tekrarlayıp farkı görebilirsin.',
+      choices: true,
       enter() {
         brain.setJourney(true);
         brain.setXray(true);
-        brain.lemon.visible = true;
+        brain.showObject(null);
         brain._alignTo = { yaw: -1.22, pitch: 0.16 };
         micro.setMode('generic');
         zoomTo(JZ, 1.8);
-        ready(true);
+        ready(false, 99);
       }
     },
     {
-      title: 'Gözden talamusa',
-      text: 'Işık, retinadaki hücreleri uyarır. Sinyal görme siniriyle ilerler; iki sinirin buluştuğu yerde yarısı karşı tarafa geçer ve beynin ortasındaki talamusa (LGN) ulaşır. Buraya kadar ≈ 30 ms.',
+      title: () => 'Gözden talamusa',
+      text: O =>
+        `Işık, ${O.name === 'dondurma' ? 'dondurmadan' : O.name === 'çilek' ? 'çilekten' : 'limondan'} yansıyıp retinadaki hücreleri uyarır. Sinyal görme siniriyle ilerler; iki sinirin buluştuğu yerde yarısı karşı tarafa geçer ve beynin ortasındaki talamusa (LGN) ulaşır. Buraya kadar ≈ 30 ms.`,
       btn: 'Görme alanına gönder',
       enter() {
         brain.send('vis1L', 1.5, C_VIS);
@@ -541,8 +608,9 @@
       }
     },
     {
-      title: 'Görme alanı',
-      text: 'Talamus sinyali ensedeki birincil görme alanına (V1) iletir. ≈ 50 ms. Şimdi oraya, nöronların arasına inelim.',
+      title: () => 'Görme alanı',
+      text: () =>
+        'Talamus sinyali ensedeki birincil görme alanına (V1) iletir. ≈ 50 ms. Şimdi oraya, nöronların arasına inelim.',
       btn: '🔬 Görme alanına yaklaş',
       enter() {
         brain.send('vis2L', 1.3, C_VIS);
@@ -555,33 +623,43 @@
       }
     },
     {
-      title: 'V1: kenarlar ve renk',
-      text: 'Burada her nöron gözün gördüğü küçük bir parçaya bakar ve belli bir şekle tepki verir (9. seviyedeki yavru kedinin gözü gibi). Limonun kıvrık kenarı ve sarı rengi için <b>eğri kenar</b> ve <b>sarı leke</b> nöronları ateşler; yatay ve dikey kenar nöronları sessiz kalır. Etiketlerdeki çubuk, nöronun eşiğe ne kadar yakın olduğunu gösterir.',
+      title: () => 'V1: kenarlar ve renk',
+      text: O =>
+        `Burada her nöron gözün gördüğü küçük bir parçaya bakar ve belli bir özelliğe tepki verir (9. seviyedeki yavru kedinin gözü gibi). ${cap(O.name)} için ${O.v1txt} ateşler; ötekiler sessiz kalır. Etiketlerdeki çubuk, nöronun eşiğe ne kadar yakın olduğunu gösterir.`,
       btn: 'Sonra? Şakak lobuna',
       enter() {
         brain.setXray(false);
         fastSim();
         micro.setMode('v1');
-        micro.setStim('lemon');
+        micro.setStim(st.journey.obj);
         micro.resetCounts();
         diveInto('occipital', 'v1');
         zoomTo(STOPS[3] - 0.08, 4.2);
-        ready(false, 0, () => micro.count('curve') >= 2 && micro.count('yellow') >= 1);
+        ready(false, 0, () => JO().v1.every(id => micro.count(id) >= 2));
+      },
+      leave() {
+        st.tried[st.journey.obj] = {
+          v1: Object.keys(V1NAMES)
+            .filter(id => micro.count(id) >= 2)
+            .map(id => V1NAMES[id])
+        };
       }
     },
     {
-      title: '“Ne” yolu: şakak lobuna',
-      text: 'Kenar ve renk bilgisi beynin alt yüzünden şakak lobuna akar. Burnundan gelen ekşi koku da buraya katılır: 10. seviyede yaptığımız gibi duyular tek bir kavramda birleşir. ≈ 150 ms.',
+      title: () => '“Ne” yolu: şakak lobuna',
+      text: O =>
+        `Kenar ve renk bilgisi beynin alt yüzünden şakak lobuna akar. Burnuna gelen ${O.smell} da buraya katılır: 11. seviyede yaptığımız gibi duyular tek bir kavramda birleşir. ≈ 150 ms.`,
       btn: '🔬 Şakak lobuna yaklaş',
       enter() {
         micro.setStim(null);
+        const sc = JO().smellCol;
         zoomTo(JZ, 3.2, () => {
           brain.setXray(true);
           brain._alignTo = { yaw: -1.3, pitch: 0.02 };
           brain.send('venL', 1.6, C_VEN);
           brain.send('venR', 1.6, C_VEN);
-          brain.send('smell', 2.0, C_SM, 4);
-          brain.spot('nose', brain.P.bulb, C_SM, 2.2, 'smell');
+          brain.send('smell', 2.0, sc, 4);
+          brain.spot('nose', brain.P.bulb, sc, 2.2, 'smell');
           setTimeout(() => brain.spot('itL', brain.P.itL, C_VEN, 1e9, 'it'), 1700);
           ready(false, 2.2);
         });
@@ -589,26 +667,33 @@
       }
     },
     {
-      title: 'Kavram nöronu: LİMON',
-      text: 'Şakak lobunda özellik nöronları (sarı renk, oval biçim, pürüzlü kabuk, ekşi koku) kavram nöronlarına bağlanır. Hepsini birden alan <b>LİMON</b> nöronu eşiği geçer; susturan nöron rakipleri bastırır. Portakal da oval ve pürüzlüdür, biraz kıpırdar ama kazanamaz. İnsanda tek bir kavrama seçici tepki veren nöronlar gerçekten bulundu (Quiroga, 2005).',
+      title: O => `Kavram nöronu: ${O.word}`,
+      text: O =>
+        `Şakak lobunda özellik nöronları kavram nöronlarına bağlanır. ${cap(O.name)} için ${O.feats} birlikte gelir; hepsini birden alan <b>${O.word}</b> nöronu eşiği geçer. ${O.rival} İnsanda tek bir kavrama seçici tepki veren nöronlar gerçekten bulundu (Quiroga, 2005).`,
       btn: 'Ve cevap…',
       enter() {
         brain.setXray(false);
         fastSim();
         micro.setMode('it');
-        micro.setStim('lemon');
+        micro.setStim(st.journey.obj);
         micro.resetCounts();
         diveInto('temporal', 'it');
         zoomTo(STOPS[3] - 0.08, 4.2);
-        ready(false, 0, () => micro.count('lemon') >= 3);
+        ready(false, 0, () => micro.count(B3.sim.OBJECTS[st.journey.obj].concept) >= 3);
+      },
+      leave() {
+        const t = st.tried[st.journey.obj] || (st.tried[st.journey.obj] = { v1: [] });
+        t.word = JO().word;
       }
     },
     {
-      title: '“Limon!”',
-      text: 'Kavram, sol alın lobundaki konuşma alanına (Broca) gider; orada kelimenin sesleri sıraya konur. Hemen arkadaki hareket kabuğu dil, dudak ve gırtlak kaslarına komut gönderir. Bir resme bakıp adını söylemek toplam ≈ 0,6 saniye sürer.',
+      title: O => O.say,
+      text: () =>
+        'Kavram, sol alın lobundaki konuşma alanına (Broca) gider; orada kelimenin sesleri sıraya konur. Hemen arkadaki hareket kabuğu dil, dudak ve gırtlak kaslarına komut gönderir. Bir resme bakıp adını söylemek toplam ≈ 0,6 saniye sürer.',
       btn: 'Özeti gör',
       enter() {
         micro.setStim(null);
+        brain.sayLbl.el.textContent = JO().say;
         zoomTo(JZ, 3.2, () => {
           brain.setXray(true);
           brain._alignTo = { yaw: -1.25, pitch: 0.12 };
@@ -630,15 +715,34 @@
       }
     },
     {
-      title: 'Ne oldu?',
-      text: '<span class="chain">göz → talamus → görme alanı <small>(kenar, renk)</small> → şakak lobu <small>(kavram: LİMON)</small> → Broca → hareket kabuğu → “Limon!”</span>Her okun arkasında aynı şey var: nöronlar girdilerini topluyor, eşiği geçen ateşliyor, sinaps sinyali bir sonrakine taşıyor. Önceki seviyelerde tek tek kurduğun parçalar, burada bir beynin içinde birlikte çalıştı.',
-      btn: '↺ Baştan',
+      title: () => 'Ne oldu?',
+      text: O => {
+        const rows = Object.keys(JOBJ)
+          .filter(k => st.tried[k])
+          .map(
+            k =>
+              `<tr><td>${JOBJ[k].icon} ${cap(JOBJ[k].name)}</td><td>${(st.tried[k].v1 || []).join(', ') || '–'}</td><td><b>${st.tried[k].word || '–'}</b></td></tr>`
+          )
+          .join('');
+        const left = Object.keys(JOBJ).filter(k => !st.tried[k]);
+        return `<span class="chain">göz → talamus → görme alanı <small>(özellikler)</small> → şakak lobu <small>(kavram: ${O.word})</small> → Broca → hareket kabuğu → ${O.say}</span>
+          <table class="jcmp"><thead><tr><th>baktığın</th><th>görme alanında ateşleyenler</th><th>kazanan kavram</th></tr></thead><tbody>${rows}</tbody></table>
+          ${left.length ? `Yol hep aynı ama her nesnede farklı nöronlar ateşliyor. Bir de ${left.map(k => JOBJ[k].dat).join(' ya da ')} bakıp karşılaştır.` : 'Yol her seferinde aynıydı; değişen, hangi nöronların ateşlediğiydi. Beyin bir şeyi, onun özelliklerine tepki veren nöronların birlikte yanma deseniyle tanır.'}`;
+      },
+      btn: '🔁 Başka bir şeye bak',
       btn2: ['Serbest gez', () => jEnd()],
       enter() {
         ready(true);
       }
     }
   ];
+  function jChoose(k) {
+    const J = st.journey;
+    if (!J) return;
+    J.obj = k;
+    brain.showObject(k);
+    jNext();
+  }
   function fastSim() {
     if (+speedIn.value < 3) {
       speedIn.value = 3;
@@ -665,7 +769,8 @@
     stopFollow();
     st.cardLobe = null;
     brain.select(null);
-    st.journey = { i: 0, ready: false };
+    st.tried = st.tried || {};
+    st.journey = { i: 0, ready: false, obj: null };
     JSTEPS[0].enter();
     renderCard(true);
   }
@@ -677,6 +782,7 @@
       jStart();
       return;
     }
+    if (JSTEPS[J.i].leave) JSTEPS[J.i].leave();
     J.i++;
     J.ready = false;
     JSTEPS[J.i].enter();

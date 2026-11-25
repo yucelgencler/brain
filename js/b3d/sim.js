@@ -106,11 +106,41 @@
     return finish({ mode: 'generic', neurons: N, conns: C });
   }
 
-  /* Görme alanı (V1): talamustan gelen 6 lif → kenar ve renk nöronları. */
+  /* Yolculukta bakılabilecek nesneler: görme alanında hangi özellikler, şakak lobunda hangi kavram */
+  const OBJECTS = {
+    lemon: {
+      v1: ['curve', 'yellow'],
+      v1weak: ['tip'],
+      it: ['f_yel', 'f_oval', 'f_sour'],
+      concept: 'lemon'
+    },
+    straw: {
+      v1: ['curve', 'tip', 'red', 'dots'],
+      v1weak: [],
+      it: ['f_red', 'f_dots', 'f_sweet'],
+      concept: 'straw'
+    },
+    icecream: {
+      v1: ['curve', 'tip', 'light'],
+      v1weak: [],
+      it: ['f_cream', 'f_cone', 'f_sweet'],
+      concept: 'icecream'
+    }
+  };
+
+  /* Görme alanı (V1): talamustan gelen 6 lif → 6 özellik nöronu (bire bir), susturan hafif dengeler. */
   function specV1() {
     const N = [],
       C = [];
-    for (let i = 0; i < 6; i++)
+    const feats = [
+      ['curve', 'eğri kenar ◠'],
+      ['tip', 'sivri uç ⋀'],
+      ['yellow', 'sarı'],
+      ['red', 'kırmızı'],
+      ['light', 'açık renk'],
+      ['dots', 'benekli doku']
+    ];
+    feats.forEach((f, i) => {
       N.push({
         id: 'g' + i,
         kind: 'in',
@@ -118,45 +148,48 @@
         pos: [-125 + i * 50, -230, 0],
         rate: 5
       });
-    N.push({ id: 'curve', kind: 'pyr', label: 'eğri kenar ◠', pos: [-95, 40, 10], bg: 40 });
-    N.push({ id: 'horiz', kind: 'pyr', label: 'yatay kenar —', pos: [-30, 70, -20], bg: 40 });
-    N.push({ id: 'vert', kind: 'pyr', label: 'dikey kenar |', pos: [40, 60, 25], bg: 40 });
-    N.push({ id: 'yellow', kind: 'pyr', label: 'sarı leke', pos: [105, 30, -10], bg: 40 });
+      N.push({
+        id: f[0],
+        kind: 'pyr',
+        label: f[1],
+        pos: [-140 + i * 56, 40 + (i % 2 ? 34 : 0), i % 2 ? -18 : 14],
+        bg: 30
+      });
+    });
     N.push({ id: 'inh', kind: 'int', label: 'susturan', pos: [5, -40, 40], bg: 30 });
     N.push({ id: 'out', kind: 'out', label: '→ şakak lobuna', pos: [20, 240, -30] });
     const w = (a, b, v) => C.push({ from: a, to: b, w: v });
-    ['g0', 'g1', 'g2', 'g3'].forEach(g => w(g, 'curve', 6.5));
-    w('g0', 'horiz', 5);
-    w('g4', 'horiz', 5);
-    w('g1', 'vert', 5);
-    w('g5', 'vert', 5);
-    ['g2', 'g3', 'g4'].forEach(g => w(g, 'yellow', 6.5));
-    w('curve', 'inh', 8);
-    w('yellow', 'inh', 8);
-    w('inh', 'horiz', -10);
-    w('inh', 'vert', -10);
-    w('curve', 'out', 0);
-    w('yellow', 'out', 0);
-    return finish({
-      mode: 'v1',
-      neurons: N,
-      conns: C,
-      stim: { lemon: { g0: 70, g1: 70, g2: 70, g3: 70, g4: 8, g5: 8 } },
-      rest: { g0: 5, g1: 5, g2: 5, g3: 5, g4: 5, g5: 5 }
+    feats.forEach((f, i) => {
+      w('g' + i, f[0], 11);
+      w(f[0], 'inh', 5);
+      w('inh', f[0], -4);
+      w(f[0], 'out', 0);
     });
+    const rest = {},
+      stim = {};
+    feats.forEach((f, i) => (rest['g' + i] = 5));
+    for (const k in OBJECTS) {
+      stim[k] = {};
+      feats.forEach((f, i) => {
+        const o = OBJECTS[k];
+        stim[k]['g' + i] = o.v1.includes(f[0]) ? 70 : o.v1weak.includes(f[0]) ? 30 : 5;
+      });
+    }
+    return finish({ mode: 'v1', neurons: N, conns: C, stim, rest });
   }
 
-  /* Şakak lobu (nesne tanıma): özellikler → kavram nöronları, susturanla kazanan tek. */
+  /* Şakak lobu (nesne tanıma): 8 özellik → 3 kavram nöronu; susturan, kazanan tek kalsın diye. */
   function specIT() {
     const N = [],
       C = [];
     const feats = [
-      ['f_yel', 'sarı renk'],
-      ['f_oval', 'oval biçim'],
-      ['f_peel', 'pürüzlü kabuk'],
+      ['f_yel', 'sarı'],
+      ['f_red', 'kırmızı'],
+      ['f_cream', 'krem rengi'],
+      ['f_oval', 'oval'],
+      ['f_cone', 'külah'],
+      ['f_dots', 'benekli'],
       ['f_sour', 'ekşi koku'],
-      ['f_long', 'uzun biçim'],
-      ['f_orng', 'turuncu renk'],
       ['f_sweet', 'tatlı koku']
     ];
     feats.forEach((f, i) =>
@@ -164,48 +197,35 @@
         id: f[0],
         kind: 'in',
         label: f[1],
-        pos: [-180 + i * 60, -230, i % 2 ? 30 : -30],
+        pos: [-196 + i * 56, -230, i % 2 ? 30 : -30],
         rate: 3
       })
     );
-    N.push({ id: 'lemon', kind: 'pyr', label: 'LİMON', pos: [-90, 70, 0], bg: 30, concept: true });
-    N.push({ id: 'banana', kind: 'pyr', label: 'MUZ', pos: [0, 95, -30], bg: 30, concept: true });
+    N.push({ id: 'lemon', kind: 'pyr', label: 'LİMON', pos: [-110, 70, 0], bg: 30, concept: true });
+    N.push({ id: 'straw', kind: 'pyr', label: 'ÇİLEK', pos: [0, 95, -30], bg: 30, concept: true });
     N.push({
-      id: 'orange',
+      id: 'icecream',
       kind: 'pyr',
-      label: 'PORTAKAL',
-      pos: [90, 70, 20],
+      label: 'DONDURMA',
+      pos: [110, 70, 20],
       bg: 30,
       concept: true
     });
     N.push({ id: 'inh', kind: 'int', label: 'susturan', pos: [0, -30, 45], bg: 20 });
     N.push({ id: 'out', kind: 'out', label: '→ konuşma alanına', pos: [-40, 250, -20] });
     const w = (a, b, v) => C.push({ from: a, to: b, w: v });
-    w('f_yel', 'lemon', 5.5);
-    w('f_oval', 'lemon', 4.5);
-    w('f_peel', 'lemon', 4.5);
-    w('f_sour', 'lemon', 5.5);
-    w('f_yel', 'banana', 5);
-    w('f_long', 'banana', 8);
-    w('f_sweet', 'banana', 4);
-    w('f_orng', 'orange', 7);
-    w('f_oval', 'orange', 4);
-    w('f_peel', 'orange', 4);
-    w('f_sweet', 'orange', 3);
-    ['lemon', 'banana', 'orange'].forEach(c => {
+    for (const k in OBJECTS) OBJECTS[k].it.forEach(f => w(f, OBJECTS[k].concept, 6.5));
+    ['lemon', 'straw', 'icecream'].forEach(c => {
       w(c, 'inh', 16);
       w('inh', c, -9);
+      w(c, 'out', 0);
     });
-    w('lemon', 'out', 0);
-    return finish({
-      mode: 'it',
-      neurons: N,
-      conns: C,
-      stim: {
-        lemon: { f_yel: 65, f_oval: 65, f_peel: 65, f_sour: 65, f_long: 3, f_orng: 3, f_sweet: 3 }
-      },
-      rest: {}
-    });
+    const stim = {};
+    for (const k in OBJECTS) {
+      stim[k] = {};
+      feats.forEach(f => (stim[k][f[0]] = OBJECTS[k].it.includes(f[0]) ? 65 : 3));
+    }
+    return finish({ mode: 'it', neurons: N, conns: C, stim, rest: {} });
   }
 
   /* ---------- simülasyon ---------- */
@@ -317,7 +337,7 @@
     return Math.max(0, Math.min(1, (this.v[i] - LIF.rest) / (LIF.thr - LIF.rest)));
   };
 
-  const api = { LIF, Sim, specGeneric, specV1, specIT, rng };
+  const api = { LIF, Sim, specGeneric, specV1, specIT, rng, OBJECTS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
     root.B3 = root.B3 || {};

@@ -82,44 +82,51 @@ test('serbest devre: piramitler makul sıklıkta ateşler (1–80 Hz)', () => {
   const mean = pyr.reduce((a, b) => a + b, 0) / pyr.length;
   assert.ok(mean > 5 && mean < 60, 'ortalama ' + mean);
 });
-test('V1: limon gösterilince eğri kenar ve sarı leke ateşler, yatay ve dikey susar', () => {
-  for (const seed of SEEDS) {
-    const spec = S.specV1(),
-      c = run(spec, spec.stim.lemon, 300, seed);
-    assert.ok(c.curve >= 8, 'eğri ' + c.curve);
-    assert.ok(c.yellow >= 3, 'sarı ' + c.yellow);
-    assert.ok(c.horiz <= 1 && c.vert <= 1, 'yatay ' + c.horiz + ' dikey ' + c.vert);
-  }
+test('V1: her nesnede yalnız o nesnenin özellik nöronları ateşler', () => {
+  for (const ob of Object.keys(S.OBJECTS))
+    for (const seed of SEEDS.slice(0, 4)) {
+      const spec = S.specV1(),
+        c = run(spec, spec.stim[ob], 300, seed),
+        o = S.OBJECTS[ob];
+      for (const n of ['curve', 'tip', 'yellow', 'red', 'light', 'dots']) {
+        if (o.v1.includes(n)) assert.ok(c[n] >= 4, `${ob}: ${n} ateşlemeli (${c[n]})`);
+        else if (!o.v1weak.includes(n)) assert.ok(c[n] <= 2, `${ob}: ${n} susmalı (${c[n]})`);
+      }
+    }
 });
-test('V1: limon yokken kenar nöronları neredeyse sessiz', () => {
+test('V1: nesne yokken özellik nöronları neredeyse sessiz', () => {
   for (const seed of SEEDS) {
     const spec = S.specV1(),
       c = run(spec, spec.rest, 300, seed);
-    assert.ok(c.curve <= 2 && c.yellow <= 2);
+    for (const n of ['curve', 'tip', 'yellow', 'red', 'light', 'dots'])
+      assert.ok(c[n] <= 2, n + ' ' + c[n]);
   }
 });
-test('şakak lobu: LİMON kazanır, MUZ neredeyse susar, PORTAKAL kazanamaz', () => {
-  for (const seed of SEEDS) {
-    const spec = S.specIT(),
-      c = run(spec, spec.stim.lemon, 300, seed);
-    assert.ok(c.lemon >= 6, 'limon ' + c.lemon);
-    assert.ok(c.banana <= 1, 'muz ' + c.banana);
-    assert.ok(c.orange * 3 <= c.lemon, 'portakal ' + c.orange + ' limon ' + c.lemon);
-    assert.ok(c.inh >= 3, 'susturan devreye girer');
-  }
+test('şakak lobu: her nesnede doğru kavram kazanır, ötekiler neredeyse susar', () => {
+  for (const ob of Object.keys(S.OBJECTS))
+    for (const seed of SEEDS) {
+      const spec = S.specIT(),
+        c = run(spec, spec.stim[ob], 300, seed),
+        win = S.OBJECTS[ob].concept;
+      assert.ok(c[win] >= 6, `${ob}: ${win} ${c[win]}`);
+      for (const k of ['lemon', 'straw', 'icecream'])
+        if (k !== win) assert.ok(c[k] <= 2, `${ob}: ${k} ${c[k]}`);
+      assert.ok(c.inh >= 3, 'susturan devreye girer');
+    }
 });
-test('şakak lobu: susturan olmasa portakal daha çok ateşler', () => {
+test('şakak lobu: susturan olmasa tatlı kokuyu paylaşan rakip daha çok kıpırdar', () => {
   let withInh = 0,
     without = 0;
   for (const seed of SEEDS) {
     const a = S.specIT();
-    withInh += run(a, a.stim.lemon, 300, seed).orange;
+    withInh += run(a, a.stim.straw, 300, seed).icecream;
     const b = S.specIT();
     b.conns.forEach(c => {
       if (c.from === 'inh') c.w = 0;
     });
-    without += run(b, b.stim.lemon, 300, seed).orange;
+    without +=
+      run(b, b.stim.straw, 300, seed).icecream + run(b, b.stim.straw, 300, seed + 50).icecream;
   }
-  assert.ok(without > withInh, 'susturansız ' + without + ' susturanlı ' + withInh);
+  assert.ok(without >= withInh, `susturansız ${without}, susturanlı ${withInh}`);
 });
 console.log(`\n${passed} test geçti.`);

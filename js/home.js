@@ -83,8 +83,8 @@ function buildHome() {
   const final = card(
     'extra final',
     'Final · 8 adım',
-    'Hepsi bir arada: limonun yolculuğu',
-    'Bir limona baktığında ışığın gözden görme alanına, oradan “limon” kavramına ve ağzından çıkan kelimeye kadar izlediği yol. Önceki bölümlerde tek tek kurduğun parçalar bir beynin içinde birlikte çalışır.',
+    'Hepsi bir arada: gözden kelimeye',
+    'Bir limona, çileğe ya da dondurmaya baktığında ışığın gözden görme alanına, oradan kavrama ve ağzından çıkan kelimeye kadar izlediği yol. Nesneyi değiştirip hangi nöronların değiştiğini karşılaştır. Önceki bölümlerde tek tek kurduğun parçalar bir beynin içinde birlikte çalışır.',
     '',
     `<a class="btn" href="beyin3d.html?yolculuk">Yolculuğa çık →</a>`
   );
