@@ -175,6 +175,60 @@ test('seviye 15: uykusuz unutur, uykulu (az tekrarla bile) hepsini hatırlar', (
     assert.ok(c.flags.little, 'az tekrar yetmeli: ' + c.acc);
   }
 });
+const W16 = require('../js/levels/16-words.js');
+const R17 = require('../js/levels/17-read.js');
+test('seviye 16: eğitimle aynı türden kelimeler kümelenir; komşu kendi türünden; bilinmeyen kelime', () => {
+  const st = fresh(W16.level);
+  assert.strictEqual(W16.level.id, 16);
+  let list = W16.wordsList(st);
+  const net = W16.wordsNet(list.length);
+  const before = W16.wordsClustering(net, list);
+  W16.wordsTrain(net, list, 150);
+  const after = W16.wordsClustering(net, list);
+  assert.ok(after.gap > before.gap + 0.5, `kümelenme ${before.gap} → ${after.gap}`);
+  W16.wordsRecord(st, net, 0);
+  assert.ok(st.flags.trained && st.flags.near);
+  st.custom.push({ w: 'zürafa', c: 'hayvan' });
+  const list2 = W16.wordsList(st),
+    net2 = net.resized(
+      list.map(p => p.w),
+      list2.map(p => p.w),
+      W16.WORDS.cats,
+      W16.WORDS.cats,
+      3
+    );
+  W16.wordsTrain(net2, list2, 150);
+  W16.wordsRecord(st, net2, list2.length - 1);
+  assert.ok(st.flags.newPlaced, 'zürafa hayvanların yanında');
+  assert.strictEqual(W16.wordsAsk(st, net2, 'kaplan').known, false);
+  assert.deepStrictEqual(check(W16.level, st), ['train', 'near', 'new', 'unknown']);
+});
+test('seviye 17: yanlış harfe dayanır, kayınca şaşırır, farklı yerlerde görerek düzelir', () => {
+  const st = fresh(R17.level);
+  assert.strictEqual(R17.level.id, 17);
+  let net = R17.readNet();
+  R17.readTrain(net, R17.readData(false, 5), R17.READ.plain, C.mulberry32(5));
+  st.trained = 1;
+  assert.strictEqual(R17.readAccuracy(net, 0), 1);
+  assert.ok(R17.readAccuracy(net, 4) < 0.5, 'kayınca çoğunu bilemez');
+  R17.readAsk(st, net, 'elme', 0);
+  R17.readAsk(st, net, 'kediler', 0);
+  R17.readAsk(st, net, 'kedi', 4);
+  assert.ok(st.flags.typo && st.flags.suffix && st.flags.shiftFail);
+  net = R17.readNet();
+  R17.readTrain(net, R17.readData(true, 5), R17.READ.aug, C.mulberry32(5));
+  st.trained = 2;
+  assert.ok(R17.readAccuracy(net, 4) >= 0.85, 'kaymaya dayanıklı');
+  R17.readAsk(st, net, 'kedi', 4);
+  assert.ok(st.flags.shiftFixed);
+});
+test('yol haritasında “yakında” ya da “serbest deney” kalmadı: her durak gerçek bir seviye', () => {
+  for (const r of Lv.ROADMAP) assert.ok(r.level, 'hazır değil: ' + r.key);
+  assert.deepStrictEqual(
+    Lv.LEVELS.map(l => l.id),
+    Lv.ROADMAP.map(r => r.id)
+  );
+});
 test('model hiçbir yerde “küçük beyin” diye anılmaz (Türkçede beyincik demek)', () => {
   const fs = require('fs'),
     path = require('path');

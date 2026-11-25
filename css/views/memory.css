@@ -383,3 +383,193 @@
   color: var(--bad);
   font-weight: 600;
 }
+
+/* ---------- 16 ve 17 (bölüm 5) ---------- */
+.wd-bench,
+.rd-bench {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.6fr) minmax(240px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 1020px) {
+  .wd-bench,
+  .rd-bench {
+    grid-template-columns: 1fr 1fr;
+  }
+  .wd-map,
+  .rd-eye {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+@media (max-width: 640px) {
+  .wd-bench,
+  .rd-bench {
+    grid-template-columns: 1fr;
+  }
+}
+.wd-bench > .panel,
+.rd-bench > .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wd-chips,
+.rd-known,
+.rd-tries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.wd-chip {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--c, var(--line));
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.wd-chip.on {
+  background: var(--surface-2);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.wd-chip.psug {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.wd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 10px;
+  padding: 2px;
+}
+.wd-form.psugc,
+#wdCanvas.psugc {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+  border-radius: 10px;
+}
+.wd-form label {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.wd-row {
+  display: flex;
+  gap: 6px;
+}
+.wd-row input,
+.wd-row select {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px 10px;
+  background: var(--surface);
+}
+.wd-row select {
+  flex: 0 0 auto;
+}
+.wd-askres {
+  margin: 2px 0 0;
+  font-size: 14px;
+  min-height: 1.4em;
+}
+#wdCanvas,
+#rdCanvas {
+  width: 100%;
+  display: block;
+  cursor: pointer;
+}
+.wd-ctl,
+.rd-train {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.wd-leg {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+.wd-ans {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 24px;
+}
+.wd-ans small {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.wd-pat {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+.wd-pat span {
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.wd-nb {
+  margin: 0;
+  padding-left: 20px;
+}
+.wd-nb b {
+  float: right;
+  font-variant-numeric: tabular-nums;
+}
+.rd-shift {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rd-shift output {
+  min-width: 7ch;
+  text-align: center;
+  font-weight: 600;
+}
+.rd-prog {
+  flex: 1;
+  min-width: 80px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.rd-prog i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+.rd-logp {
+  margin-top: 14px;
+}
+#rdLog td.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+#rdLog td.bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+.rd-ans .sh-bar.top .sh-bt i,
+.wd-sel .sh-bar.top .sh-bt i {
+  background: var(--accent);
+}
+.rd-ans .sh-bt {
+  height: 11px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.rd-ans .sh-bt i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink-2) 45%, var(--surface-2));
+}

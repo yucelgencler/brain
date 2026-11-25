@@ -823,6 +823,8 @@ if (typeof module !== 'undefined' && module.exports) {
     wordTask,
     readTask,
     TASKS,
+    DEFAULT_WORDS,
+    READ_ROWS,
     DIGIT_ROWS,
     DIGIT_BITS,
     GLYPHS,
