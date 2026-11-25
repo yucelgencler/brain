@@ -12,28 +12,28 @@ Kurulum yok, ön bilgi gerekmez. Matematik ya da programlama bilmen gerekmez.
 
 Her seviye bir soruyla başlar. Küçük bir beyin devresiyle denersin, görevler seni adım adım bir keşfe götürür ve sonunda aynı şeyin gerçek beyinde nasıl olduğunu okursun. Kolaydan zora beş bölüm var:
 
-| Bölüm | Soru | Seviyeler |
-|---|---|---|
-| Başlangıç | Beynin içine bir bak | 3B tur: beyinden kabuğa, nöronlara ve sinapsa |
-| 1 | Bir nöron nasıl karar verir? | 1 Tek bir ışık hücresi · 2 İki ışık, bir karar · 3 Susturan bağlantı |
-| 2 | Nöron nasıl öğrenir? | 4 Öğretmenle öğrenme · 5 Tahmin ederek öğrenme · 6 Tek nöronun duvarı |
-| 3 | Nöronlar birlikte nasıl anlar? | 7 Muz ve armut · 8 Gizli nöronlar · 9 Yatay mı dikey mi? · 10 Şekil ve rakam tanıma · 11 Beş duyu, tek kavram |
-| 4 | Beyin nasıl hatırlar ve pekiştirir? | 12 Birlikte yanan, birlikte bağlanır · 13 Hafıza nerede? · 14 Ezber mi, anlamak mı? · 15 Unutma ve uyku |
-| 5 | Kelimeler ve anlam | 16 Kelimelerin anlamı · 17 Okumak |
-| Final | Hepsi bir arada | 3B: bir limona, çileğe ya da dondurmaya baktığında gözden kelimeye giden yol |
+| Bölüm     | Soru                                | Seviyeler                                                                                                     |
+| --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Başlangıç | Beynin içine bir bak                | 3B tur: beyinden kabuğa, nöronlara ve sinapsa                                                                 |
+| 1         | Bir nöron nasıl karar verir?        | 1 Tek bir ışık hücresi · 2 İki ışık, bir karar · 3 Susturan bağlantı                                          |
+| 2         | Nöron nasıl öğrenir?                | 4 Öğretmenle öğrenme · 5 Tahmin ederek öğrenme · 6 Tek nöronun duvarı                                         |
+| 3         | Nöronlar birlikte nasıl anlar?      | 7 Muz ve armut · 8 Gizli nöronlar · 9 Yatay mı dikey mi? · 10 Şekil ve rakam tanıma · 11 Beş duyu, tek kavram |
+| 4         | Beyin nasıl hatırlar ve pekiştirir? | 12 Birlikte yanan, birlikte bağlanır · 13 Hafıza nerede? · 14 Ezber mi, anlamak mı? · 15 Unutma ve uyku       |
+| 5         | Kelimeler ve anlam                  | 16 Kelimelerin anlamı · 17 Okumak                                                                             |
+| Final     | Hepsi bir arada                     | 3B: bir limona, çileğe ya da dondurmaya baktığında gözden kelimeye giden yol                                  |
 
 Hiçbir seviye kilitli değil; istediğin yerden başlayabilirsin. İlerlemen yalnızca kendi tarayıcında saklanır.
 
-| | |
-|---|---|
-| ![Seviye 13: yarım bir ipucundan anıyı geri getiren hafıza ağı](docs/img/seviye-13.jpg) | ![Seviye 10: şekil ve rakam tanıyan nöron ağı](docs/img/seviye-10.jpg) |
-| ![3B: nöronlar, dendritler ve sinyaller](docs/img/3b-noronlar.jpg) | ![3B: çilekten gelen ışık görme alanına gidiyor](docs/img/3b-yolculuk.jpg) |
+|                                                                                         |                                                                            |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| ![Seviye 13: yarım bir ipucundan anıyı geri getiren hafıza ağı](docs/img/seviye-13.jpg) | ![Seviye 10: şekil ve rakam tanıyan nöron ağı](docs/img/seviye-10.jpg)     |
+| ![3B: nöronlar, dendritler ve sinyaller](docs/img/3b-noronlar.jpg)                      | ![3B: çilekten gelen ışık görme alanına gidiyor](docs/img/3b-yolculuk.jpg) |
 
 ## Nasıl çalışır?
 
 - **Dene:** Her seviyede birkaç nörondan oluşan bir beyin devresi var. Işığı açarsın, bir bağlantıyı güçlendirirsin, bir anıyı hatırlatırsın; sonucu anında görürsün.
 - **Fark et:** Parlayan düğme hep bir sonraki adımı gösterir. Her görevin sonunda neyi fark ettiğini anlatan kısa bir açıklama açılır.
-- **Gerçek beyinde:** Her seviyede üç kart var: *Gerçek beyinde* (bilim ne diyor), *Bu modelde* (ekranda ne var), *Modelin basitleştirdiği* (benzetmenin sınırı). Daha fazlasını isteyene “Daha derine”.
+- **Gerçek beyinde:** Her seviyede üç kart var: _Gerçek beyinde_ (bilim ne diyor), _Bu modelde_ (ekranda ne var), _Modelin basitleştirdiği_ (benzetmenin sınırı). Daha fazlasını isteyene “Daha derine”.
 - **3B beyin:** Bütün beyinden tek bir sinapsa kadar yakınlaşabilir, nöronları ateşletip sinyalin nasıl aktığını izleyebilirsin. Her seviyeden “🧠 3B’de gör” ile o konunun beynin neresinde olduğuna gidersin.
 - **Sözlük:** Nöron, sinaps, eşik gibi terimlerin sade açıklamaları.
 - **Serbest deney:** Ayarları açık, rehbersiz bir laboratuvar (rakamlar, kelimeler, okuma).

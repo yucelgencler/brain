@@ -5,7 +5,7 @@ Nörondan Beyne’ye katkı vermek istediğin için teşekkürler. Bu belge proj
 ## İlkeler
 
 1. **Herkes için.** Kullanan kişi yazılımcı ya da biyolog olmak zorunda değil. Her terim ilk geçtiği yerde açıklanır (gerekirse `js/glossary.js` sözlüğüne eklenir). Kontrollerin adı ne yaptığını söyler: “gizli nöron sayısı” değil “ağ büyüklüğü”.
-2. **Gerçek beyne odak.** Her seviye bir beyin olgusunu anlatır. Kartlar: *Gerçek beyinde*, *Bu modelde*, *Modelin basitleştirdiği*. Bilimsel bir iddiada bulunuyorsan kaynağını (araştırmacı ve yıl) kartta an.
+2. **Gerçek beyne odak.** Her seviye bir beyin olgusunu anlatır. Kartlar: _Gerçek beyinde_, _Bu modelde_, _Modelin basitleştirdiği_. Bilimsel bir iddiada bulunuyorsan kaynağını (araştırmacı ve yıl) kartta an.
 3. **Dürüstlük.** Model beyni bire bir taklit etmez; neyi basitleştirdiğini açıkça yaz. Modeli asla “küçük beyin” diye anma (Türkçede beyincik demektir); “nöron ağı”, “ağ” ya da “devre” de.
 4. **Tek bakış.** Dokunulan şey, etkisi ve sonuç aynı görüş alanında olur. Bir seviyenin tezgâhı genelde soldan sağa: girdi → nöronlar → cevap.
 5. **Parlayan düğme.** Kullanıcı hiçbir an “şimdi ne yapacağım?” dememeli: sıradaki adımın düğmesi `psug` sınıfıyla parlar.
@@ -62,17 +62,26 @@ Bir seviye iki parçadır: **içerik ve model** (arayüzden bağımsız, Node’
   const Lv = isNode ? require('../levels.js') : { registerLevel };
 
   const level = Lv.registerLevel({
-    key: 'ornek',          // kayıt adı; hiç değişmez (ilerleme buna göre saklanır)
-    ver: 1,                // durumun biçimi değişirse artır (eski kayıt sıfırlanır)
-    part: 'C',             // bölüm (levels.js içindeki PARTS)
-    kind: 'ornek',         // görünümün adı (path.js içindeki viewOf)
+    key: 'ornek', // kayıt adı; hiç değişmez (ilerleme buna göre saklanır)
+    ver: 1, // durumun biçimi değişirse artır (eski kayıt sıfırlanır)
+    part: 'C', // bölüm (levels.js içindeki PARTS)
+    kind: 'ornek', // görünümün adı (path.js içindeki viewOf)
     title: 'Örnek seviye',
     question: 'Seviyenin sorduğu, herkesin anlayacağı soru?',
     goal: 'Bu seviyede ne fark edilecek (tek cümle).',
     todo: ['Adım 1', 'Adım 2', 'Adım 3'],
-    init() { return { /* başlangıç durumu: JSON’a yazılabilir olmalı */ }; },
+    init() {
+      return {
+        /* başlangıç durumu: JSON’a yazılabilir olmalı */
+      };
+    },
     missions: [
-      { id: 'ilk', text: 'Görev metni (HTML olabilir).', check: st => !!st.flags.ilk, aha: 'Görev bitince açılan açıklama.' }
+      {
+        id: 'ilk',
+        text: 'Görev metni (HTML olabilir).',
+        check: st => !!st.flags.ilk,
+        aha: 'Görev bitince açılan açıklama.'
+      }
     ],
     cards: { brain: '…', model: '…', limit: '…' },
     deeper: '<p>“Daha derine” bölümü (HTML).</p>'
@@ -85,6 +94,8 @@ Bir seviye iki parçadır: **içerik ve model** (arayüzden bağımsız, Node’
 ```
 
 - `check(st)` yalnız durumu (`st`) okur; arayüzü değil. Görevin tamamlandığını model fonksiyonların `st.flags` içine yazar.
+- **Önce yaşa, sonra adını koy.** Görev açıklamalarında (`aha`) bir terimi ilk kez kullanırken `[[eşik]]` ya da `[[bağlantı gücü|bağlantı]]` yaz: üstüne gelince sözlükteki tek cümlelik açıklama görünür.
+- **Katmanlı seviye** (1. ve 2. seviye örnek): `layered: true` ile sayfa en sade hâliyle açılır. Her görevin `shows` listesi o görevle açılan kontrolleri (`b`, `w`, `theta`, `gauge`, `table`), `glow` listesi parlayacak kontrolü söyler. Seviye bitince `brainShort` (2–3 cümle) “Beyninde de böyle” kartı olarak çıkar; kartlar, hesap ve harita kapalı “Derinleş” bölümündedir.
 - Seviyenin yeri `js/levels.js` içindeki `ROADMAP` dizisinde belirlenir (oraya `{ key: 'ornek', part: 'C', title: '…' }` ekle). Numara sıradan hesaplanır.
 
 ### 2. Görünüm: `js/views/ad.js`

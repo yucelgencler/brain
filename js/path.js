@@ -190,6 +190,30 @@ function go(key) {
   $('#lv').focus({ preventScroll: true });
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
+function classicReadingHTML(lv) {
+  return `${lv.daily ? `<section class="daily" aria-label="Bunu sen de yaşadın"><h3>${esc(lv.dailyTitle || 'Bunu sen de yaşadın: beyin her an tahmin ediyor')}</h3><div class="daily-row">${lv.daily.map(d => `<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>` : ''}
+      <section class="cards3" aria-label="Beyinde ve modelde">
+        <article class="icard brain"><h3>Gerçek beyinde</h3><p>${esc(lv.cards.brain)}</p></article>
+        <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
+        <article class="icard limit"><h3>Modelin basitleştirdiği</h3><p>${esc(lv.cards.limit)}</p></article>
+      </section>
+      <details class="deeper" id="deeper"><summary>Daha derine: hesabın kendisi</summary><div class="deeper-body">${lv.deeper}</div></details>
+      <section class="panel all-missions"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>`;
+}
+// Katmanlı seviye: bitince kısa “Beyninde de böyle”, geri kalan her şey kapalı “Derinleş” içinde
+function layeredReadingHTML(lv) {
+  return `<section class="brain-short" id="brainShort"><h3>🧠 Beyninde de böyle</h3><p>${esc(lv.brainShort)}</p></section>
+      <details class="deeper lay-deep" id="deeper"><summary><b>Derinleş</b> <span>hesap, karar haritası, bilim ve bütün görevler</span></summary><div class="deeper-body">
+        ${lv.kind === 'single' || lv.kind === 'pair' ? mapHTML(lv) : ''}
+        <section class="cards3" aria-label="Beyinde ve modelde">
+          <article class="icard brain"><h3>Gerçek beyinde</h3><p>${esc(lv.cards.brain)}</p></article>
+          <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
+          <article class="icard limit"><h3>Modelin basitleştirdiği</h3><p>${esc(lv.cards.limit)}</p></article>
+        </section>
+        <div class="deeper-txt">${lv.deeper}</div>
+        <section class="panel all-missions"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>
+      </div></details>`;
+}
 function buildLevel() {
   const lv = L(),
     rec = R(),
@@ -206,7 +230,7 @@ function buildLevel() {
   const vw = viewOf(lv.kind);
   if (vw) vw.reset();
   const el = $('#lv');
-  el.className = 'lv';
+  el.className = lv.layered ? 'lv lay' : 'lv';
   const routeOpen = !rec.routeSeen;
   rec.routeSeen = true;
   el.innerHTML = `
@@ -215,19 +239,16 @@ function buildLevel() {
       <p class="lv-q">${esc(lv.question)}</p>
       ${brainLinkHTML(lv.key)}
     </div>
-    <details class="route"${routeOpen ? ' open' : ''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
-      <p><b>Amaç:</b> ${esc(lv.goal)}</p><ol>${lv.todo.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>
+    ${
+      lv.layered
+        ? ''
+        : `<details class="route"${routeOpen ? ' open' : ''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
+      <p><b>Amaç:</b> ${esc(lv.goal)}</p><ol>${lv.todo.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>`
+    }
     <div class="mission" id="mission" aria-live="polite"></div>
     ${multi ? multiGridHTML(lv) : lv.kind === 'net' ? netGridHTML(lv) : lv.kind === 'predict' ? predictGridHTML(lv) : vw ? vw.html(lv) : benchHTML(lv)}
     <section class="reading" aria-label="Okuma">
-      ${lv.daily ? `<section class="daily" aria-label="Bunu sen de yaşadın"><h3>${esc(lv.dailyTitle || 'Bunu sen de yaşadın: beyin her an tahmin ediyor')}</h3><div class="daily-row">${lv.daily.map(d => `<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>` : ''}
-      <section class="cards3" aria-label="Beyinde ve modelde">
-        <article class="icard brain"><h3>Gerçek beyinde</h3><p>${esc(lv.cards.brain)}</p></article>
-        <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
-        <article class="icard limit"><h3>Modelin basitleştirdiği</h3><p>${esc(lv.cards.limit)}</p></article>
-      </section>
-      <details class="deeper" id="deeper"><summary>Daha derine: hesabın kendisi</summary><div class="deeper-body">${lv.deeper}</div></details>
-      <section class="panel all-missions"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>
+      ${lv.layered ? layeredReadingHTML(lv) : classicReadingHTML(lv)}
       <nav class="lv-pn" aria-label="Seviyeler arası">
         <button class="btn" id="prevLv"${roadNeighbors()[0] ? '' : ' hidden'}>← Önceki seviye</button>
         <button class="btn ghost small" id="resetLv">Bu seviyeyi baştan al</button>
@@ -246,10 +267,8 @@ function buildLevel() {
     if (lv.learning) wireLearn(lv);
   }
   $('#deeper').addEventListener('toggle', e => {
-    if (e.target.open) {
-      R().st.flags.openedDeeper = true;
-      refresh();
-    }
+    if (e.target.open) R().st.flags.openedDeeper = true;
+    refresh();
   });
   wirePrevNext();
   $('#resetLv').onclick = e => {
@@ -273,6 +292,12 @@ function buildLevel() {
   refresh();
 }
 // Tezgâh: (kart) → sahne → cevap, altında adım şeridi ve yardımcı paneller
+function mapHTML(lv) {
+  const pair = lv.kind === 'pair';
+  return `<div class="panel"><h3>${pair ? 'Karar haritası' : 'Karar çizgisi'}</h3>
+      <svg id="map" class="${pair ? 'map2' : 'map1'}" viewBox="${pair ? '0 0 260 250' : '0 0 300 92'}" role="img" aria-label="${pair ? 'Karar haritası' : 'Karar çizgisi'}"></svg>
+      <p class="hint" id="mapHint">${pair ? 'Her köşe bir durum (sol alt: ikisi de kapalı, sağ üst: ikisi de açık). Boyalı bölgede nöron ateşler; sınırı düz bir çizgi.' : 'Hangi parlaklıklarda ateşlediğini gösterir. Boyalı kısım ateşleme bölgesi, üçgen şu anki parlaklık.'}</p></div>`;
+}
 function benchHTML(lv) {
   const pair = lv.kind === 'pair';
   const card = lv.learning
@@ -284,7 +309,7 @@ function benchHTML(lv) {
     </div>`
     : '';
   const table = pair
-    ? `<div class="panel"><div class="ph"><h3>${lv.learning ? 'Eğitim verisi' : 'Bütün durumlar'}</h3><span class="pc" id="tScore"></span></div>
+    ? `<div class="panel" id="ttPanel"><div class="ph"><h3>${lv.learning ? 'Eğitim verisi' : 'Bütün durumlar'}</h3><span class="pc" id="tScore"></span></div>
       <p class="hint">${lv.learning ? 'Öğretmenin 4 kartı ve nöronun şu anki cevapları.' : 'İki ışığın dört olası durumu. Bir satıra tıklarsan o durum nörona gösterilir.'}</p><table class="tt" id="tt"></table></div>`
     : '';
   const map = `<div class="panel"><h3>${pair ? 'Karar haritası' : 'Karar çizgisi'}</h3>
@@ -303,7 +328,13 @@ function benchHTML(lv) {
       <div class="bench-answer panel" id="answer" aria-live="polite"></div>
     </section>
     ${lv.learning ? `<section class="strip" id="lstep" aria-live="polite"></section>` : ''}
-    <section class="bench-bottom ${lv.learning ? 'three' : ''}">${table}${map}${lv.learning ? learnSideHTML(lv) : ''}</section>`;
+    ${
+      lv.layered
+        ? table
+          ? `<section class="bench-bottom lay-bottom">${table}</section>`
+          : ''
+        : `<section class="bench-bottom ${lv.learning ? 'three' : ''}">${table}${map}${lv.learning ? learnSideHTML(lv) : ''}</section>`
+    }`;
 }
 // Cevap kutusu: nöron ne diyor, doğru mu, nasıl hesapladı
 function answerHTML(lv, st) {
@@ -320,12 +351,17 @@ function answerHTML(lv, st) {
     if (T)
       verdict = `<div class="ans-v ${on === T[i] ? 'ok' : 'bad'}">doğru cevap: <b>${esc(ans(sc, T[i]))}</b> ${on === T[i] ? '✓' : '✗'}</div>`;
   } else {
-    big = on ? 'ateşliyor' : 'sessiz';
-    sub = on
-      ? lv.kind === 'single'
-        ? 'beyne: “ışık var”'
-        : 'darbe beyne gidiyor'
-      : 'beyne mesaj yok';
+    const fresh = lv.layered && lv.kind === 'single' && !R().done.includes('on');
+    big = fresh ? (on ? 'ışık var!' : 'sessiz') : on ? 'ateşliyor' : 'sessiz';
+    sub = fresh
+      ? on
+        ? 'beyne bir sinyal gidiyor'
+        : 'beyne bir şey gitmiyor'
+      : on
+        ? lv.kind === 'single'
+          ? 'beyne: “ışık var”'
+          : 'darbe beyne gidiyor'
+        : 'beyne mesaj yok';
     if (T) {
       const i = COMBOS.findIndex(c => c[0] === st.x[0] && c[1] === st.x[1]);
       verdict = `<div class="ans-v ${on === T[i] ? 'ok' : 'bad'}">istenen: ${T[i] ? 'ateşlesin' : 'sussun'} ${on === T[i] ? '✓' : '✗'}</div>`;
@@ -394,9 +430,9 @@ function buildScene(lv) {
     pair = lv.kind === 'pair';
   let h = `<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs>
     <text class="coltitle" x="80" y="16">${lv.learning ? 'Özellikler (girdi)' : pair ? 'Işık hücreleri' : 'Işık hücresi'}</text>
-    <text class="coltitle" x="255" y="16">Bağlantı (sinaps)</text>
+    <text class="coltitle ct-syn" x="255" y="16">Bağlantı (sinaps)</text>
     <text class="coltitle" x="${NX}" y="16">Nöron</text>
-    <text class="coltitle" x="540" y="16">Akson</text>`;
+    <text class="coltitle ct-ax" x="540" y="16">Akson</text>`;
   ins.forEach((p, i) => {
     const cy = p.y + 40,
       x1 = 128,
@@ -514,7 +550,8 @@ function updateScene(lv, st) {
     outT.classList.toggle('long', w.length > 9);
     $('#outS').textContent = on ? 'nöron ateşliyor' : 'nöron sessiz';
   } else {
-    outT.textContent = on ? 'ATEŞLİYOR' : 'SESSİZ';
+    const fresh = lv.layered && lv.kind === 'single' && !R().done.includes('on');
+    outT.textContent = on ? (fresh ? 'SİNYAL!' : 'ATEŞLİYOR') : 'SESSİZ';
     outT.classList.remove('long');
     $('#outS').textContent = on
       ? lv.kind === 'single'
@@ -610,7 +647,7 @@ function buildSliders(lv) {
   });
   el.innerHTML = defs
     .map(
-      d => `<label class="sl"><span class="sl-l">${d.label}<small>${d.hint}</small></span>
+      d => `<label class="sl" data-k="${d.key[0] === 'w' ? 'w' : d.key}"><span class="sl-l">${d.label}<small>${d.hint}</small></span>
     <input type="range" id="sl-${d.key}" min="${d.r[0]}" max="${d.r[1]}" step="${d.r[2]}"><output id="so-${d.key}" data-fl="so-${d.key}"></output></label>`
     )
     .join('');
@@ -657,7 +694,13 @@ function syncSliders() {
 /* ---------- Görevler ---------- */
 function checkMissions(lv, rec) {
   const st = rec.st;
-  if (lv.key === 'pair' && solves(st.w, st.theta, GATES.and.target)) st.flags.andW = st.w.slice();
+  if (lv.key === 'pair') {
+    const n = st.x[0] + st.x[1],
+      on = firesNow(st, lv);
+    if (n === 1 && !on) st.flags.oneNo = true;
+    if (n === 2 && on) st.flags.bothYes = true;
+    if (solves(st.w, st.theta, GATES.or.target)) st.flags.orW = st.w.slice();
+  }
   let fresh = [];
   for (const m of lv.missions)
     if (!rec.done.includes(m.id) && m.check(st)) {
@@ -679,6 +722,17 @@ function checkMissions(lv, rec) {
   }
 }
 const plain = h => String(h).replace(/<[^>]+>/g, '');
+// Açıklamalardaki [[terim]] ya da [[terim|görünen]] → üstüne gelince sözlük açıklaması
+function termify(t) {
+  return esc(t).replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, key, shown) => {
+    const k = glLower(key),
+      g = GLOSSARY.find(x => glLower(x.t) === k || (x.alt || []).some(a => glLower(a) === k));
+    const label = shown || key;
+    return g
+      ? `<span class="term" tabindex="0" data-d="${esc(g.d)}">${label}</span>`
+      : `<b>${label}</b>`;
+  });
+}
 function pickMission(lv, rec, id) {
   const m = lv.missions.find(x => x.id === id);
   rec.active = m.id;
@@ -689,6 +743,38 @@ function pickMission(lv, rec, id) {
     } else rec.st.targetKey = m.target;
   }
   refresh();
+}
+// Katmanlı seviyeler: kontroller görev geldikçe açılır; “Derinleş” açılınca ya da hepsi bitince her şey görünür
+function applyLayers(lv, rec) {
+  const el = $('#lv');
+  if (!lv.layered || !el) return;
+  const n = lv.missions.length,
+    allDone = rec.done.length === n,
+    deep = $('#deeper') && $('#deeper').open,
+    idx = Math.max(
+      0,
+      lv.missions.findIndex(m => m.id === rec.active)
+    ),
+    act = lv.missions[idx],
+    shows = new Set();
+  lv.missions.forEach((m, k) => {
+    // açıklama okunurken sıradaki görevin kontrolleri henüz açılmaz
+    if ((k <= idx && !rec.aha) || rec.done.includes(m.id))
+      (m.shows || []).forEach(x => shows.add(x));
+  });
+  const all = allDone || deep;
+  for (const k of ['b', 'w', 'theta', 'gauge', 'table'])
+    el.classList.toggle('sh-' + k, all || shows.has(k));
+  el.classList.toggle('sh-all', !!all);
+  el.classList.toggle('sh-done', allDone);
+  // parlayan adım
+  const glow = !allDone && !rec.aha && act ? act.glow || [] : [];
+  document
+    .querySelectorAll('#lv .sl')
+    .forEach(l => l.classList.toggle('psug', glow.includes(l.dataset.k)));
+  document
+    .querySelectorAll('#scene .inpx')
+    .forEach(g => g.classList.toggle('psug', glow.includes('in')));
 }
 function renderMissions(lv, rec) {
   const n = lv.missions.length,
@@ -712,13 +798,14 @@ function renderMissions(lv, rec) {
     ahaM = rec.aha && lv.missions.find(m => m.id === rec.aha);
   let h = '';
   if (ahaM)
-    h = `<div class="aha-box"><div class="aha-main"><div class="aha-h">✓ ${ahaM.text}</div><p>${esc(ahaM.aha)}</p></div>
+    h = `<div class="aha-box"><div class="aha-main"><div class="aha-h">✓ ${ahaM.text}</div><p>${termify(ahaM.aha)}</p></div>
       <button class="btn small ${allDone ? '' : 'primary'}" id="ahaOk">${allDone ? 'Tamam' : `Sıradaki görev (${idx + 1}/${n}) →`}</button></div>`;
   else if (allDone)
-    h = `<div class="mis-cur done"><span class="mis-n">✓ ${n}/${n}</span><span class="mis-t">Bu seviyenin bütün görevleri tamam. Aşağıdaki kartları okuyabilir ya da sonraki seviyeye geçebilirsin.</span></div>`;
+    h = `<div class="mis-cur done"><span class="mis-n">✓ ${n}/${n}</span><span class="mis-t">${lv.layered ? 'Hepsi tamam! Aşağıda bunun beynindeki karşılığını oku, sonra sıradaki seviyeye geç.' : 'Bu seviyenin bütün görevleri tamam. Aşağıdaki kartları okuyabilir ya da sonraki seviyeye geçebilirsin.'}</span></div>`;
   else
     h = `<div class="mis-cur"><span class="mis-n">Görev ${idx + 1}/${n}</span><span class="mis-t">${act.text}</span></div>`;
   $('#mission').innerHTML = h;
+  applyLayers(lv, rec);
   const ok = $('#ahaOk');
   if (ok)
     ok.onclick = () => {
@@ -739,7 +826,7 @@ function renderMissions(lv, rec) {
         a = rec.active === m.id;
       return `<li class="${done ? 'done' : ''} ${a ? 'active' : ''}"><button class="ms" data-id="${m.id}" aria-pressed="${a}">
       <span class="ms-dot" aria-hidden="true">${done ? '✓' : k + 1}</span><span class="ms-text">${m.text}</span></button>
-      ${done ? `<p class="aha">${esc(m.aha)}</p>` : ''}</li>`;
+      ${done ? `<p class="aha">${termify(m.aha)}</p>` : ''}</li>`;
     })
     .join('');
   ol.querySelectorAll('.ms').forEach(
@@ -1330,14 +1417,26 @@ function renderNav() {
           n = l.missions.length,
           d = rec.done.length,
           cur = l.key === P.level && document.body.dataset.view === 'level';
-        return `<li><a href="#seviye-${r.id}" class="${cur ? 'cur' : ''}" ${cur ? 'aria-current="page"' : ''}><span class="ln">${r.id}</span><span class="lt">${esc(l.title)}</span><span class="lp ${d === n ? 'full' : ''}">${d === n ? '✓' : d + '/' + n}</span></a></li>`;
+        // ilerleme: hiç başlanmadıysa boş, başlandıysa 2/4, bittiyse ✓
+        return `<li><a href="#seviye-${r.id}" class="${cur ? 'cur' : ''}" ${cur ? 'aria-current="page"' : ''}><span class="ln">${r.id}</span><span class="lt">${esc(l.title)}</span><span class="lp ${d === n ? 'full' : ''}">${d === n ? '✓' : d ? d + '/' + n : ''}</span></a></li>`;
       }
       const cur = r.key === P.level && document.body.dataset.view === 'level';
       return `<li><a href="#seviye-${r.id}" class="${r.lab ? 'lab' : 'soon-i'} ${cur ? 'cur' : ''}"${r.about ? ` title="${esc(r.about)}"` : ''}><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></a></li>`;
     });
     return `<div class="pgroup"><h3><small>Bölüm ${p.no}</small>${esc(p.title)}</h3><ol>${items.join('')}</ol></div>`;
   });
+  // en üstte: sıradaki (bitmemiş ilk) seviye
+  const nextR = ROADMAP.find(
+      r => r.level && P.rec[r.level.key].done.length < r.level.missions.length
+    ),
+    started = ROADMAP.some(r => r.level && P.rec[r.level.key].done.length);
+  const top = `<div class="lvm-top">${
+    nextR
+      ? `<a class="btn primary" href="#seviye-${nextR.id}">${started ? 'Kaldığın yerden devam' : 'Baştan başla'}: ${nextR.id}. ${esc(nextR.title)} →</a>`
+      : '<span>Bütün seviyeler tamam 🎉</span>'
+  }<span class="lvm-links"><a href="#sozluk">Sözlük</a><a href="lab.html">Serbest deney</a></span></div>`;
   el.innerHTML =
+    top +
     `<div class="pgroup extra"><h3><small>Başlangıç</small>Beynin içine bir bak</h3><ol><li><a href="beyin3d.html"><span class="ln">3B</span><span class="lt">Beyinden nörona kısa tur</span><span class="lp">5 dk</span></a></li></ol></div>` +
     groups.join('') +
     `<div class="pgroup extra"><h3><small>Final</small>Hepsi bir arada</h3><ol><li><a href="beyin3d.html?yolculuk"><span class="ln">3B</span><span class="lt">Gözden kelimeye yolculuk</span><span class="lp">8 adım</span></a></li></ol></div>`;

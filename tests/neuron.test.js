@@ -79,10 +79,10 @@ test('seviye 1 görevleri', () => {
 test('seviye 2 görevleri başlangıçta açık, çözümle kapanıyor', () => {
   const s0 = { ...lv('pair').init(), flags: {} };
   for (const m of lv('pair').missions) assert.ok(!m.check(s0), m.id);
-  assert.ok(mission('pair', 'and').check(pair([0.6, 0.6], 1)));
+  assert.ok(mission('pair', 'try').check(pair([0.6, 0.6], 1, { oneNo: true, bothYes: true })));
   assert.ok(mission('pair', 'or').check(pair([0.6, 0.6], 0.6)));
-  assert.ok(mission('pair', 'switch').check(pair([0.6, 0.6], 0.6, { andW: [0.6, 0.6] })));
-  assert.ok(!mission('pair', 'switch').check(pair([1, 1], 1, { andW: [0.6, 0.6] })));
+  assert.ok(mission('pair', 'switch').check(pair([0.6, 0.6], 1, { orW: [0.6, 0.6] })));
+  assert.ok(!mission('pair', 'switch').check(pair([1, 1], 2, { orW: [0.6, 0.6] })));
 });
 test('seviye 3 görevleri', () => {
   const s0 = { ...lv('inhibit').init(), flags: {} };
@@ -607,5 +607,13 @@ test('seviye 10: altı görev sırayla', () => {
   st.word = 'KÖPEG';
   c();
   assert.strictEqual(sDone(st).length, 6);
+});
+test('katmanlı seviyeler: sade başlar, her görevin açtığı ve parlattığı belli', () => {
+  for (const key of ['light', 'pair']) {
+    const l = lv(key);
+    assert.ok(l.layered && l.brainShort && l.brainShort.length < 320, key);
+    assert.deepStrictEqual(l.missions[0].shows, [], key + ': ilk adımda hiç kontrol yok');
+    for (const m of l.missions) assert.ok(Array.isArray(m.glow) && m.glow.length, key + '/' + m.id);
+  }
 });
 console.log(`\n${passed} test geçti.`);

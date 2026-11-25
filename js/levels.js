@@ -749,11 +749,13 @@ const LEVELS = [
   /* ------------------------------ 1 ------------------------------ */
   {
     key: 'light',
-    goal: 'Bir nöronun girdiyi nasıl bir karara (ateşle ya da sus) çevirdiğini görmek.',
+    ver: 2,
+    layered: true,
+    goal: 'Bir nöronun girdiyi nasıl bir karara (sinyal gönder ya da sus) çevirdiğini görmek.',
     todo: [
-      'Işık hücresine tıklayıp ışığı aç.',
-      'Kaydırıcılarla parlaklığı, bağlantıyı ve eşiği değiştir; nöronun ne zaman ateşlediğini izle.',
-      'Sağdaki görevleri sırayla yap. Her görevin açıklaması, görevi tamamlayınca açılır.'
+      'Işık hücresine dokunup ışığı yak.',
+      'Görevler sırayla yeni kontroller açar; her birinin etkisini izle.',
+      'Ayrıntıları merak edersen en alttaki “Derinleş” bölümünü aç.'
     ],
     part: 'A',
     title: 'Tek bir ışık hücresi',
@@ -763,30 +765,40 @@ const LEVELS = [
     init() {
       return { b: 0, bLast: 1, w: [1], theta: 0.5 };
     },
+    brainShort:
+      'Gözünün arkasında milyonlarca ışık hücresi var. Işık yeterince güçlüyse bağlı oldukları nöron ateşler ve beyne kısa bir elektrik sinyali gider. Bu sinyal hep aynı büyüklüktedir: ya hep ya hiç.',
     missions: [
       {
         id: 'on',
-        text: 'Işık açıkken nöronun ateşlediğini gör. Işık hücresine tıklayarak aç-kapat.',
+        glow: ['in'],
+        shows: [],
+        text: 'Soldaki <b>ışık kutusuna dokun</b>: ışığı yak.',
         check: st => st.b > 0 && NN.fires([st.b], st.w, st.theta),
-        aha: 'Işık hücresinden gelen sinyal bağlantı üzerinden nörona ulaştı, toplam eşiği geçti ve nöron ateşledi. Ateşleme, beyne giden tek mesaj: “burada ışık var”.'
+        aha: 'Nöron yandı ve sağa doğru kısa bir elektrik sinyali gönderdi. Buna [[ateşleme]] denir: nöronun beyne “burada ışık var” demesi.'
       },
       {
         id: 'dim',
-        text: 'Parlaklığı yavaş yavaş kıs. Işık hâlâ varken nöron hangi noktada susuyor?',
+        glow: ['b'],
+        shows: ['b'],
+        text: 'Şimdi <b>ışığı yavaş yavaş kıs</b>. Işık hâlâ varken nöron bir yerde susuyor mu?',
         check: st => st.b > 0 && !NN.fires([st.b], st.w, st.theta),
-        aha: 'Toplam (parlaklık × bağlantı) eşiğin altına indiği anda nöron tamamen sustu. Arada “yarım ateşleme” yok: ya hep ya hiç. Sınır parlaklık = eşik ÷ bağlantı. Işık hâlâ var ama bu hücre onu “görmüyor”.'
+        aha: 'Sustu! Nöronun ateşlemesi için gelen sinyalin bir sınırı geçmesi gerekiyor; bu sınıra [[eşik]] denir. Sinyal eşiğin altındaysa nöron hiç ateşlemez: ya hep ya hiç.'
       },
       {
         id: 'bright',
-        text: 'Nöron sadece çok parlak ışıkta ateşlesin: 0,8 parlaklıkta ateşlesin, 0,7’de sussun.',
+        glow: ['theta'],
+        shows: ['b', 'theta', 'gauge'],
+        text: 'Eşiği değiştir: nöron <b>yalnız çok parlak ışıkta</b> (0,8) ateşlesin, 0,7’de sussun.',
         check: st => NN.fires([0.8], st.w, st.theta) && !NN.fires([0.7], st.w, st.theta),
-        aha: 'Bunu ya eşiği yükselterek ya da bağlantıyı zayıflatarak yaptın; ikisi de aynı sonucu verir, çünkü önemli olan oran. Bir hücrenin ne kadar “duyarlı” olduğunu bu iki sayı belirliyor.'
+        aha: 'Eşik yükselince nöron daha seçici oldu: artık yalnız güçlü ışığı fark ediyor. Gözündeki hücrelerin bir kısmı loş ışığa, bir kısmı parlak ışığa duyarlıdır.'
       },
       {
         id: 'cut',
-        text: 'Bağlantıyı 0’a indir. Işık ne kadar parlak olursa olsun ne oluyor?',
+        glow: ['w'],
+        shows: ['b', 'w', 'theta', 'gauge'],
+        text: 'Işık hücresiyle nöron arasındaki <b>bağlantıyı 0’a indir</b>. Işık ne kadar parlak olursa olsun ne oluyor?',
         check: st => Math.abs(st.w[0]) < 1e-9 && st.theta > 0,
-        aha: 'Işık hücresi hâlâ ışığı alıyor ama haber veremiyor: bağlantı yoksa sinyal de yok. Bilgi hücrelerin kendisinde değil, aralarındaki bağlantılarda taşınıyor. Bu fikir hafıza bölümünde geri dönecek.'
+        aha: 'Işık hücresi ışığı görüyor ama haber veremiyor: [[bağlantı gücü|bağlantı]] kopunca sinyal de yok. Beyinde bilgi hücrelerin kendisinde değil, aralarındaki bağlantılarda taşınır; bu fikir hafıza bölümünde geri dönecek.'
       }
     ],
     cards: {
@@ -804,11 +816,13 @@ const LEVELS = [
   /* ------------------------------ 2 ------------------------------ */
   {
     key: 'pair',
+    ver: 2,
+    layered: true,
     goal: 'Bir nöronun birden çok sinyali toplayarak nasıl tek bir karar verdiğini görmek.',
     todo: [
-      'Işıklara ya da tablodaki satırlara tıklayarak dört durumu dene.',
-      'Kaydırıcılarla bağlantıları ve eşiği ayarla; tablodaki dört satırın hepsini tutturmaya çalış.',
-      'Karar haritasında boyalı bölgenin nasıl değiştiğine bak.'
+      'Işıklara dokunarak hangi durumda nöronun ateşlediğini dene.',
+      'Görevler sırayla bağlantıları ve eşiği açar; tablodaki dört durumu tutturmaya çalış.',
+      'Ayrıntıları merak edersen en alttaki “Derinleş” bölümünü aç.'
     ],
     part: 'A',
     title: 'İki ışık, bir karar',
@@ -816,32 +830,39 @@ const LEVELS = [
     kind: 'pair',
     ranges: { w: [0, 2, 0.1], theta: [0.1, 3, 0.1] },
     init() {
-      return { x: [1, 0], w: [0.3, 0.3], theta: 1, targetKey: 'and' };
+      return { x: [0, 0], w: [0.6, 0.6], theta: 1, targetKey: null };
     },
+    brainShort:
+      'Beynindeki bir nöron binlerce başka nörondan sinyal alır. Tek bir sinyal çoğu zaman yetmez; birçoğu aynı anda gelip toplam eşiği geçince nöron ateşler. Karar vermenin en küçük birimi bu toplama.',
     missions: [
       {
-        id: 'and',
-        target: 'and',
-        text: 'Nöron sadece <b>ikisi de yanınca</b> ateşlesin (VE). Tablodaki dört satırın hepsi tutmalı.',
-        check: st => NN.solves(st.w, st.theta, NN.GATES.and.target),
-        aha: 'Tek başına gelen sinyal eşiğe yetmiyor, ikisi toplanınca yetiyor. Nöronun “karar vermesi” aslında bu: gelen sinyallerin toplamı eşiği geçiyor mu?'
+        id: 'try',
+        glow: ['in'],
+        shows: [],
+        text: 'Işıklara dokun: önce <b>yalnız birini</b>, sonra <b>ikisini birden</b> yak. Nöron ne zaman ateşliyor?',
+        check: st => !!(st.flags.oneNo && st.flags.bothYes),
+        aha: 'Tek ışık yetmedi, ikisi birlikte yetti. Nöron gelen sinyalleri topluyor; toplam [[eşik|eşiği]] geçince ateşliyor. Beynindeki bir nöron da binlerce sinyali böyle toplayıp tek bir karar verir.'
       },
       {
         id: 'or',
         target: 'or',
-        text: 'Şimdi <b>biri yanınca yetsin</b> (VEYA).',
+        glow: ['theta'],
+        shows: ['w', 'theta', 'table'],
+        text: 'Şimdi öyle ayarla ki <b>ışıklardan biri yanınca da</b> ateşlesin. Aşağıdaki tablonun dört satırı da tutmalı.',
         check: st => NN.solves(st.w, st.theta, NN.GATES.or.target),
-        aha: 'Şimdi her bağlantı tek başına eşiği aşacak kadar güçlü. Aynı iki ışık, aynı nöron; değişen sadece sayılar.'
+        aha: 'Artık tek bir ışık bile yetiyor: her [[bağlantı gücü|bağlantı]] tek başına eşiği geçecek kadar güçlü. Aynı nöron, aynı ışıklar; değişen yalnız sayılar. İlk hâline “VE”, bu hâline “VEYA” denir.'
       },
       {
         id: 'switch',
-        target: 'or',
-        text: 'VE’yi çözdüğün bağlantılara dokunmadan, <b>sadece eşiği</b> değiştirerek VEYA’ya geç.',
+        target: 'and',
+        glow: ['theta'],
+        shows: ['w', 'theta', 'table'],
+        text: '<b>Bağlantılara dokunmadan</b>, yalnız eşiği değiştirerek ilk hâline dön: nöron yine <b>ikisi birden yanınca</b> ateşlesin.',
         check: st =>
-          !!st.flags.andW &&
-          NN.solves(st.w, st.theta, NN.GATES.or.target) &&
-          sameW(st.w, st.flags.andW),
-        aha: 'Aynı bağlantılar, farklı eşik, bambaşka davranış. Beyinde de bir nöronun ne kadar kolay ateşlediği dikkat, yorgunluk ya da kimyasal habercilerle değişebilir; aynı devre farklı durumlarda farklı çalışabilir.'
+          !!st.flags.orW &&
+          NN.solves(st.w, st.theta, NN.GATES.and.target) &&
+          sameW(st.w, st.flags.orW),
+        aha: 'Aynı bağlantılar, farklı eşik, bambaşka davranış. Beyinde de bir nöronun ne kadar kolay ateşlediği dikkat ya da yorgunlukla değişebilir; aynı devre farklı durumlarda farklı çalışır.'
       }
     ],
     cards: {

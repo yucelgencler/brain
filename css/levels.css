@@ -3066,3 +3066,133 @@ details.manual[open] > summary {
 :root[data-theme='dark'] .sl {
   stroke: var(--light);
 }
+
+/* ---------- Katmanlı seviyeler: önce dene, sonra keşfet, isteyen derinleşsin ---------- */
+.lv.lay:not(.sh-b) .sl[data-k='b'],
+.lv.lay:not(.sh-w) .sl[data-k='w'],
+.lv.lay:not(.sh-theta) .sl[data-k='theta'],
+.lv.lay:not(.sh-gauge) #gauge,
+.lv.lay:not(.sh-table) .lay-bottom,
+.lv.lay:not(.sh-all) .calc,
+.lv.lay:not(.sh-done) #brainShort,
+.lv.lay:not(.sh-w) #scene .wtext,
+.lv.lay:not(.sh-theta) #scene #somaTh,
+.lv.lay:not(.sh-all) #scene .ct-syn,
+.lv.lay:not(.sh-all) #scene .ct-ax {
+  display: none;
+}
+.lv.lay .sl {
+  animation: layIn 0.5s ease-out;
+}
+@keyframes layIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.sl.psug {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.inpx.psug .px-cell {
+  stroke: var(--accent);
+  stroke-width: 4;
+  animation: pxGlow 1.6s ease-in-out infinite;
+}
+@keyframes pxGlow {
+  50% {
+    stroke-width: 9;
+    stroke-opacity: 0.45;
+  }
+}
+/* sözlük terimi: üstüne gelince/dokununca tek cümlelik açıklama */
+.term {
+  position: relative;
+  font-weight: 700;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+.term::after {
+  content: attr(data-d);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  width: min(320px, 80vw);
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.term:hover::after,
+.term:focus::after {
+  opacity: 1;
+}
+.brain-short {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--brain) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--brain) 35%, var(--line));
+  animation: layIn 0.5s ease-out;
+}
+.brain-short h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+.brain-short p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+.lay-deep summary span {
+  font-weight: 400;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  margin-left: 6px;
+}
+.lay-deep .deeper-body > * + * {
+  margin-top: 14px;
+}
+.lay-deep .map1,
+.lay-deep .map2 {
+  max-width: 360px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv.lay .sl,
+  .brain-short,
+  .sl.psug,
+  .inpx.psug .px-cell {
+    animation: none;
+  }
+}
+
+/* Seviye menüsünün üst satırı: kaldığın yerden devam + küçük bağlantılar */
+.lvm-top {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.lvm-links {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+.lvm-links a {
+  color: var(--ink-2);
+}
