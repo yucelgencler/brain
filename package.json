@@ -1,0 +1,13 @@
+{
+  "name": "brain",
+  "private": true,
+  "description": "Beynin nasıl algıladığını, öğrendiğini ve hatırladığını kendi deneylerinle keşfettiğin tarayıcı uygulaması.",
+  "license": "MIT",
+  "repository": "github:yucelgencler/brain",
+  "scripts": {
+    "test": "node tests/neuron.test.js && node tests/core.test.js && node tests/b3d.test.js",
+    "start": "python3 -m http.server 8765",
+    "format": "npx --yes prettier@3.3.3 --write \"js/**/*.js\" \"css/*.css\" \"*.html\" \"tests/*.js\"",
+    "format:check": "npx --yes prettier@3.3.3 --check \"js/**/*.js\" \"css/*.css\" \"*.html\" \"tests/*.js\""
+  }
+}
