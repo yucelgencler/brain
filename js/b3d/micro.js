@@ -83,6 +83,8 @@
       st.mode = mode;
       st.inhOn = true;
       st.drive = 1;
+      probe = null;
+      pops = [];
       st.center.set(0, mode === 'generic' ? -45 : -25, 0);
       const S = B3.sim;
       spec = mode === 'v1' ? S.specV1() : mode === 'it' ? S.specIT() : S.specGeneric(7);
@@ -408,7 +410,38 @@
         st.select(pyr[Math.floor(Math.random() * pyr.length)].i);
       }
       sim.kick(st.sel);
+      // deney kaydı: bu ateşleme kimlere ulaştı, kimi ateşletti?
+      const targets = {};
+      spec.conns.forEach(c => {
+        if (c.a === st.sel && vis[c.b].n.kind !== 'out')
+          targets[c.b] = { hit: false, fired: false, w: c.w };
+      });
+      probe = { src: st.sel, t0: sim.t, targets, endReal: 0 };
     };
+    /* Gerilim değişimi yazıları (+7 mV, ⚡ ateşledi): takip edilen ya da deneydeki nöronlar için */
+    let pops = [];
+    function pop(i, text, cls) {
+      if (pops.length > 10) return;
+      const l = B3.label(ctx.layer, text, 'pop ' + cls);
+      l.pos.copy(vis[i].p).add(V((Math.random() - 0.5) * 16, 14, (Math.random() - 0.5) * 6));
+      st.labels.push(l);
+      ownLabels.push(l);
+      pops.push({ l, t: performance.now() });
+    }
+    function updatePops(dt) {
+      const now = performance.now();
+      pops = pops.filter(p => {
+        const age = (now - p.t) / 1000;
+        p.l.pos.y += dt * 14;
+        p.l.alpha = Math.max(0, 1 - age / 1.8);
+        if (age < 1.8) return true;
+        p.l.el.remove();
+        const k = st.labels.indexOf(p.l);
+        if (k >= 0) st.labels.splice(k, 1);
+        return false;
+      });
+    }
+    const mvTxt = w => (w >= 0 ? '+' : '−') + B3.fmt(Math.abs(w), 1) + ' mV';
     st.setInhibition = function (on) {
       st.inhOn = on;
       if (sim) sim.inhGain = on ? 1 : 0;
@@ -426,9 +459,27 @@
       st.cardRev++;
     };
     // canlı etkinlik: uyarıcı nöronların son 100 ms'deki ortalama ateşleme sıklığı
-    let recent = [];
+    let recent = [],
+      probe = null;
+    function probeCaption() {
+      const T = Object.values(probe.targets),
+        n = T.length,
+        hit = T.filter(x => x.hit).length,
+        fired = T.filter(x => x.fired).length,
+        v = vis[probe.src],
+        who = v.n.label
+          ? `“${v.n.label}”`
+          : v.n.kind === 'int'
+            ? 'Bu susturan nöron'
+            : 'Bu uyarıcı nöron';
+      if (sim.t - probe.t0 < 40)
+        return `⚡ ${who} ateşledi. Sinyali aksonu boyunca ${n} nörona gidiyor · ulaştı: ${hit}/${n}${fired ? ` · ${fired} tanesi eşiği geçip o da ateşledi!` : ''}`;
+      return `Sonuç: tek bir ateşleme ${n} nörona ulaştı ve her birinin gerilimini biraz ${v.n.kind === 'int' ? 'düşürdü' : 'yükseltti'}. ${fired ? `${fired} tanesi zaten eşiğe yakındı: eşiği geçip ateşledi ve sinyali daha ileri taşıdı.` : 'Hiçbiri tek başına eşiği geçemedi: bir nöronu ateşletmek için genelde birçok sinyalin aynı anda gelmesi gerekir.'}`;
+    }
     function activityCaption() {
       if (!sim) return '';
+      if (probe && (sim.t - probe.t0 < 40 || performance.now() < probe.endReal))
+        return probeCaption();
       const nPyr = vis.filter(v => v.n.kind === 'pyr').length || 1;
       recent = recent.filter(t => t > sim.t - 100);
       const hz = Math.round(recent.length / nPyr / 0.1);
@@ -451,6 +502,13 @@
     st.followOut = function (ids) {
       st.following = { phase: 'wait', chain: 0, ids, toOut: true };
     };
+    // Zincir: bir giriş sinyaline bin → hedef nöronda dur, dolmasını izle → ateşleyince
+    // çıkış sinyaline bin → öbür bölgeye var (st.arrivedOut). Yolculuk filminde kullanılır.
+    st.followChain = function (ids) {
+      st.following = { chainMode: true, phase: 'waitIn', ids };
+      st.arrivedOut = false;
+    };
+    st.chainNote = '';
     st.stopFollow = function () {
       st.following = null;
       st.override = null;
@@ -466,7 +524,11 @@
       em = new THREE.Color();
     st.update = function (dt, info) {
       if (!sim) return;
-      const simDt = info.paused ? 0 : Math.min(dt * info.speed, 25);
+      // deneyde ilk 40 ms ağır çekimde: darbelerin yolunu göz takip edebilsin
+      const Fz = st.following,
+        chaseSlow = Fz && Fz.chainMode && ['rideIn', 'atTarget', 'rideOut'].includes(Fz.phase);
+      const slow = (probe && sim.t - probe.t0 < 40) || chaseSlow ? 0.3 : 1;
+      const simDt = info.paused ? 0 : Math.min(dt * info.speed * slow, 25);
       const res = simDt > 0 ? sim.step(simDt) : { spikes: [], arrivals: [] };
       const now = sim.t;
       if (st.mode === 'generic' && simDt > 0) st.caption = activityCaption();
@@ -481,7 +543,29 @@
           fresh.push(p);
         }
         const F = st.following;
-        if (F && F.toOut) {
+        // yalnız sinyal vardıktan hemen sonraki ateşleme “bu sinyal yüzünden” sayılır
+        if (
+          probe &&
+          probe.targets[s.i] &&
+          probe.targets[s.i].hit &&
+          !probe.targets[s.i].fired &&
+          s.t - probe.targets[s.i].hitT < 4
+        ) {
+          probe.targets[s.i].fired = true;
+          pop(s.i, '⚡ o da ateşledi!', 'fire');
+        }
+        if (F && F.chainMode) {
+          if (F.phase === 'waitIn' && vis[s.i].n.kind === 'in') {
+            const pick = fresh.find(p => F.ids.includes(vis[p.c.b].n.id));
+            if (pick) Object.assign(F, { phase: 'rideIn', p: pick, target: pick.c.b });
+          } else if (F.phase === 'atTarget' && s.i === F.target) {
+            pop(s.i, '⚡ ateşledi!', 'fire');
+            // kamera hedefte en az 1,8 s kalsın: dolmayı ve ateşlemeyi gör, sonra çıkış sinyaline bin
+            const pick = fresh.find(p => vis[p.c.b].n.kind === 'out');
+            if (pick && performance.now() - F.tArr > 1800)
+              Object.assign(F, { phase: 'rideOut', p: pick });
+          }
+        } else if (F && F.toOut) {
           // yolculuk: istenen nöron ateşleyince çıkışa giden sinyaline bin
           if (F.phase === 'wait' && F.ids.includes(vis[s.i].n.id)) {
             const pick = fresh.find(p => vis[p.c.b].n.kind === 'out');
@@ -499,12 +583,43 @@
           if (pick) startRide(pick);
         }
       }
-      for (const c of res.arrivals) flashes.push({ c, t: now });
+      for (const c of res.arrivals) {
+        flashes.push({ c, t: now });
+        const F = st.following;
+        if (
+          F &&
+          F.chainMode &&
+          (F.phase === 'rideIn' || F.phase === 'atTarget') &&
+          c.b === F.target
+        )
+          pop(c.b, mvTxt(c.w), c.w >= 0 ? 'up' : 'down');
+        if (probe && c.a === probe.src && probe.targets[c.b]) {
+          probe.targets[c.b].hit = true;
+          probe.targets[c.b].hitT = now;
+          pop(c.b, mvTxt(c.w), c.w >= 0 ? 'up' : 'down');
+          if (Object.values(probe.targets).every(x => x.hit))
+            probe.endReal = performance.now() + 6000;
+        }
+      }
+      updatePops(dt);
       glow.clear();
       // darbeler
       pulses = pulses.filter(p => {
         const u = (now - p.t0) / p.c.travel;
         if (u >= 1) {
+          const Fc = st.following;
+          if (Fc && Fc.chainMode && Fc.p === p) {
+            if (Fc.phase === 'rideIn') {
+              Fc.phase = 'atTarget';
+              Fc.tArr = performance.now();
+              st.select(Fc.target);
+            } else if (Fc.phase === 'rideOut') {
+              Fc.phase = 'done';
+              Fc.outAt = p.c.b;
+              st.arrivedOut = true;
+            }
+            return false;
+          }
           if (st.following && st.following.p === p) {
             if (st.following.toOut) st.arrivedOut = true;
             st.following = {
@@ -610,7 +725,32 @@
       // takip: kamera için hedef
       const F = st.following;
       st.override = null;
-      if (F) {
+      st.chainNote = '';
+      if (F && F.chainMode) {
+        const lb = i => vis[i].n.label || 'hedef';
+        if (F.phase === 'waitIn') {
+          const tg = vis.filter(v => F.ids.includes(v.n.id));
+          const c = tg
+            .reduce((a, v) => a.add(v.p), V(0, 0, 0))
+            .multiplyScalar(1 / Math.max(1, tg.length));
+          st.override = { target: c.add(V(0, -70, 0)), dist: 230 };
+          st.chainNote = 'Aşağıdan, önceki bölgeden gelen liflerde bir sinyal bekleniyor…';
+        } else if (F.phase === 'rideIn' || F.phase === 'rideOut') {
+          const u = clamp((now - F.p.t0) / F.p.c.travel, 0, 1);
+          F.p.c.curve.getPointAt(u, tmp);
+          st.override = { target: tmp.clone(), dist: 62 };
+          st.chainNote =
+            F.phase === 'rideIn'
+              ? `Bu sinyal “${lb(F.target)}” nöronuna gidiyor…`
+              : `“${lb(F.target)}” ateşledi! Kamera şimdi onun sinyalinde: ${vis[F.p.c.b].n.label.replace('→ ', '')} gidiyor…`;
+        } else if (F.phase === 'atTarget') {
+          st.override = { target: vis[F.target].p.clone(), dist: 72 };
+          st.chainNote = `“${lb(F.target)}” nöronu gelen sinyalleri topluyor: zar gerilimi ${B3.fmt(Math.min(sim.v[F.target], -50), 0)} mV, ateşlemek için −55 mV gerekiyor.`;
+        } else if (F.phase === 'done') {
+          st.override = { target: vis[F.outAt].p.clone(), dist: 120 };
+          st.chainNote = 'Sinyal bir sonraki bölgeye ulaştı.';
+        }
+      } else if (F) {
         if (F.phase === 'ride') {
           const u = clamp((now - F.p.t0) / F.p.c.travel, 0, 1);
           F.p.c.curve.getPointAt(u, tmp);

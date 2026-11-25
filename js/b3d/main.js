@@ -716,9 +716,11 @@
       }
     },
     {
-      title: () => 'Nöronların arasına',
-      cap: () => 'Görme alanının kabuğuna, sinyali karşılayan nöronların arasına iniyoruz.',
+      title: () => 'Görme alanının katlarına',
+      cap: () =>
+        'Görme alanının kabuğuna iniyoruz. Kabuk altı kattır; talamustan gelen sinyal önce 4. kata (giriş katı) iner, oradan öbür katlara yayılır.',
       ms: 55,
+      live: () => column.caption || '',
       async run(t, O) {
         fastSim();
         micro.setMode('v1');
@@ -726,8 +728,12 @@
         micro.resetCounts();
         diveInto('occipital', 'v1');
         holdAt(brain.focus);
-        zoomTo(STOPS[3] - 0.08, 3.6);
-        await fWait(t, 3.8);
+        zoomTo(STOPS[2] + 0.02, 3.2);
+        await fWait(t, 3.3);
+        column.stimulate();
+        await fWait(t, 5.4);
+        zoomTo(STOPS[3] - 0.08, 2.6);
+        await fWait(t, 2.7);
       }
     },
     {
@@ -735,31 +741,29 @@
       cap: O =>
         `Burada her nöron gözün gördüğü küçük bir parçaya bakıp belli bir özelliğe tepki veriyor. ${cap(O.name)} için ${O.v1txt} ateşliyor; ötekiler sessiz kalıyor.`,
       ms: 80,
-      live: O =>
+      live: () =>
+        (micro.chainNote ? micro.chainNote + ' · ' : '') +
         'Ateşleyenler: ' +
         (Object.keys(V1NAMES)
           .filter(id => micro.count(id) >= 1)
           .map(id => `${V1NAMES[id]} (${micro.count(id)})`)
-          .join(', ') || 'bekleniyor…'),
+          .join(', ') || 'henüz yok'),
       async run(t, O) {
-        await fWait(t, 9, () => O.v1.every(id => micro.count(id) >= 2));
+        // kamera: talamustan gelen bir sinyale bin → özellik nöronunda dur → ateşleyince çıkışına bin
+        micro.followChain(O.v1);
+        await fWait(t, 16, () => micro.arrivedOut);
         st.tried[st.journey.obj] = {
           v1: Object.keys(V1NAMES)
             .filter(id => micro.count(id) >= 2)
             .map(id => V1NAMES[id])
         };
-        st.journey.note =
-          'Şimdi bu nöronlardan birinin çıkış sinyalini takip ediyoruz: şakak lobuna gidiyor…';
-        micro.arrivedOut = false;
-        micro.followOut(O.v1);
-        await fWait(t, 8, () => micro.arrivedOut);
-        st.journey.note = '';
+        await fWait(t, 1.2);
       }
     },
     {
       title: () => '“Ne” yolu: şakak lobuna',
       cap: O =>
-        `Kenar ve renk bilgisi beynin alt yüzünden şakak lobuna akıyor. Burnuna gelen ${O.smell} da (turuncu iz) buraya katılıyor: duyular tek bir kavramda birleşecek.`,
+        `Kenar ve renk bilgisi beynin alt yüzünden şakak lobuna akıyor. Burnuna gelen ${O.smell} da buraya katılıyor: duyular tek bir kavramda birleşecek.`,
       ms: 150,
       async run(t, O) {
         micro.stopFollow();
@@ -780,6 +784,7 @@
         `Şakak lobunda ${O.feats} birlikte geliyor. Hepsini birden alan ${O.word} nöronu eşiği geçiyor; susturan nöron rakipleri bastırıyor. ${O.rival}`,
       ms: 200,
       live: () =>
+        (micro.chainNote ? micro.chainNote + ' · ' : '') +
         ['lemon', 'straw', 'icecream']
           .map(
             k => `${{ lemon: 'LİMON', straw: 'ÇİLEK', icecream: 'DONDURMA' }[k]}: ${micro.count(k)}`
@@ -795,13 +800,11 @@
         zoomTo(STOPS[3] - 0.08, 3.6);
         await fWait(t, 3.8);
         const concept = B3.sim.OBJECTS[st.journey.obj].concept;
-        await fWait(t, 9, () => micro.count(concept) >= 2);
+        // kamera: bir özellik sinyaline bin → kavram nöronunda dur → ateşleyince konuşma alanına
+        micro.followChain([concept]);
+        await fWait(t, 16, () => micro.arrivedOut);
         (st.tried[st.journey.obj] || (st.tried[st.journey.obj] = { v1: [] })).word = O.word;
-        st.journey.note = `Şimdi ${O.word} nöronunun çıkış sinyalini takip ediyoruz: konuşma alanına gidiyor…`;
-        micro.arrivedOut = false;
-        micro.followOut([concept]);
-        await fWait(t, 8, () => micro.arrivedOut);
-        st.journey.note = '';
+        await fWait(t, 1.2);
       }
     },
     {
@@ -1007,14 +1010,15 @@
       const S = FILM[st.journey.scene],
         t = st.journey.note || (S.live ? S.live(JO()) : '');
       if (jl.textContent !== t) jl.textContent = t;
-      jl.hidden = !t;
+      jl.style.visibility = t ? 'visible' : 'hidden';
     }
     renderCard();
     const cap = document.getElementById('stageCap');
     if (cap) {
       const t = A.caption || '';
       if (cap.textContent !== t) cap.textContent = t;
-      cap.hidden = !t;
+      // yer hep ayrılı kalsın: yazı değişince kart zıplamasın
+      cap.style.visibility = t ? 'visible' : 'hidden';
     }
   }
 

@@ -607,3 +607,33 @@ body.slowctl .b3ctl .slow {
   font-size: 12.5px;
   color: var(--ink-2);
 }
+
+/* nöronların üstünde beliren gerilim değişimi yazıları */
+.b3lbl.pop {
+  font-weight: 700;
+  font-size: 14px;
+  padding: 1px 7px;
+  border-radius: 7px;
+  background: rgba(8, 10, 26, 0.7);
+}
+.b3lbl.pop.up {
+  color: #a9c4ff;
+}
+.b3lbl.pop.down {
+  color: #ff9cc0;
+}
+.b3lbl.pop.fire {
+  color: #1d1630;
+  background: #ffe27a;
+}
+
+/* altyazı kutuları sabit yükseklikte: içerik değişince kart kaymasın */
+.b3card .cap {
+  min-height: 6.2em;
+  box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  .b3card .cap {
+    min-height: 7.6em;
+  }
+}
