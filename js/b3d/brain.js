@@ -350,6 +350,8 @@
     };
     st.P = P;
     const paths = {
+      lightL: [P.lemon, V(-1.5, -1.8, 12.6), V(-3.0, -2.0, 10.55)],
+      lightR: [P.lemon, V(1.5, -1.8, 12.6), V(3.0, -2.0, 10.55)],
       vis1L: [P.eyeL, V(-1.9, -2.3, 6.6), P.chiasm, V(1.2, -1.9, 1.6), P.lgnR],
       vis1R: [P.eyeR, V(1.9, -2.3, 6.6), P.chiasm, V(-1.2, -1.9, 1.6), P.lgnL],
       vis2L: [P.lgnL, V(-2.2, -0.4, -2.6), V(-2.5, 0.2, -5.2), P.v1L],
@@ -616,6 +618,22 @@
         hoverLobe = null;
         paint();
         lobeLbl.on = false;
+      }
+    };
+    // kamera beynin içine girince kabuğu içeriden de göster
+    // takip eden kamera yoldaki göz ve talamusun içinden geçerken onları saydamlaştır
+    st.setSeeThrough = function (on) {
+      for (const m of [eyeMat, irisMat, thMat]) {
+        m.transparent = true;
+        m.opacity = on ? 0.28 : m === thMat ? 0.9 : 1;
+        m.depthWrite = !on;
+        m.needsUpdate = true;
+      }
+    };
+    st.setInside = function (on) {
+      for (const m of mats) {
+        m.side = on ? THREE.DoubleSide : THREE.FrontSide;
+        m.needsUpdate = true;
       }
     };
     st.setJourney = function (on) {

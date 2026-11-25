@@ -583,3 +583,27 @@ body.slowctl .b3ctl .slow {
   color: var(--ink-2);
   font-weight: 500;
 }
+
+/* film: sahne ilerleme şeridi ve süre */
+.b3card .jbar {
+  display: flex;
+  gap: 3px;
+  margin: 4px 0 2px;
+}
+.b3card .jbar i {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2);
+}
+.b3card .jbar i.done {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface-2));
+}
+.b3card .jbar i.now {
+  background: var(--accent);
+}
+.b3card .jms {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}

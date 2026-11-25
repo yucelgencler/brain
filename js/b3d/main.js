@@ -26,7 +26,9 @@
   }
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   const t0 = performance.now();
-  const ctx = { bg: BG, layer, clock: () => (performance.now() - t0) / 1000 };
+  // Sahnelerin saati: Duraklat’a basınca durur (darbeler, dalgalar, film birlikte donar)
+  let clockT = 0;
+  const ctx = { bg: BG, layer, clock: () => clockT };
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 1000);
   const ray = new THREE.Raycaster();
 
@@ -43,7 +45,7 @@
     speed = 4,
     lastUser = 0,
     dragging = false;
-  const st = { journey: null, arrive: null, cardLobe: null };
+  const st = { journey: null, arrive: null, cardLobe: null, tried: {} };
 
   /* ---------- birleştirme (iki sahne arası geçiş) ---------- */
   let rtA, rtB;
@@ -208,7 +210,7 @@
   function renderCard(force) {
     const a = activeStage();
     let key;
-    if (st.journey) key = 'j' + st.journey.i + ':' + (st.journey.ready ? 1 : 0);
+    if (st.journey) key = 'j' + st.journey.phase + ':' + st.journey.scene + ':' + (paused ? 1 : 0);
     else if (a === brain && st.cardLobe) key = 'lobe:' + st.cardLobe;
     else
       key =
@@ -231,19 +233,34 @@
       nav = [];
     if (st.journey) {
       const J = st.journey,
-        S = JSTEPS[J.i];
-      const O = JO();
-      html = `<div class="ct"><span class="chip">Gözden kelimeye · ${J.i + 1}/${JSTEPS.length}</span><h2>${S.title(O)}</h2></div><p>${S.text(O)}</p>`;
-      if (S.choices)
+        O = JO();
+      if (J.phase === 'choose') {
+        html = `<div class="ct"><span class="chip">Gözden kelimeye</span><h2>Neye bakalım?</h2></div><p>Gözlerinin önüne bir şey koyacağız. Kamera ışığı göze girdiği andan itibaren takip edecek: sinirden talamusa, görme alanındaki nöronlara, şakak lobundaki kavrama ve ağzından çıkan kelimeye kadar. Sonra başka bir şeyle tekrarlayıp farkı görebilirsin.</p>`;
         Object.keys(JOBJ).forEach((k, n) =>
           acts.push({
-            label: `${JOBJ[k].icon} ${cap(JOBJ[k].dat)} bak${st.tried && st.tried[k] ? ' ✓' : ''}`,
+            label: `${JOBJ[k].icon} ${cap(JOBJ[k].dat)} bak${st.tried[k] ? ' ✓' : ''}`,
             fn: () => jChoose(k),
-            psug: n === 0 && !(st.tried && Object.keys(st.tried).length)
+            psug: !Object.keys(st.tried).length
+              ? n === 0
+              : !st.tried[k] && Object.keys(JOBJ).find(x => !st.tried[x]) === k
           })
         );
-      if (S.btn) acts.push({ label: S.btn, fn: () => jNext(), psug: J.ready, disabled: !J.ready });
-      if (S.btn2) acts.push({ label: S.btn2[0], fn: S.btn2[1] });
+      } else if (J.phase === 'film') {
+        const S = FILM[J.scene];
+        html = `<div class="ct"><span class="chip">${O.icon} Gözden kelimeye · ${J.scene + 1}/${FILM.length}</span><h2>${S.title(O)}</h2></div>
+          <div class="jbar" aria-hidden="true">${FILM.map((x, k) => `<i class="${k < J.scene ? 'done' : k === J.scene ? 'now' : ''}"></i>`).join('')}</div>
+          <p>${S.cap(O)}</p><p class="cap" id="jLive" aria-live="polite"></p>
+          <p class="jms">⏱ Gerçekte buraya kadar ≈ ${S.ms} ms${S.ms ? '' : ' (ışık bir anda gelir)'} · burada çok yavaşlatıldı</p>`;
+        acts.push({
+          label: paused ? '▶ Devam' : '⏸ Duraklat',
+          fn: () => (setPaused(!paused), renderCard(true))
+        });
+        acts.push({ label: '⏭ Sonraki sahne', fn: () => jSkip(), ghost: true });
+      } else {
+        html = `<div class="ct"><span class="chip">${O.icon} Gözden kelimeye</span><h2>Ne oldu?</h2></div><p>${summaryHTML(O)}</p>`;
+        acts.push({ label: '🔁 Başka bir şeye bak', fn: () => jStart(), psug: true });
+        acts.push({ label: 'Serbest gez', fn: () => jEnd() });
+      }
       acts.push({ label: 'Yolculuktan çık', fn: () => jEnd(), ghost: true });
     } else if (a === brain && st.cardLobe) {
       const L = brain.LOBES[st.cardLobe];
@@ -525,6 +542,7 @@
       icon: '🍋',
       name: 'limon',
       dat: 'limona',
+      abl: 'limondan',
       word: 'LİMON',
       say: '“Limon!”',
       v1: ['curve', 'yellow'],
@@ -538,6 +556,7 @@
       icon: '🍓',
       name: 'çilek',
       dat: 'çileğe',
+      abl: 'çilekten',
       word: 'ÇİLEK',
       say: '“Çilek!”',
       v1: ['curve', 'tip', 'red', 'dots'],
@@ -553,6 +572,7 @@
       icon: '🍦',
       name: 'dondurma',
       dat: 'dondurmaya',
+      abl: 'dondurmadan',
       word: 'DONDURMA',
       say: '“Dondurma!”',
       v1: ['curve', 'tip', 'light'],
@@ -575,223 +595,307 @@
   };
   const JO = () => JOBJ[(st.journey && st.journey.obj) || 'lemon'];
   const cap = t => t.charAt(0).toLocaleUpperCase('tr-TR') + t.slice(1);
-  const JSTEPS = [
+  // Yolculuğun sonundaki karşılaştırma
+  function summaryHTML(O) {
+    const rows = Object.keys(JOBJ)
+      .filter(k => st.tried[k])
+      .map(
+        k =>
+          `<tr><td>${JOBJ[k].icon} ${cap(JOBJ[k].name)}</td><td>${(st.tried[k].v1 || []).join(', ') || '–'}</td><td><b>${st.tried[k].word || '–'}</b></td></tr>`
+      )
+      .join('');
+    const left = Object.keys(JOBJ).filter(k => !st.tried[k]);
+    return `<span class="chain">${O.icon} ışık → göz → talamus → görme alanı <small>(özellikler)</small> → şakak lobu <small>(kavram: ${O.word})</small> → Broca → hareket kabuğu → ${O.say}</span>
+      <table class="jcmp"><thead><tr><th>baktığın</th><th>görme alanında ateşleyenler</th><th>kazanan kavram</th></tr></thead><tbody>${rows}</tbody></table>
+      ${left.length ? `Yol hep aynı ama her nesnede farklı nöronlar ateşliyor. Bir de ${left.map(k => JOBJ[k].dat).join(' ya da ')} bakıp karşılaştır.` : 'Yol her seferinde aynıydı; değişen, hangi nöronların ateşlediğiydi. Beyin bir şeyi, onun özelliklerine tepki veren nöronların birlikte yanma deseniyle tanır.'}`;
+  }
+
+  /* --- film: kamera girdiyi, sinyali, etkiyi ve sonucu kesintisiz takip eder --- */
+  let waiters = [],
+    chaseS = null;
+  // Duraklatılabilir saate göre bekle; sahne atlanınca hemen geçer, yolculuk bitince iptal olur
+  function fWait(tok, sec, cond) {
+    return new Promise((res, rej) => waiters.push({ t: ctx.clock() + sec, cond, res, rej, tok }));
+  }
+  function tickWaiters() {
+    waiters = waiters.filter(w => {
+      if (w.tok.dead) {
+        w.rej('dead');
+        return false;
+      }
+      if (w.tok.skip || ctx.clock() >= w.t || (w.cond && w.cond())) {
+        w.res();
+        return false;
+      }
+      return true;
+    });
+  }
+  // Kamera bir yolu, üzerindeki öncü darbenin hemen arkasından izler
+  function chase(tok, key, sec, dist, col) {
+    brain.send(key, sec, col || C_VIS, 3, 0.18);
+    chaseS = { c: brain.curves[key], t0: ctx.clock(), dur: sec, dist };
+    brain._alignTo = null;
+    return fWait(tok, sec);
+  }
+  function release() {
+    chaseS = null;
+    brain.override = null;
+  }
+  // Kamerayı bir noktanın yakınında tut (lobun yüzeyine dalarken ve oradan çıkarken)
+  function holdAt(p) {
+    chaseS = null;
+    brain.override = { target: p.clone(), dist: 3.8 };
+  }
+  function updateChase(dt) {
+    if (!chaseS) return;
+    const u = clamp((ctx.clock() - chaseS.t0) / chaseS.dur, 0, 1),
+      p = chaseS.c.getPointAt(u),
+      tg = chaseS.c.getTangentAt(u);
+    // sinyalin arkasından ve biraz yukarısından bak
+    const dir = tg
+      .clone()
+      .negate()
+      .add(new THREE.Vector3(0, 0.95, 0))
+      .normalize();
+    brain.yaw = angTo(brain.yaw, Math.atan2(dir.x, dir.z), Math.min(1, dt * 3));
+    brain.pitch = lerp(brain.pitch, Math.asin(clamp(dir.y, -1, 1)), Math.min(1, dt * 3));
+    brain.override = { target: p, dist: chaseS.dist };
+  }
+  const C_LIGHT = [1, 0.97, 0.7];
+  const FILM = [
     {
-      title: () => 'Neye bakalım?',
-      text: () =>
-        'Beyni yarı saydam yaptık; önde iki göz var. Gözlerin önüne bir şey koyalım ve ışığın beyinde nereye gittiğini izleyelim. Sonra başka bir şeyle tekrarlayıp farkı görebilirsin.',
-      choices: true,
-      enter() {
-        brain.setJourney(true);
-        brain.setXray(true);
-        brain.showObject(null);
-        brain._alignTo = { yaw: -1.22, pitch: 0.16 };
-        micro.setMode('generic');
-        zoomTo(JZ, 1.8);
-        ready(false, 99);
+      title: O => `${cap(O.dat)} bakıyorsun`,
+      cap: O =>
+        `Gözlerinin önünde bir ${O.name} var. Beyni yarı saydam yaptık. Şimdi ışığın ve sinyalin izini kamerayla adım adım takip edeceğiz.`,
+      ms: 0,
+      async run(t, O) {
+        brain._alignTo = { yaw: -1.05, pitch: 0.16 };
+        zoomTo(JZ, 1.6);
+        await fWait(t, 3);
       }
     },
     {
-      title: () => 'Gözden talamusa',
-      text: O =>
-        `Işık, ${O.name === 'dondurma' ? 'dondurmadan' : O.name === 'çilek' ? 'çilekten' : 'limondan'} yansıyıp retinadaki hücreleri uyarır. Sinyal görme siniriyle ilerler; iki sinirin buluştuğu yerde yarısı karşı tarafa geçer ve beynin ortasındaki talamusa (LGN) ulaşır. Buraya kadar ≈ 30 ms.`,
-      btn: 'Görme alanına gönder',
-      enter() {
-        brain.send('vis1L', 1.5, C_VIS);
-        brain.send('vis1R', 1.5, C_VIS);
-        brain.spot('eye', brain.P.eyeL, C_VIS, 1.4, 'eye');
-        setTimeout(() => {
-          brain.spot('lgnL', brain.P.lgnL, C_VIS, 1e9, 'lgn');
-          brain.spot('lgnR', brain.P.lgnR, C_VIS, 1e9);
-        }, 1500);
-        ready(false, 2.0);
+      title: () => 'Işık gözüne giriyor',
+      cap: O =>
+        `${cap(O.abl)} yansıyan ışık gözüne giriyor. Gözün arkasındaki retinada ışığa duyarlı hücreler onu elektrik sinyaline çeviriyor.`,
+      ms: 0,
+      async run(t) {
+        // ışığı yandan izle: nesneden göze
+        brain._alignTo = { yaw: -1.4, pitch: 0.12 };
+        holdAt(new THREE.Vector3(0, -1.8, 12.4));
+        brain.override.dist = 9;
+        brain.send('lightL', 2.4, C_LIGHT, 3, 0.2);
+        brain.send('lightR', 2.4, C_LIGHT, 3, 0.2);
+        await fWait(t, 2.4);
+        brain.spot('eye', brain.P.eyeR, C_LIGHT, 1.6, 'eye');
+        await fWait(t, 0.6);
       }
     },
     {
-      title: () => 'Görme alanı',
-      text: () =>
-        'Talamus sinyali ensedeki birincil görme alanına (V1) iletir. ≈ 50 ms. Şimdi oraya, nöronların arasına inelim.',
-      btn: '🔬 Görme alanına yaklaş',
-      enter() {
-        brain.send('vis2L', 1.3, C_VIS);
-        brain.send('vis2R', 1.3, C_VIS);
-        setTimeout(() => {
-          brain.spot('v1L', brain.P.v1L, C_VIS, 1e9, 'v1');
-          brain.spot('v1R', brain.P.v1R, C_VIS, 1e9);
-        }, 1300);
-        ready(false, 1.6);
+      title: () => 'Görme sinirinde',
+      cap: () =>
+        'Sinyal görme siniri boyunca beynin içine ilerliyor. İki sinirin buluştuğu yerde (çaprazlaşma) yarısı karşı tarafa geçiyor ve beynin ortasındaki talamusa varıyor.',
+      ms: 30,
+      async run(t) {
+        brain.send('vis1L', 3.6, C_VIS);
+        await chase(t, 'vis1R', 3.6, 4.5);
+        brain.spot('lgnL', brain.P.lgnL, C_VIS, 1e9, 'lgn');
+        brain.spot('lgnR', brain.P.lgnR, C_VIS, 1e9);
       }
     },
     {
-      title: () => 'V1: kenarlar ve renk',
-      text: O =>
-        `Burada her nöron gözün gördüğü küçük bir parçaya bakar ve belli bir özelliğe tepki verir (9. seviyedeki yavru kedinin gözü gibi). ${cap(O.name)} için ${O.v1txt} ateşler; ötekiler sessiz kalır. Etiketlerdeki çubuk, nöronun eşiğe ne kadar yakın olduğunu gösterir.`,
-      btn: 'Sonra? Şakak lobuna',
-      enter() {
-        brain.setXray(false);
+      title: () => 'Talamustan görme alanına',
+      cap: () =>
+        'Talamus sinyali beynin arkasına, ense lobundaki birincil görme alanına (V1) iletiyor.',
+      ms: 50,
+      async run(t) {
+        brain.send('vis2R', 3.0, C_VIS);
+        await chase(t, 'vis2L', 3.0, 4.5);
+        brain.spot('v1L', brain.P.v1L, C_VIS, 1e9, 'v1');
+        brain.spot('v1R', brain.P.v1R, C_VIS, 1e9);
+      }
+    },
+    {
+      title: () => 'Nöronların arasına',
+      cap: () => 'Görme alanının kabuğuna, sinyali karşılayan nöronların arasına iniyoruz.',
+      ms: 55,
+      async run(t, O) {
         fastSim();
         micro.setMode('v1');
         micro.setStim(st.journey.obj);
         micro.resetCounts();
         diveInto('occipital', 'v1');
-        zoomTo(STOPS[3] - 0.08, 4.2);
-        ready(false, 0, () => JO().v1.every(id => micro.count(id) >= 2));
-      },
-      leave() {
+        holdAt(brain.focus);
+        zoomTo(STOPS[3] - 0.08, 3.6);
+        await fWait(t, 3.8);
+      }
+    },
+    {
+      title: () => 'Görme alanı: özellikler',
+      cap: O =>
+        `Burada her nöron gözün gördüğü küçük bir parçaya bakıp belli bir özelliğe tepki veriyor. ${cap(O.name)} için ${O.v1txt} ateşliyor; ötekiler sessiz kalıyor.`,
+      ms: 80,
+      live: O =>
+        'Ateşleyenler: ' +
+        (Object.keys(V1NAMES)
+          .filter(id => micro.count(id) >= 1)
+          .map(id => `${V1NAMES[id]} (${micro.count(id)})`)
+          .join(', ') || 'bekleniyor…'),
+      async run(t, O) {
+        await fWait(t, 9, () => O.v1.every(id => micro.count(id) >= 2));
         st.tried[st.journey.obj] = {
           v1: Object.keys(V1NAMES)
             .filter(id => micro.count(id) >= 2)
             .map(id => V1NAMES[id])
         };
+        st.journey.note =
+          'Şimdi bu nöronlardan birinin çıkış sinyalini takip ediyoruz: şakak lobuna gidiyor…';
+        micro.arrivedOut = false;
+        micro.followOut(O.v1);
+        await fWait(t, 8, () => micro.arrivedOut);
+        st.journey.note = '';
       }
     },
     {
       title: () => '“Ne” yolu: şakak lobuna',
-      text: O =>
-        `Kenar ve renk bilgisi beynin alt yüzünden şakak lobuna akar. Burnuna gelen ${O.smell} da buraya katılır: 11. seviyede yaptığımız gibi duyular tek bir kavramda birleşir. ≈ 150 ms.`,
-      btn: '🔬 Şakak lobuna yaklaş',
-      enter() {
+      cap: O =>
+        `Kenar ve renk bilgisi beynin alt yüzünden şakak lobuna akıyor. Burnuna gelen ${O.smell} da (turuncu iz) buraya katılıyor: duyular tek bir kavramda birleşecek.`,
+      ms: 150,
+      async run(t, O) {
+        micro.stopFollow();
         micro.setStim(null);
-        const sc = JO().smellCol;
-        zoomTo(JZ, 3.2, () => {
-          brain.setXray(true);
-          brain._alignTo = { yaw: -1.3, pitch: 0.02 };
-          brain.send('venL', 1.6, C_VEN);
-          brain.send('venR', 1.6, C_VEN);
-          brain.send('smell', 2.0, sc, 4);
-          brain.spot('nose', brain.P.bulb, sc, 2.2, 'smell');
-          setTimeout(() => brain.spot('itL', brain.P.itL, C_VEN, 1e9, 'it'), 1700);
-          ready(false, 2.2);
-        });
-        ready(false, 99);
+        holdAt(brain.focus);
+        zoomTo(JZ, 2.4);
+        await fWait(t, 2.5);
+        brain.send('smell', 3.0, O.smellCol, 4);
+        brain.spot('nose', brain.P.bulb, O.smellCol, 3.2, 'smell');
+        brain.send('venR', 3.0, C_VEN);
+        await chase(t, 'venL', 3.0, 4.5, C_VEN);
+        brain.spot('itL', brain.P.itL, C_VEN, 1e9, 'it');
       }
     },
     {
       title: O => `Kavram nöronu: ${O.word}`,
-      text: O =>
-        `Şakak lobunda özellik nöronları kavram nöronlarına bağlanır. ${cap(O.name)} için ${O.feats} birlikte gelir; hepsini birden alan <b>${O.word}</b> nöronu eşiği geçer. ${O.rival} İnsanda tek bir kavrama seçici tepki veren nöronlar gerçekten bulundu (Quiroga, 2005).`,
-      btn: 'Ve cevap…',
-      enter() {
-        brain.setXray(false);
+      cap: O =>
+        `Şakak lobunda ${O.feats} birlikte geliyor. Hepsini birden alan ${O.word} nöronu eşiği geçiyor; susturan nöron rakipleri bastırıyor. ${O.rival}`,
+      ms: 200,
+      live: () =>
+        ['lemon', 'straw', 'icecream']
+          .map(
+            k => `${{ lemon: 'LİMON', straw: 'ÇİLEK', icecream: 'DONDURMA' }[k]}: ${micro.count(k)}`
+          )
+          .join(' · '),
+      async run(t, O) {
         fastSim();
         micro.setMode('it');
         micro.setStim(st.journey.obj);
         micro.resetCounts();
         diveInto('temporal', 'it');
-        zoomTo(STOPS[3] - 0.08, 4.2);
-        ready(false, 0, () => micro.count(B3.sim.OBJECTS[st.journey.obj].concept) >= 3);
-      },
-      leave() {
-        const t = st.tried[st.journey.obj] || (st.tried[st.journey.obj] = { v1: [] });
-        t.word = JO().word;
+        holdAt(brain.focus);
+        zoomTo(STOPS[3] - 0.08, 3.6);
+        await fWait(t, 3.8);
+        const concept = B3.sim.OBJECTS[st.journey.obj].concept;
+        await fWait(t, 9, () => micro.count(concept) >= 2);
+        (st.tried[st.journey.obj] || (st.tried[st.journey.obj] = { v1: [] })).word = O.word;
+        st.journey.note = `Şimdi ${O.word} nöronunun çıkış sinyalini takip ediyoruz: konuşma alanına gidiyor…`;
+        micro.arrivedOut = false;
+        micro.followOut([concept]);
+        await fWait(t, 8, () => micro.arrivedOut);
+        st.journey.note = '';
       }
     },
     {
-      title: O => O.say,
-      text: () =>
-        'Kavram, sol alın lobundaki konuşma alanına (Broca) gider; orada kelimenin sesleri sıraya konur. Hemen arkadaki hareket kabuğu dil, dudak ve gırtlak kaslarına komut gönderir. Bir resme bakıp adını söylemek toplam ≈ 0,6 saniye sürer.',
-      btn: 'Özeti gör',
-      enter() {
+      title: O => `Kelimeye dönüşüyor: ${O.say}`,
+      cap: () =>
+        'Kavram sol alın lobundaki konuşma alanına (Broca) gidiyor; orada kelimenin sesleri sıraya konuyor. Hemen arkadaki hareket kabuğu dil, dudak ve gırtlak kaslarına komut gönderiyor.',
+      ms: 600,
+      async run(t, O) {
+        micro.stopFollow();
         micro.setStim(null);
-        brain.sayLbl.el.textContent = JO().say;
-        zoomTo(JZ, 3.2, () => {
-          brain.setXray(true);
-          brain._alignTo = { yaw: -1.25, pitch: 0.12 };
-          brain.send('speech', 1.2, C_SP, 4);
-          setTimeout(() => {
-            brain.spot('broca', brain.P.broca, C_SP, 1e9, 'broca');
-            brain.send('motor', 0.9, C_SP, 4);
-          }, 1200);
-          setTimeout(() => {
-            brain.spot('motor', brain.P.motor, C_SP, 1e9, 'motor');
-            brain.send('out', 1.6, C_SP, 5);
-          }, 2200);
-          setTimeout(() => {
-            brain.sayLbl.on = true;
-            ready(true);
-          }, 3900);
-        });
-        ready(false, 99);
-      }
-    },
-    {
-      title: () => 'Ne oldu?',
-      text: O => {
-        const rows = Object.keys(JOBJ)
-          .filter(k => st.tried[k])
-          .map(
-            k =>
-              `<tr><td>${JOBJ[k].icon} ${cap(JOBJ[k].name)}</td><td>${(st.tried[k].v1 || []).join(', ') || '–'}</td><td><b>${st.tried[k].word || '–'}</b></td></tr>`
-          )
-          .join('');
-        const left = Object.keys(JOBJ).filter(k => !st.tried[k]);
-        return `<span class="chain">göz → talamus → görme alanı <small>(özellikler)</small> → şakak lobu <small>(kavram: ${O.word})</small> → Broca → hareket kabuğu → ${O.say}</span>
-          <table class="jcmp"><thead><tr><th>baktığın</th><th>görme alanında ateşleyenler</th><th>kazanan kavram</th></tr></thead><tbody>${rows}</tbody></table>
-          ${left.length ? `Yol hep aynı ama her nesnede farklı nöronlar ateşliyor. Bir de ${left.map(k => JOBJ[k].dat).join(' ya da ')} bakıp karşılaştır.` : 'Yol her seferinde aynıydı; değişen, hangi nöronların ateşlediğiydi. Beyin bir şeyi, onun özelliklerine tepki veren nöronların birlikte yanma deseniyle tanır.'}`;
-      },
-      btn: '🔁 Başka bir şeye bak',
-      btn2: ['Serbest gez', () => jEnd()],
-      enter() {
-        ready(true);
+        brain.sayLbl.el.textContent = O.say;
+        holdAt(brain.focus);
+        zoomTo(JZ, 2.4);
+        await fWait(t, 2.5);
+        await chase(t, 'speech', 2.0, 5, C_SP);
+        brain.spot('broca', brain.P.broca, C_SP, 1e9, 'broca');
+        await chase(t, 'motor', 1.4, 5, C_SP);
+        brain.spot('motor', brain.P.motor, C_SP, 1e9, 'motor');
+        await chase(t, 'out', 2.4, 6, C_SP);
+        brain.sayLbl.on = true;
+        release();
+        brain._alignTo = { yaw: -1.05, pitch: 0.16 };
+        await fWait(t, 3);
       }
     }
   ];
-  function jChoose(k) {
-    const J = st.journey;
-    if (!J) return;
-    J.obj = k;
-    brain.showObject(k);
-    jNext();
-  }
   function fastSim() {
     if (+speedIn.value < 3) {
       speedIn.value = 3;
       setSpeed();
     }
   }
-  function ready(on, after, cond) {
+  async function filmRun() {
+    const J = st.journey;
+    for (let k = 0; k < FILM.length; k++) {
+      if (st.journey !== J) return;
+      J.scene = k;
+      J.note = '';
+      J.tok = {};
+      renderCard(true);
+      try {
+        await FILM[k].run(J.tok, JO());
+      } catch (e) {
+        if (e === 'dead') return;
+        console.error(e);
+      }
+    }
+    if (st.journey !== J) return;
+    release();
+    J.phase = 'done';
+    renderCard(true);
+  }
+  function jChoose(k) {
     const J = st.journey;
     if (!J) return;
-    J.ready = !!on;
-    J.cond = cond || null;
-    if (after && after < 90) {
-      const i = J.i;
-      setTimeout(() => {
-        if (st.journey && st.journey.i === i) {
-          st.journey.ready = true;
-          renderCard(true);
-        }
-      }, after * 1000);
-    }
-    renderCard(true);
+    J.obj = k;
+    J.phase = 'film';
+    brain.showObject(k);
+    setPaused(false);
+    filmRun();
   }
   function jStart() {
     stopFollow();
     st.cardLobe = null;
     brain.select(null);
     st.tried = st.tried || {};
-    st.journey = { i: 0, ready: false, obj: null };
-    JSTEPS[0].enter();
+    if (st.journey && st.journey.tok) st.journey.tok.dead = true;
+    tickWaiters();
+    release();
+    brain.setJourney(true);
+    brain.setXray(true);
+    brain.setInside(true);
+    brain.setSeeThrough(true);
+    brain.showObject(null);
+    brain._alignTo = { yaw: -1.22, pitch: 0.16 };
+    micro.setMode('generic');
+    zoomTo(JZ, 1.8);
+    st.journey = { phase: 'choose', obj: null, scene: 0, note: '' };
     renderCard(true);
   }
-  function jNext() {
+  function jSkip() {
     const J = st.journey;
-    if (!J) return;
-    if (J.i === JSTEPS.length - 1) {
-      jEnd(true);
-      jStart();
-      return;
-    }
-    if (JSTEPS[J.i].leave) JSTEPS[J.i].leave();
-    J.i++;
-    J.ready = false;
-    JSTEPS[J.i].enter();
-    renderCard(true);
+    if (J && J.tok) J.tok.skip = true;
   }
   function jEnd(keep) {
+    if (st.journey && st.journey.tok) st.journey.tok.dead = true;
+    tickWaiters();
+    release();
     st.journey = null;
     brain.setJourney(false);
     brain.setXray(false);
+    brain.setInside(false);
+    brain.setSeeThrough(false);
+    micro.stopFollow();
     micro.setStim(null);
     if (!keep) {
       micro.setMode('generic');
@@ -805,6 +909,9 @@
     frames = 0,
     fpsT = 0;
   function frame(now) {
+    const dtc = Math.min(0.05, (now - (frame.last || now)) / 1000);
+    frame.last = now;
+    if (!paused) clockT += dtc;
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
@@ -893,9 +1000,14 @@
     else if (A === synapse) clockEl.textContent = '≈ 2.000 kat yavaş';
     xrayBtn.hidden = !(A === brain);
     document.body.classList.toggle('slowctl', showClock);
-    if (st.journey && !st.journey.ready && st.journey.cond && st.journey.cond()) {
-      st.journey.ready = true;
-      renderCard(true);
+    tickWaiters();
+    updateChase(dtc);
+    const jl = document.getElementById('jLive');
+    if (jl && st.journey && st.journey.phase === 'film') {
+      const S = FILM[st.journey.scene],
+        t = st.journey.note || (S.live ? S.live(JO()) : '');
+      if (jl.textContent !== t) jl.textContent = t;
+      jl.hidden = !t;
     }
     renderCard();
     const cap = document.getElementById('stageCap');
@@ -993,7 +1105,8 @@
         zoomTo,
         stages: () => stages,
         jStart,
-        jNext,
+        jSkip,
+        jChoose,
         micro: () => micro,
         synapse: () => synapse,
         brain: () => brain,

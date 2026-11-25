@@ -447,6 +447,10 @@
     st.followNext = function () {
       st.following = { phase: 'wait', chain: 0 };
     };
+    // Yolculuk için: verilen nöronlardan biri ateşleyince çıkışa (→ öbür bölgeye) giden sinyalini takip et
+    st.followOut = function (ids) {
+      st.following = { phase: 'wait', chain: 0, ids, toOut: true };
+    };
     st.stopFollow = function () {
       st.following = null;
       st.override = null;
@@ -477,7 +481,13 @@
           fresh.push(p);
         }
         const F = st.following;
-        if (
+        if (F && F.toOut) {
+          // yolculuk: istenen nöron ateşleyince çıkışa giden sinyaline bin
+          if (F.phase === 'wait' && F.ids.includes(vis[s.i].n.id)) {
+            const pick = fresh.find(p => vis[p.c.b].n.kind === 'out');
+            if (pick) st.following = { phase: 'ride', p: pick, chain: 1, toOut: true, ids: F.ids };
+          }
+        } else if (
           F &&
           ((F.phase === 'wait' && vis[s.i].n.kind !== 'in') ||
             (F.phase === 'arrive' && s.i === F.target))
@@ -496,6 +506,7 @@
         const u = (now - p.t0) / p.c.travel;
         if (u >= 1) {
           if (st.following && st.following.p === p) {
+            if (st.following.toOut) st.arrivedOut = true;
             st.following = {
               phase: 'arrive',
               target: p.c.b,
