@@ -969,7 +969,23 @@
       $('#loading').hidden = true;
       document.body.classList.add('ready');
       requestAnimationFrame(frame);
-      if (new URLSearchParams(location.search).get('yolculuk') != null) jStart();
+      const Q = new URLSearchParams(location.search);
+      if (Q.get('yolculuk') != null) jStart();
+      // seviyelerden gelen bağlantılar: ?lob=occipital (o loba dal) ya da ?durak=noronlar
+      const lob = Q.get('lob'),
+        durak = { beyin: 0, bolge: 1, katlar: 2, noronlar: 3, sinaps: 4 }[Q.get('durak')];
+      if (lob && brain.LOBES[lob]) {
+        // önce bütün beyinde lobu göster; kartta “Buraya yaklaş”
+        brain.setFocus(lob);
+        const f = brain.focusDir;
+        brain._alignTo = {
+          yaw: Math.atan2(f.x, f.z),
+          pitch: Math.max(-0.2, Math.min(0.6, Math.asin(f.y)))
+        };
+        st.cardLobe = lob;
+        brain.select(lob);
+        renderCard(true);
+      } else if (durak != null) setTimeout(() => zoomTo(STOPS[durak], 2.4), 600);
       window.B3dbg = {
         get Z() {
           return Z;

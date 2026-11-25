@@ -549,3 +549,26 @@ body.hero-ready .hero-in {
 .all-missions {
   margin-top: 14px;
 }
+
+/* seviyeden 3B beyne bağlantı */
+.brain-link {
+  align-self: center;
+  margin-left: auto;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 99px;
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+.brain-link:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+@media (max-width: 760px) {
+  .brain-link {
+    margin-left: 0;
+    white-space: normal;
+  }
+}

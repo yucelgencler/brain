@@ -106,6 +106,33 @@ function firesNow(st, lv) {
   return fires(inputsOf(st, lv), st.w, st.theta);
 }
 
+/* ---------- Bu seviye beynin neresinde? (3B sayfasına bağlantı) ---------- */
+const BRAIN_LINK = {
+  light: ['lob=occipital', 'gözden ense lobuna giden görme yolu'],
+  pair: ['durak=noronlar', 'bir nöronun birçok girdiyi topladığı yer'],
+  inhibit: ['durak=noronlar', 'susturan nöronlar (pembe olanlar)'],
+  learn: ['durak=sinaps', 'bağlantının gücünün değiştiği yer: sinaps'],
+  predict: ['durak=sinaps', 'öğrenmenin olduğu yer: sinaps'],
+  xor: ['durak=noronlar', 'tek tek nöronlar ve bağlantıları'],
+  fruit: ['durak=noronlar', 'birlikte çalışan nöronlar'],
+  two: ['durak=katlar', 'kabuğun katları ve ara nöronlar'],
+  lines: ['lob=occipital', 'görme alanı (V1), ense lobu'],
+  shapes: ['lob=occipital', 'görme alanı, ense lobu'],
+  senses: ['lob=temporal', 'duyuların birleştiği şakak lobu'],
+  hebb: ['lob=temporal', 'anıların kaydedildiği şakak lobu'],
+  where: ['lob=temporal', 'şakak lobu ve kabuk'],
+  general: ['lob=temporal', 'hipokampusun bulunduğu şakak lobu'],
+  sleep: ['lob=temporal', 'hipokampusun bulunduğu şakak lobu'],
+  words: ['lob=temporal', 'kelimelerin anlamı: şakak lobu'],
+  read: ['lob=occipital', 'okuma: ense ve şakak lobunun birleştiği yer']
+};
+function brainLinkHTML(key) {
+  const b = BRAIN_LINK[key];
+  return b
+    ? `<a class="brain-link" href="beyin3d.html?${b[0]}">🧠 3B’de gör: ${esc(b[1])} →</a>`
+    : '';
+}
+
 /* ---------- Seviye sayfasını kur ---------- */
 // Kendi sahnesi olan seviyeler (9 ve sonrası): html, wire, update, reset
 function viewOf(kind) {
@@ -186,6 +213,7 @@ function buildLevel() {
     <div class="lv-head">
       <div><p class="kicker crumb"><a href="#">Ana sayfa</a> › Bölüm ${part.no}: ${esc(part.title)} › Seviye ${lv.id}</p><h2>${esc(lv.title)}</h2></div>
       <p class="lv-q">${esc(lv.question)}</p>
+      ${brainLinkHTML(lv.key)}
     </div>
     <details class="route"${routeOpen ? ' open' : ''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
       <p><b>Amaç:</b> ${esc(lv.goal)}</p><ol>${lv.todo.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>
