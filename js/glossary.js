@@ -139,7 +139,7 @@ const GLOSSARY = [
   {
     t: 'Genelleme',
     d: 'Daha önce hiç görülmemiş bir örneği de doğru tanıyabilmek. Ezberlemenin tersi: kuralı ya da ortak özelliği öğrenmek.',
-    see: 'digits'
+    see: 'shapes'
   },
   {
     t: 'Hipokampus',

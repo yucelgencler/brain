@@ -1,0 +1,339 @@
+/* Seviye 10: şekil ve rakam tanıma */
+.sh-mode {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 4px 0 12px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+.sh-mbtn {
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  padding: 8px 16px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sh-mbtn[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(34, 24, 58, 0.12);
+}
+.sh-mbtn.psug {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.sh-bench {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.6fr) minmax(250px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 1020px) {
+  .sh-bench {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sh-brain {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+@media (max-width: 640px) {
+  .sh-bench {
+    grid-template-columns: 1fr;
+  }
+}
+.sh-bench > .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sh-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 40px);
+  gap: 5px;
+  justify-content: center;
+  touch-action: none;
+  border-radius: 10px;
+  padding: 4px;
+}
+.sh-grid.psugc {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.sh-cell {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0;
+  cursor: pointer;
+}
+.sh-cell.on {
+  background: var(--node-on);
+  border-color: var(--node-on);
+}
+.sh-tools {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.sh-add label {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sh-add-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.sh-add-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px 10px;
+  background: var(--surface);
+}
+#shNet {
+  width: 100%;
+  display: block;
+}
+.pos-t {
+  color: var(--pos);
+}
+.neg-t {
+  color: var(--neg);
+}
+.sh-verdict {
+  font-family: 'Bricolage Grotesque', 'IBM Plex Sans', sans-serif;
+  font-size: 24px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.sh-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sh-bar {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 42px;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+.sh-bl {
+  font-weight: 600;
+}
+.sh-bt {
+  height: 11px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.sh-bt i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink-2) 45%, var(--surface-2));
+  transition: width 0.25s;
+}
+.sh-bar.top .sh-bt i {
+  background: var(--accent);
+}
+.sh-bv {
+  text-align: right;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.sh-teach {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sh-q {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sh-chips {
+  display: flex;
+  gap: 6px;
+}
+.sh-chip {
+  flex: 1;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 7px 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sh-chip small {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.sh-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.sh-chip.psug {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+.sh-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sh-res {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.sh-res.ok {
+  color: var(--ok);
+}
+.sh-res.bad {
+  color: var(--bad);
+}
+.sh-tray {
+  margin-top: 14px;
+}
+.sh-tray-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .sh-tray-row {
+    grid-template-columns: 1fr;
+  }
+}
+.sh-tcol {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.sh-th {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.sh-th small {
+  color: var(--ink-2);
+  margin-left: auto;
+}
+.sh-tex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.sh-mini rect {
+  fill: color-mix(in srgb, var(--ink-2) 18%, var(--surface));
+}
+.sh-mini rect.on {
+  fill: var(--node-on);
+}
+.sh-ctl {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+.sh-ctl output {
+  min-width: 7ch;
+}
+.sh-ctl label.psug {
+  border-radius: 10px;
+  padding: 4px 8px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: psug 1.6s ease-in-out infinite;
+}
+#shReset {
+  margin-left: auto;
+}
+.sh-scores {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 760px) {
+  .sh-scores {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.sh-score {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+}
+.sh-score small {
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+.sh-score b {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 28px;
+  line-height: 1.15;
+}
+.sh-advb {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 860px) {
+  .sh-advb {
+    grid-template-columns: 1fr;
+  }
+}
+#shCurve {
+  width: 100%;
+  display: block;
+}
+.sh-leg {
+  display: flex;
+  gap: 14px;
+}
+.lg-tr {
+  color: var(--pos);
+}
+.lg-te {
+  color: var(--neg);
+}
+.sh-conf {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.sh-cc {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 12.5px;
+  line-height: 1.3;
+  text-align: center;
+}
+.sh-cc:hover {
+  border-color: var(--ink-2);
+}

@@ -131,7 +131,7 @@ test('yol haritası: numaralar sıralı, hazır seviyeler yerinde', () => {
   );
   assert.strictEqual(ROADMAP[4].key, 'predict');
   assert.strictEqual(ROADMAP[6].key, 'fruit');
-  assert.strictEqual(ROADMAP[9].key, 'digits');
+  assert.strictEqual(ROADMAP[9].key, 'shapes');
   assert.strictEqual(ROADMAP[10].key, 'senses');
   assert.strictEqual(ROADMAP[11].key, 'hebb');
   for (const r of ROADMAP) assert.ok(r.title && r.part, r.key);

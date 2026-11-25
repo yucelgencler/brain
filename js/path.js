@@ -112,7 +112,13 @@ function viewOf(kind) {
   const V = {
     eye: { html: eyeGridHTML, wire: wireEye, update: updateEye, reset: eyeResetView },
     hebb: { html: hebbGridHTML, wire: wireHebb, update: updateHebb, reset: hebbResetView },
-    senses: { html: sensesGridHTML, wire: wireSenses, update: updateSenses, reset: sensesResetView }
+    senses: {
+      html: sensesGridHTML,
+      wire: wireSenses,
+      update: updateSenses,
+      reset: sensesResetView
+    },
+    shapes: { html: shapesGridHTML, wire: wireShapes, update: updateShapes, reset: shapesResetView }
   };
   return V[kind] || null;
 }
@@ -122,6 +128,7 @@ let auto = 0,
   resetArm = 0;
 function go(key) {
   stopAuto();
+  shapesStop();
   hebbResetView();
   multiStop();
   netStop();
@@ -1449,6 +1456,7 @@ function routeOf(h) {
 }
 function leaveLevel() {
   stopAuto();
+  shapesStop();
   hebbResetView();
   multiStop();
   netStop();

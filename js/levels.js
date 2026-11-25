@@ -1602,9 +1602,9 @@ const ROADMAP = [
   { key: 'two' },
   { key: 'lines' },
   {
-    key: 'digits',
+    key: 'shapes',
     part: 'C',
-    title: 'Rakamları tanıma',
+    title: 'Şekil ve rakam tanıma',
     lab: 'digits',
     note: 'serbest deney',
     about:
@@ -1667,8 +1667,26 @@ ROADMAP.forEach((r, i) => {
   }
 });
 
+/* Ayrı dosyada duran bir seviyeyi (js/levels/*.js) yol haritasındaki yerine bağla.
+   ROADMAP'teki tanıtım kaydı (yakında / serbest deney) seviyenin kendisiyle değişir. */
+function registerLevel(lv) {
+  const r = ROADMAP.find(x => x.key === lv.key);
+  if (!r) throw new Error('Yol haritasında yok: ' + lv.key);
+  lv.id = r.id;
+  r.level = lv;
+  r.part = lv.part;
+  r.title = lv.title;
+  delete r.lab;
+  delete r.note;
+  delete r.about;
+  LEVELS.push(lv);
+  LEVELS.sort((a, b) => a.id - b.id);
+  return lv;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    registerLevel,
     PARTS,
     LEVELS,
     ROADMAP,

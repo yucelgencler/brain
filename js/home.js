@@ -93,9 +93,9 @@ function buildHome() {
 }
 
 /* ---------- Sözlük ---------- */
-const trLower = s => s.toLocaleLowerCase('tr-TR');
+const glLower = s => s.toLocaleLowerCase('tr-TR');
 const slug = s =>
-  trLower(s)
+  glLower(s)
     .replace(/ç/g, 'c')
     .replace(/ğ/g, 'g')
     .replace(/ı/g, 'i')
@@ -117,7 +117,7 @@ function buildGlossary() {
       </div>
       <div class="gl-list" id="glList"></div>`;
     $('#glQ').addEventListener('input', e => {
-      glossQ = trLower(e.target.value.trim());
+      glossQ = glLower(e.target.value.trim());
       renderGlossary();
     });
   }
@@ -126,7 +126,7 @@ function buildGlossary() {
 function renderGlossary() {
   const items = GLOSSARY.slice()
     .sort((a, b) => a.t.localeCompare(b.t, 'tr'))
-    .filter(g => !glossQ || trLower([g.t, g.d].concat(g.alt || []).join(' ')).includes(glossQ));
+    .filter(g => !glossQ || glLower([g.t, g.d].concat(g.alt || []).join(' ')).includes(glossQ));
   $('#glList').innerHTML = items.length
     ? items
         .map(g => {
