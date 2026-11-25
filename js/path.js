@@ -107,10 +107,8 @@ function firesNow(st, lv) {
 }
 
 /* ---------- Bu seviye beynin neresinde? (3B sayfasına bağlantı) ---------- */
+// İlk bölümde (1–3) yok: en basit seviyeler dikkati dağıtmadan tek bir şeye odaklansın
 const BRAIN_LINK = {
-  light: ['lob=occipital', 'gözden ense lobuna giden görme yolu'],
-  pair: ['durak=noronlar', 'bir nöronun birçok girdiyi topladığı yer'],
-  inhibit: ['durak=noronlar', 'susturan nöronlar (pembe olanlar)'],
   learn: ['durak=sinaps', 'bağlantının gücünün değiştiği yer: sinaps'],
   predict: ['durak=sinaps', 'öğrenmenin olduğu yer: sinaps'],
   xor: ['durak=noronlar', 'tek tek nöronlar ve bağlantıları'],
