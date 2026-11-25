@@ -16,7 +16,7 @@
     scene.fog = new THREE.FogExp2(ctx.bg, 0.0013);
     const st = {
       id: 'micro',
-      name: 'Devre',
+      name: 'Nöronlar',
       scene,
       far: 640,
       near: 3.4,
@@ -81,6 +81,8 @@
       if (st.mode === mode && group) return;
       clearAll();
       st.mode = mode;
+      st.inhOn = true;
+      st.drive = 1;
       st.center.set(0, mode === 'generic' ? -45 : -25, 0);
       const S = B3.sim;
       spec = mode === 'v1' ? S.specV1() : mode === 'it' ? S.specIT() : S.specGeneric(7);
@@ -358,7 +360,88 @@
     st.select = function (vi) {
       st.sel = vi;
       st.selLbl.on = vi != null;
+      highlight(vi);
     };
+    // Seçili nöronun bağlantılarını parlat: giden kalın, gelen ince
+    let hiGroup = null;
+    function highlight(vi) {
+      if (hiGroup) {
+        if (hiGroup.parent) hiGroup.parent.remove(hiGroup);
+        hiGroup.traverse(o => {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) o.material.dispose();
+        });
+        hiGroup = null;
+      }
+      if (vi == null || !spec) return;
+      const out = [],
+        inn = [];
+      for (const c of spec.conns) {
+        if (vis[c.b].n.kind === 'out') continue;
+        if (c.a === vi)
+          out.push(B3.taperTube(c.curve, 40, 1.6, 1.2, 6, B3.rgb(c.w < 0 ? '#ff9cc0' : '#a9c4ff')));
+        else if (c.b === vi)
+          inn.push(B3.taperTube(c.curve, 40, 1.1, 0.9, 6, B3.rgb(c.w < 0 ? '#ff7aa8' : '#7fa6ff')));
+      }
+      hiGroup = new THREE.Group();
+      if (out.length)
+        hiGroup.add(
+          new THREE.Mesh(B3.merge(out), new THREE.MeshBasicMaterial({ vertexColors: true }))
+        );
+      if (inn.length)
+        hiGroup.add(
+          new THREE.Mesh(
+            B3.merge(inn),
+            new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55 })
+          )
+        );
+      group.add(hiGroup);
+    }
+    /* --- deneyler: ateşlet, susturmayı kapat, girdiyi değiştir --- */
+    st.inhOn = true;
+    st.drive = 1;
+    st.cardRev = 0;
+    st.fireOne = function () {
+      if (!sim) return;
+      if (st.sel == null || vis[st.sel].n.kind === 'in') {
+        const pyr = vis.filter(v => v.n.kind === 'pyr');
+        st.select(pyr[Math.floor(Math.random() * pyr.length)].i);
+      }
+      sim.kick(st.sel);
+    };
+    st.setInhibition = function (on) {
+      st.inhOn = on;
+      if (sim) sim.inhGain = on ? 1 : 0;
+      vis.forEach(v => {
+        if (v.n.kind !== 'int' || !v.mat) return;
+        v.mat.transparent = !on;
+        v.mat.opacity = on ? 1 : 0.22;
+        v.mat.needsUpdate = true;
+      });
+      st.cardRev++;
+    };
+    st.setDrive = function (d) {
+      st.drive = d;
+      if (sim) sim.drive = d;
+      st.cardRev++;
+    };
+    // canlı etkinlik: uyarıcı nöronların son 100 ms'deki ortalama ateşleme sıklığı
+    let recent = [];
+    function activityCaption() {
+      if (!sim) return '';
+      const nPyr = vis.filter(v => v.n.kind === 'pyr').length || 1;
+      recent = recent.filter(t => t > sim.t - 100);
+      const hz = Math.round(recent.length / nPyr / 0.1);
+      const word = hz < 8 ? 'sakin' : hz <= 60 ? 'normal' : 'aşırı';
+      let s = `Etkinlik: her uyarıcı nöron saniyede ~${hz} kez ateşliyor (${word}).`;
+      if (!st.inhOn && hz > 60)
+        s +=
+          ' ⚠ Susturma olmadan uyarı kontrolden çıktı: sara (epilepsi) nöbetinde de beyindeki uyarı–susturma dengesi bozulur.';
+      else if (!st.inhOn) s += ' Susturanlar kapalı: etkinlik yükseliyor…';
+      else if (st.drive < 1) s += ' Dışarıdan az girdi geliyor: ağ sessizleşiyor.';
+      else if (st.drive > 1) s += ' Dışarıdan çok girdi geliyor: ağ hareketleniyor.';
+      return s;
+    }
 
     /* --- takip --- */
     st.followNext = function () {
@@ -382,8 +465,10 @@
       const simDt = info.paused ? 0 : Math.min(dt * info.speed, 25);
       const res = simDt > 0 ? sim.step(simDt) : { spikes: [], arrivals: [] };
       const now = sim.t;
+      if (st.mode === 'generic' && simDt > 0) st.caption = activityCaption();
       for (const s of res.spikes) {
         vis[s.i].flash = now;
+        if (vis[s.i].n.kind === 'pyr') recent.push(s.t);
         const outs = spec.conns.filter(c => c.a === s.i);
         const fresh = [];
         for (const c of outs) {
@@ -556,17 +641,33 @@
       x.stroke();
     }
     st.card = function () {
-      const t =
-        {
-          generic: 'Küçük bir devre',
-          v1: 'Görme alanında bir devre',
-          it: 'Şakak lobunda bir devre'
-        }[st.mode] || 'Küçük bir devre';
+      st.caption = st.mode === 'generic' ? activityCaption() : '';
+      if (st.mode !== 'generic')
+        return {
+          title: { v1: 'Görme alanında nöronlar', it: 'Şakak lobunda nöronlar' }[st.mode],
+          scale: '≈ 100 µm',
+          body: 'Her nöron dendritleriyle (kısa dallar) sinyal toplar; toplam eşiği (−55 mV) geçince aksonu boyunca bir sinyal ateşler: ya hep ya hiç. <b style="color:var(--b3-exc)">Mavi</b> bağlantılar uyarır, <b style="color:var(--b3-inh)">pembe</b> olanlar susturur. Bir nörona tıkla, zar gerilimini izle.',
+          action: { label: '👁 Sinyali takip et', fn: () => st.followNext() }
+        };
+      const lvl = ['az', 'normal', 'çok'],
+        di = st.drive < 1 ? 0 : st.drive > 1 ? 2 : 1;
       return {
-        title: t,
+        title: 'Nöronlar ve bağlantıları',
         scale: '≈ 100 µm',
-        body: 'Her nöron dendritleriyle (kısa dallar) binlerce sinyal toplar. Toplam eşiği (−55 mV) geçince aksonu boyunca bir sinyal ateşler: ya hep ya hiç. <b style="color:var(--b3-exc)">Mavi</b> bağlantılar uyarır, <b style="color:var(--b3-inh)">pembe</b> olanlar susturur. Bir nörona tıkla, zar gerilimini izle.',
-        action: { label: '👁 Sinyali takip et', fn: () => st.followNext() }
+        body: '<b>Neye bakıyorsun?</b> Kabuğun bir köşesindeki birkaç düzine nöron. Her biri dendritleriyle (kısa dallar) sinyal toplar; toplam eşiği geçince aksonu boyunca bir sinyal ateşler. <b style="color:var(--b3-exc)">Mavi</b> bağlantılar uyarır, <b style="color:var(--b3-inh)">pembe</b> olanlar susturur. <b>Dene:</b> bir nöronu ateşlet ve sinyalinin kimlere gittiğini izle; susturan nöronları kapat; girdiyi değiştir. Bir nörona tıklarsan zar gerilimini görürsün.',
+        caption: true,
+        actions: [
+          { label: '⚡ Bir nöronu ateşlet', fn: () => st.fireOne() },
+          {
+            label: st.inhOn ? '🔇 Susturanları kapat' : '🔈 Susturanları aç',
+            fn: () => st.setInhibition(!st.inhOn)
+          },
+          {
+            label: `Girdi: ${lvl[di]} → ${lvl[(di + 1) % 3]}`,
+            fn: () => st.setDrive([1, 2.2, 0.3][di])
+          },
+          { label: '👁 Sinyali takip et', fn: () => st.followNext() }
+        ]
       };
     };
     st.setMode('generic');

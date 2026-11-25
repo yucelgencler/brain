@@ -14,8 +14,8 @@
       n: 40,
       pyr: 0,
       size: 0.9,
-      name: 'I',
-      text: 'neredeyse yalnız lifler'
+      name: '1. kat',
+      text: 'neredeyse yalnız lifler, çok az hücre'
     },
     {
       id: 'II',
@@ -24,8 +24,8 @@
       n: 420,
       pyr: 0.75,
       size: 1.0,
-      name: 'II',
-      text: 'komşu kolonlarla konuşur'
+      name: '2. kat',
+      text: 'komşu bölgelerle haberleşir'
     },
     {
       id: 'III',
@@ -34,8 +34,8 @@
       n: 620,
       pyr: 0.8,
       size: 1.2,
-      name: 'III',
-      text: 'komşu kolonlarla, öbür yarım küreyle'
+      name: '3. kat',
+      text: 'komşu bölgelerle ve öbür yarım küreyle haberleşir'
     },
     {
       id: 'IV',
@@ -44,8 +44,8 @@
       n: 950,
       pyr: 0.05,
       size: 0.8,
-      name: 'IV',
-      text: 'talamustan gelen girdi buraya iner'
+      name: '4. kat · GİRİŞ',
+      text: 'duyulardan gelen sinyal buraya iner'
     },
     {
       id: 'V',
@@ -54,8 +54,8 @@
       n: 300,
       pyr: 0.85,
       size: 1.8,
-      name: 'V',
-      text: 'büyük piramitler: çıktı (kas, omurilik)'
+      name: '5. kat · ÇIKIŞ',
+      text: 'kaslara ve beynin derinine sinyal yollar'
     },
     {
       id: 'VI',
@@ -64,8 +64,8 @@
       n: 560,
       pyr: 0.6,
       size: 1.1,
-      name: 'VI',
-      text: 'talamusa geri bildirim'
+      name: '6. kat',
+      text: 'talamusa geri bildirim gönderir'
     }
   ];
 
@@ -75,9 +75,9 @@
     scene.fog = new THREE.FogExp2(ctx.bg, 0.0011);
     const st = {
       id: 'column',
-      name: 'Kolon',
+      name: 'Katlar',
       scene,
-      far: 540,
+      far: 640,
       near: 42,
       unit: 1e-5,
       center: V(0, -125, 0),
@@ -267,20 +267,61 @@
       });
     }
     /* etiketler */
-    LAYERS.forEach(L => {
-      const l = B3.label(ctx.layer, `<b>${L.name}</b> ${L.text}`, 'layer');
-      l.pos.set(-W - 4, (L.top + L.bot) / 2, W);
+    // her katın adı ve o katı vurgulayan saydam bant (sinyal o kattayken parlar)
+    const bands = LAYERS.map(L => {
+      const l = B3.label(ctx.layer, `<b>${L.name}</b> ${L.text}`, 'layer right');
+      l.pos.set(W + 4, (L.top + L.bot) / 2, W);
       st.labels.push(l);
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(2 * W, L.top - L.bot, 2 * W),
+        new THREE.MeshBasicMaterial({
+          color: 0xffd27a,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false
+        })
+      );
+      m.position.y = (L.top + L.bot) / 2;
+      scene.add(m);
+      return { l, m, a: 0 };
     });
     {
       const l = B3.label(
         ctx.layer,
-        'bir kolon ≈ 0,5 mm<br><small>altta talamustan gelen lifler</small>',
+        'kolon<br><small>üst üste dizilmiş, aynı şeye tepki veren nöronlar (≈ 0,5 mm)</small>',
         'side'
       );
-      l.pos.set(32, 6, 30);
+      l.pos.set(-20, 16, 30);
       st.labels.push(l);
+      const f = B3.label(ctx.layer, 'duyulardan (talamustan) gelen lifler', 'side');
+      f.pos.set(20, -300, 0);
+      st.labels.push(f);
     }
+    // “Girdi gönder” adımları: [başlangıç s, bitiş s, vurgulanan katlar, altyazı]
+    const STEPS = [
+      [0, 1.0, [], '1. Duyulardan (talamustan) gelen lifler sinyali aşağıdan yukarı taşıyor.'],
+      [0.9, 2.0, [3], '2. Sinyal 4. kata, giriş katına iniyor.'],
+      [
+        1.9,
+        3.1,
+        [1, 2],
+        '3. 4. kat sinyali yukarıya, 2. ve 3. katlara gönderiyor: burada komşu bölgelerle haber alışverişi olur.'
+      ],
+      [
+        3.0,
+        4.2,
+        [4],
+        '4. 2.–3. katlar sinyali aşağıya, 5. kata (çıkış) yolluyor: buradan kaslara ve beynin derinine gider.'
+      ],
+      [4.1, 5.3, [5], '5. 6. kat sinyalin bir kopyasını talamusa geri gönderiyor.'],
+      [
+        5.3,
+        9.5,
+        [],
+        'Sıra hep aynı: giriş (4) → haberleşme (2–3) → çıkış (5) → geri bildirim (6). Kabuğun hemen her yeri, görmede de işitmede de dokunmada da bu düzenle çalışır.'
+      ]
+    ];
+    st.caption = '';
 
     const glow = new B3.GlowPoints(600);
     scene.add(glow.mesh);
@@ -289,7 +330,7 @@
     st.stimulate = function () {
       const now = ctx.clock();
       wave = { t0: now };
-      const D = [1.0, 0.55, 0.55, 0.25, 0.85, 1.15]; // katmana göre gecikme (s, yavaşlatılmış): IV önce
+      const D = [4.6, 2.1, 2.1, 1.0, 3.2, 4.3]; // kata göre gecikme (s, çok yavaşlatılmış): önce 4. kat
       cells.forEach(c => {
         const near = Math.hypot(c.x, c.z);
         const p = c.inCol
@@ -299,15 +340,25 @@
           : c.li === 1 || c.li === 2
             ? 0.18 * Math.exp(-(near - 30) / 40)
             : 0.02;
-        if (r() < p) c.due = now + D[c.li] + r() * 0.35 + (c.inCol ? 0 : 0.35);
+        if (r() < p) c.due = now + D[c.li] + r() * 0.6 + (c.inCol ? 0 : 0.4);
       });
     };
     st.update = function (dt, info) {
       const now = ctx.clock();
       if (!info.paused && now > nextAuto) {
         st.stimulate();
-        nextAuto = now + 7;
+        nextAuto = now + 12;
       }
+      // şu anki adım: altyazı ve vurgulanan kat
+      const tw = wave ? now - wave.t0 : 1e9,
+        cur = STEPS.find(S => tw >= S[0] && tw < S[1]);
+      st.caption = cur ? cur[3] : '';
+      bands.forEach((B, i) => {
+        const on = cur && cur[2].includes(i);
+        B.a += ((on ? 1 : 0) - B.a) * Math.min(1, dt * 5);
+        B.m.material.opacity = 0.16 * B.a;
+        B.l.el.classList.toggle('on', !!on);
+      });
       // kendiliğinden ateşleme
       if (!info.paused)
         for (let k = 0; k < Math.round(40 * dt) + (r() < (40 * dt) % 1 ? 1 : 0); k++) {
@@ -317,10 +368,10 @@
       let dirtyS = false,
         dirtyC = false;
       glow.clear();
-      const fa = wave ? Math.max(0, 1 - (now - wave.t0) / 0.6) : 0;
+      const fa = wave ? Math.max(0, 1 - (now - wave.t0) / 1.2) : 0;
       st.fiberMat.opacity = 0.22 + 0.6 * fa;
-      if (wave && now - wave.t0 < 0.45) {
-        const u = (now - wave.t0) / 0.45;
+      if (wave && now - wave.t0 < 1.0) {
+        const u = (now - wave.t0) / 1.0;
         fibers.forEach(pts => {
           const k = Math.max(0, Math.min(pts.length - 1, Math.floor(u * pts.length)));
           const p = pts[k];
@@ -351,9 +402,10 @@
     };
     st.card = function () {
       return {
-        title: 'Altı katman, bir kolon',
+        title: 'Kabuğun içi: 6 kat',
         scale: '≈ 1 mm',
-        body: 'Kabuk altı katmandır. Talamustan gelen girdi IV. katmana iner, oradan II–III’e, sonra V’e (çıkış) ve VI’ya geçer: hemen her bölgede tekrarlanan aynı devre. Bu küpte gerçekte ~300.000 nöron ve milyarlarca sinaps var; burada her nokta bir nöron, ama yalnız yaklaşık %1’ini gösteriyoruz.',
+        body: '<b>Neye bakıyorsun?</b> Beyin kabuğundan kesilmiş 1 milimetrelik bir küp. Her nokta bir nöron (gerçekte bunun yaklaşık yüz katı var). Kabuk üst üste 6 kattan oluşur ve her kat ayrı bir iş yapar. Ortadaki silindir bir <b>kolon</b>: üst üste dizilmiş, aynı şeye tepki veren nöronlar. <b>⚡ Girdi gönder</b>’e bas ve sinyalin katlar arasında hangi sırayla dolaştığını izle.',
+        caption: true,
         action: { label: '⚡ Girdi gönder', fn: () => st.stimulate() }
       };
     };

@@ -166,8 +166,8 @@
   const NAMES = [
     ['Beyin', '15 cm'],
     ['Bölge', '1 cm'],
-    ['Kolon', '1 mm'],
-    ['Devre', '100 µm'],
+    ['Katlar', '1 mm'],
+    ['Nöronlar', '100 µm'],
     ['Sinaps', '1 µm']
   ];
   NAMES.forEach((n, i) => {
@@ -193,6 +193,11 @@
     };
     Zt = anim.to;
   }
+  // Ölçek şeridindeki bir durağa git (takibi bırakır)
+  function goStop(i) {
+    stopFollow();
+    zoomTo(STOPS[i]);
+  }
   function fmtLen(m) {
     if (m >= 0.01) return B3.fmt(m * 100, m >= 0.1 ? 0 : 1) + ' cm';
     if (m >= 0.001) return B3.fmt(m * 1000, 1) + ' mm';
@@ -206,11 +211,24 @@
     if (st.journey) key = 'j' + st.journey.i + ':' + (st.journey.ready ? 1 : 0);
     else if (a === brain && st.cardLobe) key = 'lobe:' + st.cardLobe;
     else
-      key = 's:' + a.id + ':' + (a.mode || '') + ':' + (a.type || '') + ':' + (st.arrive ? 1 : 0);
+      key =
+        's:' +
+        a.id +
+        ':' +
+        (a.mode || '') +
+        ':' +
+        (a.type || '') +
+        ':' +
+        (st.arrive ? 1 : 0) +
+        ':' +
+        (a._tried ? 1 : 0) +
+        ':' +
+        (a.cardRev || 0);
     if (key === cardKey && !force) return;
     cardKey = key;
     let html = '',
-      acts = [];
+      acts = [],
+      nav = [];
     if (st.journey) {
       const J = st.journey,
         S = JSTEPS[J.i];
@@ -232,17 +250,55 @@
         ghost: true
       });
     } else {
-      const c = a.card();
-      html = `<div class="ct"><span class="chip">${c.scale}</span><h2>${c.title}</h2></div><p>${c.body}</p>`;
+      const c = a.card(),
+        i = stages.indexOf(a);
+      html = `<div class="ct"><span class="chip">${c.scale}</span><h2>${c.title}</h2></div><p>${c.body}</p>${c.caption ? '<p class="cap" id="stageCap" aria-live="polite"></p>' : ''}`;
+      // önce durağın kendi denemesi parlar; bir kez denenince “Daha yakına”
+      const tried = a._tried || !(c.action || c.actions);
       if (a === micro && st.arrive)
         acts.push({ label: '🔬 Bu sinapsa yaklaş', fn: () => intoSynapse(st.arrive), psug: true });
-      if (c.action)
-        acts.push(Object.assign({ psug: !(a === micro && st.arrive) && a !== brain }, c.action));
+      else
+        (c.actions || (c.action ? [c.action] : [])).forEach((x, k) =>
+          acts.push(
+            Object.assign({}, x, {
+              psug: !tried && k === 0,
+              fn: () => {
+                x.fn();
+                a._tried = true;
+                renderCard(true);
+              }
+            })
+          )
+        );
       if (c.action2) acts.push(Object.assign({ ghost: true }, c.action2));
-      if (a === brain) acts.push({ label: '🍋 Limonun yolculuğu', fn: () => jStart(), psug: true });
+      if (a === brain) acts.push({ label: '🍋 Limonun yolculuğu', fn: () => jStart() });
+      // gezinme: geri ve daha yakına
+      const prev = stages[i - 1],
+        next = stages[i + 1];
+      if (prev)
+        nav.push({ label: `← Geri: ${NAMES[i - 1][0]}`, fn: () => goStop(i - 1), ghost: true });
+      if (next)
+        nav.push({
+          label:
+            a === brain
+              ? `🔬 İçeri gir: ${lobeName(brain.focusLobe || 'occipital').toLocaleLowerCase('tr-TR')}`
+              : `🔬 Daha yakına: ${NAMES[i + 1][0]} (${NAMES[i + 1][1]})`,
+          fn: () => (a === brain ? diveInto(brain.focusLobe || 'occipital') : goStop(i + 1)),
+          psug: tried && !(a === micro && st.arrive),
+          next: true
+        });
     }
-    card.innerHTML = html + '<div class="acts"></div>';
+    card.innerHTML =
+      html + '<div class="acts"></div>' + (nav.length ? '<div class="acts navrow"></div>' : '');
     const box = card.querySelector('.acts');
+    const navBox = card.querySelector('.navrow');
+    nav.forEach(x => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (x.psug ? ' primary psug' : x.next ? ' primary' : ' ghost');
+      b.textContent = x.label;
+      b.addEventListener('click', x.fn);
+      navBox.appendChild(b);
+    });
     acts.forEach(x => {
       const b = document.createElement('button');
       b.className = 'btn' + (x.psug ? ' primary psug' : x.ghost ? ' ghost' : '');
@@ -736,6 +792,12 @@
       renderCard(true);
     }
     renderCard();
+    const cap = document.getElementById('stageCap');
+    if (cap) {
+      const t = A.caption || '';
+      if (cap.textContent !== t) cap.textContent = t;
+      cap.hidden = !t;
+    }
   }
 
   /* ---------- kurulum ---------- */

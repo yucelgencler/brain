@@ -95,10 +95,13 @@
       return o;
     };
     ex.forEach(n => {
-      pick(ex, 3, n).forEach(t => C.push({ from: n.id, to: t.id, w: 5 + r() * 3 }));
+      pick(ex, 3, n).forEach(t => C.push({ from: n.id, to: t.id, w: (5 + r() * 3) * 1.45 }));
       pick(inh, 1).forEach(t => C.push({ from: n.id, to: t.id, w: 7 }));
     });
-    inh.forEach(n => pick(ex, 4).forEach(t => C.push({ from: n.id, to: t.id, w: -(7 + r() * 3) })));
+    // uyarı ile susturma birbirini dengeler; susturma kalkınca etkinlik taşar
+    inh.forEach(n =>
+      pick(ex, 4).forEach(t => C.push({ from: n.id, to: t.id, w: -(7 + r() * 3) * 1.9 }))
+    );
     inp.forEach(n => pick(ex, 4).forEach(t => C.push({ from: n.id, to: t.id, w: 8 })));
     return finish({ mode: 'generic', neurons: N, conns: C });
   }
@@ -229,7 +232,14 @@
     this.tp = 0;
     this.tAcc = 0;
     this.bgOn = true;
+    this.inhGain = 1; // susturan bağlantıların etkisi (0: kapalı)
+    this.drive = 1; // dışarıdan gelen girdinin çarpanı
   }
+  // Bir nöronu hemen ateşlet (deney: “bu nöron ateşlerse ne olur?”)
+  Sim.prototype.kick = function (i) {
+    this.refr[i] = 0;
+    this.v[i] = LIF.thr + 1;
+  };
   Sim.prototype.setRates = function (map) {
     this.spec.neurons.forEach((x, i) => {
       if (x.kind === 'in' && map && map[x.id] != null) this.rate[i] = map[x.id];
@@ -263,7 +273,7 @@
           if (e.t <= this.t) {
             const b = e.c.b;
             arrivals.push(e.c);
-            if (this.refr[b] <= 0) this.v[b] += e.c.w;
+            if (this.refr[b] <= 0) this.v[b] += e.c.w < 0 ? e.c.w * this.inhGain : e.c.w;
           } else keep.push(e);
         }
         this.q = keep;
@@ -272,11 +282,12 @@
         const nn = N[i];
         if (nn.kind === 'out') continue;
         if (nn.kind === 'in') {
-          if (this.rate[i] > 0 && this.t >= this.next[i]) {
+          const rate = this.rate[i] * this.drive;
+          if (rate > 0 && this.t >= this.next[i]) {
             this.fire(i, spikes);
-            const per = 1000 / this.rate[i];
+            const per = 1000 / rate;
             this.next[i] = this.t + per * (0.75 + 0.5 * this.r());
-          } else if (this.rate[i] <= 0) this.next[i] = this.t + this.r() * 50;
+          } else if (rate <= 0) this.next[i] = this.t + this.r() * 50;
           continue;
         }
         if (this.refr[i] > 0) {
@@ -288,7 +299,7 @@
           continue;
         } // gelen sinyal eşiği geçirdiyse hemen ateşle
         this.v[i] = LIF.rest + (this.v[i] - LIF.rest) * decay;
-        if (this.bgOn && nn.bg && this.r() < (nn.bg * h) / 1000) this.v[i] += 3;
+        if (this.bgOn && nn.bg && this.r() < (nn.bg * this.drive * h) / 1000) this.v[i] += 3;
         if (this.v[i] >= LIF.thr) this.fire(i, spikes);
       }
       this.tAcc += h;
