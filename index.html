@@ -3,7 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Boş Beyin</title>
+    <title>Nörondan Beyne</title>
+    <meta
+      name="description"
+      content="Beynin bilgiyi nasıl aldığını, karar verdiğini, öğrendiğini ve hatırladığını tek bir nörondan başlayarak kendi ellerinle keşfet."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,16 +16,13 @@
     />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/levels.css" />
+    <link rel="stylesheet" href="css/site.css" />
   </head>
   <body>
-    <header class="bar">
-      <a
-        class="logo"
-        href="#seviye-1"
-        title="Beyin bir girdiyi nasıl algılar, nasıl cevaba çevirir, nasıl öğrenir?"
-        >Boş Beyin</a
-      >
-      <div class="lvswitch">
+    <a class="skip" href="#main">İçeriğe geç</a>
+    <header class="bar" id="bar">
+      <a class="logo" href="#" aria-label="Nörondan Beyne, ana sayfa">Nörondan Beyne</a>
+      <div class="lvswitch" id="lvswitch" hidden>
         <button class="btn small" id="barPrev" aria-label="Önceki seviye">◀</button>
         <button
           class="btn small"
@@ -33,17 +34,123 @@
         <button class="btn small" id="barNext" aria-label="Sonraki seviye">▶</button>
       </div>
       <div class="bar-missions" id="barMissions"></div>
-      <a class="btn ghost small labbtn" href="beyin3d.html">3B beyin →</a>
-      <a class="btn ghost small labbtn" href="lab.html">Laboratuvar →</a>
+      <button class="btn small menubtn" id="menuBtn" aria-expanded="false" aria-controls="sitenav">
+        Menü
+      </button>
+      <nav class="sitenav" id="sitenav" aria-label="Ana menü">
+        <button
+          class="navlink"
+          id="chaptersBtn"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="lvnav"
+        >
+          Bölümler ▾
+        </button>
+        <a class="navlink" href="beyin3d.html">3B Beyin</a>
+        <a class="navlink" href="#sozluk" id="navGlossary">Sözlük</a>
+        <a class="navlink" href="lab.html">Serbest deney</a>
+      </nav>
     </header>
-    <nav class="lvmenu" id="lvnav" aria-label="Bütün seviyeler" hidden></nav>
-    <div class="wrap">
-      <main class="lv" id="lv" tabindex="-1"></main>
+    <nav class="lvmenu" id="lvnav" aria-label="Bütün bölümler ve seviyeler" hidden></nav>
+
+    <div id="main" tabindex="-1">
+      <!-- Ana sayfa -->
+      <div id="home" hidden>
+        <section class="hero" aria-labelledby="heroTitle">
+          <canvas id="heroGl" aria-hidden="true"></canvas>
+          <div id="heroLabels" hidden></div>
+          <div class="hero-in">
+            <p class="hero-kicker">Kurulum yok · ön bilgi gerekmez · tarayıcıda çalışır</p>
+            <h1 id="heroTitle">Nörondan Beyne</h1>
+            <p class="hero-lead">
+              Beynin bilgiyi nasıl aldığını, nasıl karar verdiğini, nasıl öğrendiğini ve nasıl
+              hatırladığını tek bir nörondan başlayarak kendi ellerinle keşfet.
+            </p>
+            <div class="hero-acts">
+              <a class="btn primary cta" id="startBtn" href="#seviye-1">Başla →</a>
+              <a class="btn cta ghost-dark" href="beyin3d.html">3B beyne yolculuk</a>
+            </div>
+            <p class="hero-resume" id="resumeNote" hidden></p>
+          </div>
+          <button class="btn small skipintro" id="skipIntro" hidden>Girişi geç</button>
+        </section>
+
+        <div class="home-body">
+          <section class="how" aria-labelledby="howTitle">
+            <h2 id="howTitle">Nasıl çalışır?</h2>
+            <ol class="how-steps">
+              <li>
+                <b>Dene</b>
+                <p>
+                  Her seviyede küçük bir beyin parçası var. Işığı açarsın, bir bağlantıyı
+                  güçlendirirsin, sonucu anında görürsün.
+                </p>
+              </li>
+              <li>
+                <b>Fark et</b>
+                <p>
+                  Görevler seni adım adım bir keşfe götürür. Parlayan düğme hep bir sonraki adımı
+                  gösterir; görev bitince açıklaması açılır.
+                </p>
+              </li>
+              <li>
+                <b>Beyinde ne oluyor?</b>
+                <p>
+                  Her seviye, denediğin şeyin gerçek beyinde nasıl olduğunu ve modelin nerede
+                  basitleştirdiğini anlatır.
+                </p>
+              </li>
+            </ol>
+          </section>
+
+          <section class="roadmap" aria-labelledby="mapTitle">
+            <div class="sec-head">
+              <h2 id="mapTitle">Yol haritası</h2>
+              <p>
+                Kolaydan zora beş bölüm. İstediğin yerden başlayabilirsin; hiçbir şey kilitli değil.
+              </p>
+            </div>
+            <div class="chapters" id="chapters"></div>
+          </section>
+
+          <section class="who" aria-labelledby="whoTitle">
+            <div>
+              <h2 id="whoTitle">Kimin için?</h2>
+              <p>
+                Beynin nasıl çalıştığını merak eden herkes için. Matematik ya da programlama bilmen
+                gerekmez. Bir bölüm yaklaşık 15–20 dakika sürer. İlerlemen ve notların yalnızca bu
+                tarayıcıda saklanır.
+              </p>
+            </div>
+            <div>
+              <h2>Açık kaynak</h2>
+              <p>
+                Nörondan Beyne herkesin kullanıp geliştirebileceği açık kaynak bir projedir (MIT
+                lisansı). Yeni bir seviye fikrin ya da bir düzeltmen varsa katkıya açığız.
+              </p>
+              <p><a href="https://github.com/yucelgencler/brain">GitHub’da projeye git →</a></p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Sözlük -->
+      <div class="wrap" id="glossary" hidden></div>
+
+      <!-- Seviye -->
+      <div class="wrap" id="levelView" hidden>
+        <main class="lv" id="lv" tabindex="-1"></main>
+      </div>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script src="vendor/three.min.js"></script>
+    <script src="js/b3d/util.js"></script>
+    <script src="js/b3d/brain.js"></script>
     <script src="js/neuron.js"></script>
     <script src="js/levels.js"></script>
+    <script src="js/glossary.js"></script>
     <script src="js/multi.js"></script>
     <script src="js/net.js"></script>
     <script src="js/predict.js"></script>
@@ -51,5 +158,6 @@
     <script src="js/hebb.js"></script>
     <script src="js/senses.js"></script>
     <script src="js/path.js"></script>
+    <script src="js/home.js"></script>
   </body>
 </html>

@@ -233,7 +233,7 @@
       });
     } else {
       const c = a.card();
-      html = `<div class="ct"><span class="chip">${c.scale}</span><h2>${c.title}</h2></div><p>${c.body}</p>${c.ai ? `<p class="ai"><b>Yapay zekâda:</b> ${c.ai}</p>` : ''}`;
+      html = `<div class="ct"><span class="chip">${c.scale}</span><h2>${c.title}</h2></div><p>${c.body}</p>`;
       if (a === micro && st.arrive)
         acts.push({ label: '🔬 Bu sinapsa yaklaş', fn: () => intoSynapse(st.arrive), psug: true });
       if (c.action)

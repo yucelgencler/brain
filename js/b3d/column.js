@@ -354,7 +354,6 @@
         title: 'Altı katman, bir kolon',
         scale: '≈ 1 mm',
         body: 'Kabuk altı katmandır. Talamustan gelen girdi IV. katmana iner, oradan II–III’e, sonra V’e (çıkış) ve VI’ya geçer: hemen her bölgede tekrarlanan aynı devre. Bu küpte gerçekte ~300.000 nöron ve milyarlarca sinaps var; burada her nokta bir nöron, ama yalnız yaklaşık %1’ini gösteriyoruz.',
-        ai: 'Katmanlı yapay ağlarda da girdi önce bir katmana gelir, sonra sırayla sonrakilere aktarılır.',
         action: { label: '⚡ Girdi gönder', fn: () => st.stimulate() }
       };
     };

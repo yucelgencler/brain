@@ -566,7 +566,6 @@
         title: t,
         scale: '≈ 100 µm',
         body: 'Her nöron dendritleriyle (kısa dallar) binlerce sinyal toplar. Toplam eşiği (−55 mV) geçince aksonu boyunca bir sinyal ateşler: ya hep ya hiç. <b style="color:var(--b3-exc)">Mavi</b> bağlantılar uyarır, <b style="color:var(--b3-inh)">pembe</b> olanlar susturur. Bir nörona tıkla, zar gerilimini izle.',
-        ai: 'Yapay nöron da aynısını yapar: girdileri ağırlıklarıyla toplar, eşikten geçirir. Fark: gerçek nöron zamana yayılmış darbelerle konuşur.',
         action: { label: '👁 Sinyali takip et', fn: () => st.followNext() }
       };
     };

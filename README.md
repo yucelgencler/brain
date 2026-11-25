@@ -1,6 +1,6 @@
-# Boş Beyin
+# Nörondan Beyne
 
-Beynin bir girdiyi nasıl algıladığını, nasıl cevaba çevirdiğini ve nasıl öğrendiğini; ardından yapay zekânın buna nerede benzeyip nerede ayrıldığını **kendi deneylerinle** keşfettiğin bir öğrenme yolu. Tek bir ışık hücresi ve tek bir nöronla başlar, her seviyede tek bir yeni fikir ekler.
+Beynin bilgiyi nasıl aldığını, nasıl karar verdiğini, nasıl öğrendiğini ve nasıl hatırladığını tek bir nörondan başlayarak **kendi deneylerinle** keşfettiğin bir öğrenme yolu. Tek bir ışık hücresi ve tek bir nöronla başlar, her seviyede tek bir yeni fikir ekler.
 
 Kurulum veya derleme gerekmez: `index.html` dosyasını tarayıcıda açman yeterli. İlerlemen ve notların aynı tarayıcıda saklanır.
 
@@ -19,8 +19,8 @@ Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görev
 | 7 | Anlama | Muz ve armut: ortak nöronlar | birden çok nöron ve çıktı, ortak özellikler, desen | hazır |
 | 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, yumuşak eşik, geri yayılım (suç paylaştırma), simetri | hazır |
 | 9 | Anlama | Yatay mı dikey mi? | yavru Pamuk’un gözü: algı alanı, etiketsiz (rekabetçi) öğrenme, az etiketle ad, kritik dönem (Blakemore) | hazır |
-| 10 | Anlama | Beş duyu, tek kavram | eğitilmiş ağ: kart, yazı, tat, koku, ses → duyu alanları → kavram nöronları → ad; duyuları birleştirmek, kavram hücreleri | hazır |
-| 11 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | laboratuvarda |
+| 11 | Anlama | Beş duyu, tek kavram | eğitilmiş ağ: kart, yazı, tat, koku, ses → duyu alanları → kavram nöronları → ad; duyuları birleştirmek, kavram hücreleri | hazır |
+| 10 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | serbest deneyde |
 | 12 | Hafıza | Birlikte yanan, birlikte bağlanır | Ela, limon ve çilek: Hebb kuralı, örüntü tamamlama, yanlış ipucunu düzeltme, anıların karışması | hazır |
 | 13 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
 | 14 | Hafıza | Ezber ve genelleme | eğitim ve doğrulama (sınav) verisi | yakında |

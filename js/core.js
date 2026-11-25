@@ -576,7 +576,7 @@ const wordTask = {
   short: 'Kelimeler (duyarak)',
   region: 'dil bölgesi',
   about:
-    'Yeni bir kelime öğrendiğinde beyinde ona özel bir bağlantı ağı kurulur; anlamı, başka kavramlarla ilişkisinden doğar. Burada her kelime bir duyu nöronu, her anlam bir cevap nöronu. Kavram haritasında aynı türdeki kelimelerin eğitim ilerledikçe birbirine yaklaştığını görebilirsin: dil modellerindeki “anlam uzayı” fikrinin küçük bir örneği. Hiç duymadığı bir kelimeyi soramazsın, çünkü onun için henüz bir nöron yok.',
+    'Yeni bir kelime öğrendiğinde beyinde ona özel bir bağlantı ağı kurulur; anlamı, başka kavramlarla ilişkisinden doğar. Burada her kelime bir duyu nöronu, her anlam bir cevap nöronu. Kavram haritasında aynı türdeki kelimelerin eğitim ilerledikçe birbirine yaklaştığını görebilirsin: beyinde de anlamca yakın kavramlar birbirine benzeyen nöron gruplarını harekete geçirir. Hiç duymadığı bir kelimeyi soramazsın, çünkü onun için henüz bir nöron yok.',
   defaults() {
     return { hidden: 8, layers: 1, lr: 0.03, text: DEFAULT_WORDS };
   },

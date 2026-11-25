@@ -142,7 +142,7 @@ function buildLevel() {
     rec = R(),
     part = PARTS.find(p => p.id === lv.part),
     multi = lv.kind === 'multi';
-  document.title = `Seviye ${lv.id}: ${lv.title} · Boş Beyin`;
+  document.title = `Seviye ${lv.id}: ${lv.title} · Nörondan Beyne`;
   flashPrev.clear();
   lastCardKey = '';
   lastStepKey = '';
@@ -158,7 +158,7 @@ function buildLevel() {
   rec.routeSeen = true;
   el.innerHTML = `
     <div class="lv-head">
-      <div><p class="kicker">Seviye ${lv.id} · ${esc(part.title)}</p><h2>${esc(lv.title)}</h2></div>
+      <div><p class="kicker crumb"><a href="#">Ana sayfa</a> › Bölüm ${part.no}: ${esc(part.title)} › Seviye ${lv.id}</p><h2>${esc(lv.title)}</h2></div>
       <p class="lv-q">${esc(lv.question)}</p>
     </div>
     <details class="route"${routeOpen ? ' open' : ''}><summary>Amaç ve bu sayfada ne yapacaksın</summary>
@@ -167,11 +167,10 @@ function buildLevel() {
     ${multi ? multiGridHTML(lv) : lv.kind === 'net' ? netGridHTML(lv) : lv.kind === 'predict' ? predictGridHTML(lv) : vw ? vw.html(lv) : benchHTML(lv)}
     <section class="reading" aria-label="Okuma">
       ${lv.daily ? `<section class="daily" aria-label="Bunu sen de yaşadın"><h3>${esc(lv.dailyTitle || 'Bunu sen de yaşadın: beyin her an tahmin ediyor')}</h3><div class="daily-row">${lv.daily.map(d => `<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>` : ''}
-      <section class="cards4" aria-label="Beyinde ve modelde">
-        <article class="icard brain"><h3>İnsan beyninde</h3><p>${esc(lv.cards.brain)}</p></article>
+      <section class="cards3" aria-label="Beyinde ve modelde">
+        <article class="icard brain"><h3>Gerçek beyinde</h3><p>${esc(lv.cards.brain)}</p></article>
         <article class="icard model"><h3>Bu modelde</h3><p>${esc(lv.cards.model)}</p></article>
-        <article class="icard limit"><h3>Benzetmenin sınırı</h3><p>${esc(lv.cards.limit)}</p></article>
-        <article class="icard ai"><h3>Yapay zekâda</h3><p>${esc(lv.cards.ai)}</p></article>
+        <article class="icard limit"><h3>Modelin basitleştirdiği</h3><p>${esc(lv.cards.limit)}</p></article>
       </section>
       <details class="deeper" id="deeper"><summary>Daha derine: hesabın kendisi</summary><div class="deeper-body">${lv.deeper}</div></details>
       <div class="read-duo">
@@ -298,7 +297,7 @@ function answerHTML(lv, st) {
 function nextHTML() {
   const n = roadNeighbors()[1];
   if (!n) return '';
-  return `<button class="btn primary" id="nextLv">Sonraki: ${n.id}. ${esc(n.title)}${n.level ? '' : n.lab ? ' (laboratuvar)' : ' (yakında)'} →</button>`;
+  return `<button class="btn primary" id="nextLv">Sonraki: ${n.id}. ${esc(n.title)}${n.level ? '' : n.lab ? ' (serbest deney)' : ' (yakında)'} →</button>`;
 }
 function wirePrevNext() {
   const [p, n] = roadNeighbors();
@@ -307,25 +306,25 @@ function wirePrevNext() {
   const nx = $('#nextLv');
   if (nx && n) nx.onclick = () => go(n.key);
 }
-// Henüz hazır olmayan ya da laboratuvarda duran seviye: tanıtım sayfası
+// Henüz hazır olmayan ya da serbest deneyde (lab.html) duran seviye: tanıtım sayfası
 function buildPlaceholder() {
   const r = curRoad(),
     part = PARTS.find(p => p.id === r.part);
-  document.title = `Seviye ${r.id}: ${r.title} · Boş Beyin`;
+  document.title = `Seviye ${r.id}: ${r.title} · Nörondan Beyne`;
   const el = $('#lv');
   el.className = 'lv';
   $('#barMissions').innerHTML = '';
   el.innerHTML = `
     <div class="lv-head">
-      <div><p class="kicker">Seviye ${r.id} · ${esc(part.title)}</p><h2>${esc(r.title)}</h2></div>
+      <div><p class="kicker crumb"><a href="#">Ana sayfa</a> › Bölüm ${part.no}: ${esc(part.title)} › Seviye ${r.id}</p><h2>${esc(r.title)}</h2></div>
     </div>
     <section class="panel soon-page">
-      <p class="soon-badge ${r.lab ? 'lab' : ''}">${r.lab ? 'Şimdilik laboratuvarda' : 'Yakında'}</p>
+      <p class="soon-badge ${r.lab ? 'lab' : ''}">${r.lab ? 'Şimdilik serbest deneyde' : 'Yakında'}</p>
       <p class="soon-about">${esc(r.about || 'Bu seviyenin içeriği hazırlanıyor.')}</p>
       ${
         r.lab
-          ? `<p><a class="btn primary" href="lab.html?task=${r.lab}">Laboratuvarda aç →</a></p>
-        <p class="hint">Laboratuvar bu konunun serbest deney hâli: daha büyük bir ağ, daha çok ayar. Öğrenme yolundaki adım adım düzene sonra kavuşacak.</p>`
+          ? `<p><a class="btn primary" href="lab.html?task=${r.lab}">Serbest deneyde aç →</a></p>
+        <p class="hint">Serbest deney bu konunun ayarları açık hâli: daha büyük bir ağ, daha çok ayar. Adım adım rehberli hâli hazırlanıyor.</p>`
           : `<p class="hint">Bu seviye henüz yapılmadı. İstediğin seviyeye geçebilirsin; hiçbir seviye kilitli değil.</p>`
       }
     </section>
@@ -1283,32 +1282,51 @@ function renderNav() {
   $('#barPrev').disabled = !pr;
   $('#barNext').disabled = !nx;
   const el = $('#lvnav');
-  el.innerHTML = PARTS.map(p => {
+  const groups = PARTS.map(p => {
     const items = ROADMAP.filter(r => r.part === p.id).map(r => {
       if (r.level) {
         const l = r.level,
           rec = P.rec[l.key],
           n = l.missions.length,
           d = rec.done.length,
-          cur = l.key === P.level;
+          cur = l.key === P.level && document.body.dataset.view === 'level';
         return `<li><a href="#seviye-${r.id}" class="${cur ? 'cur' : ''}" ${cur ? 'aria-current="page"' : ''}><span class="ln">${r.id}</span><span class="lt">${esc(l.title)}</span><span class="lp ${d === n ? 'full' : ''}">${d === n ? '✓' : d + '/' + n}</span></a></li>`;
       }
-      const cur = r.key === P.level;
+      const cur = r.key === P.level && document.body.dataset.view === 'level';
       return `<li><a href="#seviye-${r.id}" class="${r.lab ? 'lab' : 'soon-i'} ${cur ? 'cur' : ''}"${r.about ? ` title="${esc(r.about)}"` : ''}><span class="ln">${r.id}</span><span class="lt">${esc(r.title)}</span><span class="lp">${r.note}</span></a></li>`;
     });
-    return `<div class="pgroup"><h3>${esc(p.title)}<small>${esc(p.sub)}</small></h3><ol>${items.join('')}</ol></div>`;
-  }).join('');
+    return `<div class="pgroup"><h3><small>Bölüm ${p.no}</small>${esc(p.title)}</h3><ol>${items.join('')}</ol></div>`;
+  });
+  el.innerHTML =
+    `<div class="pgroup extra"><h3><small>Başlangıç</small>Beynin içine bir bak</h3><ol><li><a href="beyin3d.html"><span class="ln">3B</span><span class="lt">Beyinden nörona kısa tur</span><span class="lp">5 dk</span></a></li></ol></div>` +
+    groups.join('') +
+    `<div class="pgroup extra"><h3><small>Final</small>Hepsi bir arada</h3><ol><li><a href="beyin3d.html?yolculuk"><span class="ln">3B</span><span class="lt">Limonun yolculuğu</span><span class="lp">8 adım</span></a></li></ol></div>`;
 }
 function menuOpen(on) {
-  const m = $('#lvnav'),
-    b = $('#barLevel');
+  const m = $('#lvnav');
+  if (on) renderNav();
   m.hidden = !on;
-  b.setAttribute('aria-expanded', on ? 'true' : 'false');
+  for (const id of ['#barLevel', '#chaptersBtn'])
+    $(id).setAttribute('aria-expanded', on ? 'true' : 'false');
 }
-$('#barLevel').onclick = e => {
+for (const id of ['#barLevel', '#chaptersBtn'])
+  $(id).onclick = e => {
+    e.stopPropagation();
+    menuOpen($('#lvnav').hidden);
+  };
+// Dar ekranda site menüsü tek bir düğmenin arkasında
+$('#menuBtn').onclick = e => {
   e.stopPropagation();
-  menuOpen($('#lvnav').hidden);
+  const open = !$('#sitenav').classList.contains('open');
+  $('#sitenav').classList.toggle('open', open);
+  $('#menuBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
 };
+$('#sitenav').addEventListener('click', e => {
+  if (e.target.closest('a')) {
+    $('#sitenav').classList.remove('open');
+    $('#menuBtn').setAttribute('aria-expanded', 'false');
+  }
+});
 $('#barPrev').onclick = () => {
   const p = roadNeighbors()[0];
   if (p) go(p.key);
@@ -1321,7 +1339,10 @@ document.addEventListener('click', e => {
   if (!$('#lvnav').hidden && !e.target.closest('#lvnav')) menuOpen(false);
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') menuOpen(false);
+  if (e.key === 'Escape') {
+    menuOpen(false);
+    $('#sitenav').classList.remove('open');
+  }
 });
 $('#lvnav').addEventListener('click', e => {
   if (e.target.closest('a')) menuOpen(false);
@@ -1420,10 +1441,50 @@ function toast(m) {
   toastT = setTimeout(() => el.classList.remove('on'), 3800);
 }
 
-window.addEventListener('hashchange', () => {
-  const k = levelFromHash();
-  if (k && k !== P.level) go(k);
-});
+/* ---------- Sayfalar: ana sayfa, sözlük, seviye ---------- */
+function routeOf(h) {
+  if (/^#seviye-\d+$/.test(h)) return 'level';
+  if (h === '#sozluk') return 'glossary';
+  return 'home';
+}
+function leaveLevel() {
+  stopAuto();
+  hebbResetView();
+  multiStop();
+  netStop();
+  predictStop();
+  busy = false;
+}
+function showView(v) {
+  document.body.dataset.view = v;
+  $('#home').hidden = v !== 'home';
+  $('#glossary').hidden = v !== 'glossary';
+  $('#levelView').hidden = v !== 'level';
+  $('#lvswitch').hidden = v !== 'level';
+  $('#barMissions').hidden = v !== 'level';
+  $('#navGlossary').toggleAttribute('aria-current', v === 'glossary');
+  menuOpen(false);
+  window.dispatchEvent(new CustomEvent('nb:view', { detail: v }));
+}
+function applyRoute() {
+  const v = routeOf(location.hash);
+  if (v === 'level') {
+    showView('level');
+    go(levelFromHash() || P.level);
+    return;
+  }
+  leaveLevel();
+  showView(v);
+  if (v === 'glossary') {
+    document.title = 'Sözlük · Nörondan Beyne';
+    if (typeof buildGlossary === 'function') buildGlossary();
+  } else {
+    document.title = 'Nörondan Beyne';
+    if (typeof buildHome === 'function') buildHome();
+  }
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+window.addEventListener('hashchange', applyRoute);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     try {
@@ -1433,6 +1494,5 @@ document.addEventListener('visibilitychange', () => {
 });
 
 load();
-history.replaceState(null, '', '#seviye-' + curRoad().id);
-if (L()) buildLevel();
-else buildPlaceholder();
+// Bütün betikler yüklenince (ana sayfa ve sözlük home.js'te) ilk sayfayı aç
+document.addEventListener('DOMContentLoaded', applyRoute);

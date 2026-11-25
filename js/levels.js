@@ -11,7 +11,7 @@
      goal: seviyenin amacı, todo: “bu sayfada ne yapacaksın” adımları
      targets: (öğrenme seviyelerinde) seçilebilen istenen davranışlar
      missions: [{id, text, target?, check(st), aha}]  -> aha, görev tamamlanınca görünen açıklama
-     cards: {brain, model, limit, ai}, deeper: "Daha derine" (HTML)
+     cards: {brain, model, limit}, deeper: "Daha derine" (HTML)
 
    Durum (st): single -> {b, w:[w], theta}; pair -> {x:[a,b], w:[w1,w2], theta, targetKey, target, flags}
 ------------------------------------------------------------------- */
@@ -702,11 +702,44 @@ function sensesClear(st) {
 }
 
 const PARTS = [
-  { id: 'A', title: 'Algı', sub: 'tek bir nöron' },
-  { id: 'B', title: 'Öğrenme', sub: 'hatadan düzeltme' },
-  { id: 'C', title: 'Anlama', sub: 'birden çok nöron' },
-  { id: 'D', title: 'Hafıza', sub: 'bilgi nerede saklanır' },
-  { id: 'E', title: 'Anlam', sub: 'kelimeler ve okuma' }
+  {
+    id: 'A',
+    no: 1,
+    title: 'Bir nöron nasıl karar verir?',
+    short: 'Karar',
+    about:
+      'Tek bir nöron ışığı fark eder, sinyalleri toplar, susturulur. Beynin en küçük karar birimi.'
+  },
+  {
+    id: 'B',
+    no: 2,
+    title: 'Nöron nasıl öğrenir?',
+    short: 'Öğrenme',
+    about:
+      'Bağlantılar hatadan ve sürprizden güçlenip zayıflar. Tek bir nöronun nerede tıkandığını da görürsün.'
+  },
+  {
+    id: 'C',
+    no: 3,
+    title: 'Nöronlar birlikte nasıl anlar?',
+    short: 'Anlama',
+    about: 'Birçok nöron birlikte bir meyveyi, bir çizgiyi, bir rakamı ve bir kavramı tanır.'
+  },
+  {
+    id: 'D',
+    no: 4,
+    title: 'Beyin nasıl hatırlar ve pekiştirir?',
+    short: 'Hafıza',
+    about:
+      'Birlikte ateşlenen nöronlar bağlanır; anı bağlantılara dağılır, tekrar ve uyku onu sağlamlaştırır.'
+  },
+  {
+    id: 'E',
+    no: 5,
+    title: 'Kelimeler ve anlam',
+    short: 'Anlam',
+    about: 'İleri seviye: kelimelerin anlamı nasıl oluşur, okurken beyin harfleri nasıl tanır?'
+  }
 ];
 
 const sameW = (a, b) =>
@@ -762,8 +795,7 @@ const LEVELS = [
       model:
         'Kare ışık hücresi, çizgi bağlantı (sinaps), daire nöron. Nöron “parlaklık × bağlantı” hesabını yapar; sonuç eşiği geçerse ateşler. Kaydırıcılarla değiştirdiğin iki sayı, bağlantı ve eşik, bu hücrenin bütün “kişiliği”.',
       limit:
-        'Gerçek nöron tek bir darbe değil, saniyede onlarca darbe gönderir; ışık güçlendikçe darbeler sıklaşır. Yani “ne kadar” bilgisini darbelerin sıklığı taşır. Ayrıca ışık hücreleri kendileri darbe üretmez, sinyali kademeli iletir; arada birkaç hücre katmanı daha vardır. Model bu ayrıntıları bilerek atlıyor.',
-      ai: 'Yapay sinir ağlarının temel parçası tam olarak bu hesap: girdiyi ağırlıkla çarp, eşikle karşılaştır. Fikir 1943’te McCulloch ve Pitts’e dayanır. Bugünkü dev modellerde bu hesaptan milyarlarca var.'
+        'Gerçek nöron tek bir darbe değil, saniyede onlarca darbe gönderir; ışık güçlendikçe darbeler sıklaşır. Yani “ne kadar” bilgisini darbelerin sıklığı taşır. Ayrıca ışık hücreleri kendileri darbe üretmez, sinyali kademeli iletir; arada birkaç hücre katmanı daha vardır. Model bu ayrıntıları bilerek atlıyor.'
     },
     deeper: `<p>Nöronun hesabı tek satır: <b>toplam = parlaklık × bağlantı</b>. Ateşleme koşulu: <b>toplam ≥ eşik</b>.</p>
     <p>Buradan sınır parlaklık çıkar: <b>parlaklık ≥ eşik ÷ bağlantı</b>. Bağlantıyı iki katına çıkarmak, eşiği yarıya indirmekle aynı etkiyi yapar.</p>
@@ -818,8 +850,7 @@ const LEVELS = [
       model:
         'İki ışık hücresi (A ve B) tek bir nörona bağlı. Nöron iki sinyali toplar ve eşikle karşılaştırır. Tablodaki dört satır, iki ışığın bütün olası durumları. Karar haritası aynı şeyin resmi: boyalı bölge, nöronun ateşlediği durumlar.',
       limit:
-        'Gerçek dendritler basit bir toplama makinesi değil: sinyalin dalın neresine geldiği, ne zaman geldiği ve dalın kendi elektriksel özellikleri sonucu değiştirir. Bu modelde bütün sinyaller anında ve eşit şekilde toplanıyor.',
-      ai: 'Bilgisayarların temelindeki mantık kapıları (VE, VEYA) böyle eşik birimleriyle kurulabilir. McCulloch ve Pitts 1943’te bunu gösterdi: yeterince eşik nöronuyla her mantık hesabı yapılabilir.'
+        'Gerçek dendritler basit bir toplama makinesi değil: sinyalin dalın neresine geldiği, ne zaman geldiği ve dalın kendi elektriksel özellikleri sonucu değiştirir. Bu modelde bütün sinyaller anında ve eşit şekilde toplanıyor.'
     },
     deeper: `<p>İki girdiyle hesap: <b>toplam = A × bağlantı<sub>A</sub> + B × bağlantı<sub>B</sub></b>.</p>
     <p>Karar haritasında “toplam = eşik” olan noktalar <b>düz bir çizgi</b> oluşturur. Çizginin bir yanında nöron ateşler, öbür yanında susar. Bağlantılar çizginin eğimini, eşik ise konumunu belirler.</p>
@@ -872,12 +903,10 @@ const LEVELS = [
       model:
         'Bağlantı artık negatif olabilir: pembe çizgi, yanan ışığın toplamı düşürmesi demek. Eşik sıfırın altına inince nöron hiçbir ışık yokken de ateşler. İkisi birlikte “yokluğu” fark eden bir hücre kurar.',
       limit:
-        'Beyinde bir nöron genellikle ya uyarıcıdır ya ketleyici; gönderdiği bütün sinyaller aynı türdendir (Dale ilkesi; istisnaları var). Buradaki yapay nöronun bir bağlantısı uyarıcı, öbürü susturucu olabiliyor. Beyinde aynı etki için araya ayrı bir ketleyici nöron girer.',
-      ai: 'Yapay ağlarda negatif ağırlık sıradan bir şeydir; bir ağırlığın işareti öğrenme sırasında değişebilir. Eşiğin karşılığına yapay zekâ kaynaklarında “yanlılık” (bias) denir.'
+        'Beyinde bir nöron genellikle ya uyarıcıdır ya ketleyici; gönderdiği bütün sinyaller aynı türdendir (Dale ilkesi; istisnaları var). Buradaki yapay nöronun bir bağlantısı uyarıcı, öbürü susturucu olabiliyor. Beyinde aynı etki için araya ayrı bir ketleyici nöron girer.'
     },
     deeper: `<p>Negatif bağlantı, karar çizgisinin eğimini ters çevirir: o ışık yandıkça nöron ateşlemekten uzaklaşır.</p>
-    <p><b>Karanlık dedektörü</b> için üç koşul gerekir: hiçbir ışık yokken ateşlesin (<b>0 ≥ eşik</b>, yani eşik sıfır ya da negatif), A tek başına ve B tek başına toplamı eşiğin altına çeksin (iki bağlantı da eşikten küçük).</p>
-    <p>Yapay zekâ kitaplarında eşik genelde öbür tarafa geçirilir: <b>yanlılık = −eşik</b>, koşul <b>toplam + yanlılık ≥ 0</b> olur. Aynı şeyin başka yazılışı.</p>`
+    <p><b>Karanlık dedektörü</b> için üç koşul gerekir: hiçbir ışık yokken ateşlesin (<b>0 ≥ eşik</b>, yani eşik sıfır ya da negatif), A tek başına ve B tek başına toplamı eşiğin altına çeksin (iki bağlantı da eşikten küçük).</p>`
   },
   /* ------------------------------ 4 ------------------------------ */
   {
@@ -939,8 +968,7 @@ const LEVELS = [
       model:
         'Her kartta üç şey olur: nöron tahmin eder; tahmin doğru cevapla karşılaştırılır; fark varsa o kartta var olan özelliklerin bağlantıları ve eşik küçük bir adım düzeltilir. Buna algılayıcı (perceptron) kuralı denir. Çözümü olan bir tablo için bir noktada durmayı garanti eder. Bu seviyede girdiler artık ham ışık değil, “sarı mı?”, “yumuşak mı?” gibi özellikler: beyinde de bir nöronun girdileri çoğu zaman, bu özellikleri daha önceki aşamalarda zaten tespit etmiş başka nöronlardan gelir.',
       limit:
-        'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli. Gerçek bir kararın da iki değil yüzlerce, binlerce girdisi olur: muzun kokusu, lekeleri, sapı… Burada bilerek tek nöron ve tek çıktı var, kuralı yalın görmek için. Beyinde aynı soruyu birçok nöron birlikte cevaplar, birden çok olası cevap aynı anda yarışır ve karar çoğu zaman “ya hep ya hiç” değil, kanıt biriktikçe güçlenen dereceli bir süreçtir. Birden çok nöron ve çıktı 7. seviyede (Muz ve armut) geliyor.',
-      ai: 'Tablodaki dört kart, yapay zekâda “etiketli eğitim verisi” diye anılır: her örnek bir girdi ve doğru cevap. Kural 1958’de Frank Rosenblatt’ın algılayıcısıyla ortaya çıktı. Ayrıca eğitimde hiç gösterilmeyen “doğrulama” ya da “sınav” verisiyle modelin ezberleyip ezberlemediği kontrol edilir (“Ezber ve genelleme” seviyesi). Bugünkü bütün yapay sinir ağları aynı fikrin genelleştirilmiş hâliyle eğitilir: tahmin et, hatayı ölç, ağırlıkları hatayı azaltacak yönde biraz değiştir, milyonlarca kez tekrarla.'
+        'Burada her örnekte bir “öğretmen” doğru cevabı söylüyor. Beyin çoğu zaman böyle hazır etiketler almaz; sık sık kendi öğretmeni olur: bir sonraki anı tahmin eder, sonra dünya ne olduğunu gösterir ve aradaki fark geri bildirim olur. Beynin sinapsları tam olarak bu kuralla değiştirdiği de gösterilmiş değil; bu, “hatadan düzeltme” fikrinin en sade hâli. Gerçek bir kararın da iki değil yüzlerce, binlerce girdisi olur: muzun kokusu, lekeleri, sapı… Burada bilerek tek nöron ve tek çıktı var, kuralı yalın görmek için. Beyinde aynı soruyu birçok nöron birlikte cevaplar, birden çok olası cevap aynı anda yarışır ve karar çoğu zaman “ya hep ya hiç” değil, kanıt biriktikçe güçlenen dereceli bir süreçtir. Birden çok nöron ve çıktı 7. seviyede (Muz ve armut) geliyor.'
     },
     deeper: `<p><b>hata = istenen − çıktı</b>. Üç değer alabilir: <b>+1</b> (sustu ama ateşlemeliydi), <b>−1</b> (boşuna ateşledi), <b>0</b> (doğru).</p>
     <p>Düzeltme: <b>bağlantı += hız × hata × ışık</b> ve <b>eşik −= hız × hata</b>. Işık sönükse (0) çarpım sıfırdır, o bağlantı değişmez.</p>
@@ -1040,8 +1068,7 @@ const LEVELS = [
       model:
         'Pamuk’un beyninde iki ses nöronu (poşet sesi, “pisi pisi”) bir tahmin nöronuna bağlı. Tahmin nöronu ya hep ya hiç çalışmıyor: ne kadar beklediğini 0 ile 1 arasında söylüyor (beklenti = o an duyulan seslerin bağlarının toplamı). Sürpriz = olan − beklenti. Bağ += 0,3 × sürpriz (sadece o an duyulan sesin bağı). Bu, 4. seviyedeki kuralın neredeyse aynısı; tek fark, doğru cevabı öğretmenin değil, bir an sonranın vermesi.',
       limit:
-        'Bu model (Rescorla ve Wagner, 1972) her anı tek bir an sayıyor; gerçek bir kedi mamanın ne zaman geleceğini de tahmin eder. Söndürme burada bağı siliyor; hayvanlarda ve insanda eski öğrenme silinmez, bastırılır ve geri dönebilir. Gerçek kediyi koşturan sadece tek bir tahmin nöronu değil, binlercesi; dopamin de yalnızca bir sürpriz sinyali değil, harekette ve isteklendirmede de rol oynar.',
-      ai: 'Öğretmensiz, “bir sonrakini tahmin et” diye öğrenmeye kendi kendine denetimli öğrenme denir: dil modelleri metindeki bir sonraki kelimeyi tahmin ederek eğitilir, doğru cevap metnin kendisindedir. Ödül tahmin hatası ise pekiştirmeli öğrenmede (zamansal fark öğrenmesi) birebir kullanılır; Schultz’un dopamin bulgusu bu algoritmayla örtüştüğü için ünlü oldu.'
+        'Bu model (Rescorla ve Wagner, 1972) her anı tek bir an sayıyor; gerçek bir kedi mamanın ne zaman geleceğini de tahmin eder. Söndürme burada bağı siliyor; hayvanlarda ve insanda eski öğrenme silinmez, bastırılır ve geri dönebilir. Gerçek kediyi koşturan sadece tek bir tahmin nöronu değil, binlercesi; dopamin de yalnızca bir sürpriz sinyali değil, harekette ve isteklendirmede de rol oynar.'
     },
     deeper: `<p><b>Beklenti:</b> o an duyulan seslerin bağlarının toplamı. Sadece poşet hışırdadıysa beklenti = poşet bağı; poşet ve “pisi pisi” birlikteyse ikisinin toplamı. Pamuk beklentisi kadar kabına doğru koşar.</p>
     <p><b>Sürpriz:</b> olan − beklenti. Mama verildiyse olan 1, verilmediyse 0.</p>
@@ -1095,8 +1122,7 @@ const LEVELS = [
       model:
         'Tek nöron karar haritasını tek bir düz çizgiyle ikiye bölebilir. “Tam olarak biri” tablosunda ateşlemesi gereken köşeler çaprazda; onları öbür ikisinden ayıran düz çizgi yok. Öğrenme kuralı da bu yüzden hiç durmuyor.',
       limit:
-        '2020’de insan korteksinden alınan bazı nöronların dendritlerinin tek başına bu “ya o ya bu” hesabına benzer bir şey yapabildiği gösterildi (Gidon ve arkadaşları). Yani gerçek bir nöron buradaki modelden daha güçlü olabilir: tek bir dendrit dalı bile küçük bir hesap birimi gibi davranabiliyor.',
-      ai: '1969’da Minsky ve Papert “Perceptrons” kitabında tek katmanlı algılayıcıların bu tür sınırlarını matematiksel olarak gösterdi. Bu, yapay sinir ağlarına ilginin yıllarca azalmasına katkıda bulundu. Çıkış yolu, nöronları katman katman bağlamak ve aradaki gizli nöronları da eğitebilmekti (geri yayılım, 1986’da yaygınlaştı).'
+        '2020’de insan korteksinden alınan bazı nöronların dendritlerinin tek başına bu “ya o ya bu” hesabına benzer bir şey yapabildiği gösterildi (Gidon ve arkadaşları). Yani gerçek bir nöron buradaki modelden daha güçlü olabilir: tek bir dendrit dalı bile küçük bir hesap birimi gibi davranabiliyor.'
     },
     deeper: `<p>Tek bir nöronun bu tabloyu yapabilmesi için dört koşulun hepsi aynı anda sağlanmalı:</p>
     <ul>
@@ -1187,8 +1213,7 @@ const LEVELS = [
       model:
         'Altı özellik nöronu iki kavram nöronuna bağlı. Özellik nöronları ortak: sarı nöronu hem muz hem armut nöronuna sinyal yollar. Bağlantılar ayrı: sarıdan muza giden bağlantı ile armuda giden farklı sayılar olabilir. Her kavram nöronu 4. seviyedeki nöronun aynısı ve aynı kuralla, aynı anda öğrenir.',
       limit:
-        'Burada özellik nöronları hazır veriliyor ve her kavram tek bir nöron. Beyinde özellik dedektörlerinin kendisi de deneyimle şekillenir ve bir kavram binlerce nörona yayılır. Sonraki seviyede aradaki nöronların kendi özelliklerini kendilerinin öğrendiğini göreceğiz.',
-      ai: 'Görüntü tanıyan yapay ağlar da böyle çalışır: ilk katmanlar bütün nesneler için ortak kenar ve renk dedektörleridir; son katmanda her sınıfın kendi çıktı nöronu vardır ve hepsi aynı özellikleri farklı ağırlıklarla okur. Bir nesnenin katmanlardaki etkinlik deseni onun temsilidir; benzer nesnelerin desenleri birbirine yakındır.'
+        'Burada özellik nöronları hazır veriliyor ve her kavram tek bir nöron. Beyinde özellik dedektörlerinin kendisi de deneyimle şekillenir ve bir kavram binlerce nörona yayılır. Sonraki seviyede aradaki nöronların kendi özelliklerini kendilerinin öğrendiğini göreceğiz.'
     },
     deeper: `<p>Her kavram nöronu bağımsız bir algılayıcıdır: bir kartta muz nöronunun hatası sadece muz nöronunun bağlantılarını değiştirir, armut nöronununkilere dokunmaz. Bu yüzden 4. seviyedeki unutma burada olmaz: armudu öğrenmek muzun üzerine yazmaz.</p>
     <p><b>Ne kadar ortak?</b> İki desenin ortaklığını ölçmenin basit bir yolu: ikisinde de ateşleyen nöron sayısı ÷ en az birinde ateşleyen nöron sayısı. Olgun muz ile olgun armut: 2 ÷ 4 = %50.</p>
@@ -1251,7 +1276,7 @@ const LEVELS = [
         id: 'learn',
         text: '<b>“Makine öğrensin”</b>e geç ve öğret: rastgele bağlantılarla başlayan ağ, lambayı kendisi öğrenebilir mi?',
         check: st => !!st.flags.learned,
-        aha: 'Öğrendi. Kimse ara nöronlara ne yakalamaları gerektiğini söylemedi; sadece lambanın doğru cevabı biliniyordu. Lamba her yanıldığında hata, ara nöronlara bağlantıları oranında paylaştırıldı ve her biri kendi payına göre düzeltildi. Buna geri yayılım denir; bugünkü bütün yapay zekâ ağları böyle eğitilir.'
+        aha: 'Öğrendi. Kimse ara nöronlara ne yakalamaları gerektiğini söylemedi; sadece lambanın doğru cevabı biliniyordu. Lamba her yanıldığında hata, ara nöronlara bağlantıları oranında paylaştırıldı ve her biri kendi payına göre düzeltildi. Buna geri yayılım denir. Beynin tam olarak bu yolla öğrenip öğrenmediği hâlâ tartışılıyor; aşağıdaki “Benzetmenin sınırı” kartına bak.'
       },
       {
         id: 'compare',
@@ -1272,8 +1297,7 @@ const LEVELS = [
       model:
         'İki ara (gizli) nöron A ve B anahtarlarını dinliyor, lamba nöronu da iki ara nöronu. “Elle kur”da nöronlar ya hep ya hiç çalışıyor. “Makine öğrensin”de yumuşak eşiğe geçiliyor: nöron ne kadar güçlü ateşlediğini 0 ile 1 arasında söylüyor; böylece “eşiğe ne kadar yakındı?” bilgisi var ve lambanın hatası ara nöronlara pay edilebiliyor.',
       limit:
-        'Geri yayılım, hatanın aynı bağlantılardan geriye doğru, tam sayısıyla gönderilmesini ister; gerçek sinapslar ise tek yönlüdür. Beynin hatayı bu kadar düzgün geriye taşıdığına dair kanıt yok; dendritlerdeki ayrı sinyaller ya da geri bildirim bağlantıları gibi beyne daha uygun açıklamalar araştırılıyor. Yumuşak eşik ise gerçek nöronlardaki ateşleme sıklığına kabaca benziyor.',
-      ai: 'Geri yayılım 1986’da Rumelhart, Hinton ve Williams’ın çalışmasıyla yaygınlaştı ve 1969’daki tek katman duvarını aştı. Bugünkü bütün sinir ağları, dil modelleri dahil, bu yöntemle eğitilir. “Derin öğrenme”deki “derin”, bu ara katmanlardan çok sayıda olması demek.'
+        'Geri yayılım, hatanın aynı bağlantılardan geriye doğru, tam sayısıyla gönderilmesini ister; gerçek sinapslar ise tek yönlüdür. Beynin hatayı bu kadar düzgün geriye taşıdığına dair kanıt yok; dendritlerdeki ayrı sinyaller ya da geri bildirim bağlantıları gibi beyne daha uygun açıklamalar araştırılıyor. Yumuşak eşik ise gerçek nöronlardaki ateşleme sıklığına kabaca benziyor.'
     },
     deeper: `<p><b>Yumuşak eşik:</b> ateşleme gücü = 1 ÷ (1 + e<sup>−(toplam − eşik)</sup>). Toplam eşiğe eşitken %50, çok üstündeyken %100’e, çok altındayken %0’a yaklaşır.</p>
     <p><b>Lambanın hatası:</b> doğru cevap − lambanın ateşleme gücü. Örneğin lamba %73 yandı ama sönmeliydi: hata −0,73.</p>
@@ -1370,8 +1394,7 @@ const LEVELS = [
       model:
         'Pamuk’un gözü 9 nokta, görme korteksi 6 nöron. Her nöronun 9 bağı var; bu bağları 3×3 resim olarak çizince nöronun neye baktığını görürsün. Bakınca her nöron, gördüğü resme ne kadar benzediğini hesaplar (benzerlik, %0–100). En çok benzeyen kazanır ve Pamuk yavruyken onun bağları gördüğü resme doğru %60 kayar (kazanan hepsini alır). 24 bakıştan sonra Pamuk büyür ve bu bağlar artık değişmez. Etiket yok; adlar ayrı: kazanan nörondan “yatay” ve “dikey” nöronlarına giden bağlar senin söylediğinle güçlenir.',
       limit:
-        'Gerçek gözde milyonlarca nokta, görme korteksinde yüz milyonlarca nöron var; çizgiler her yerde, her açıda ve kalınlıkta. “Kazanan hepsini alır” beyinde, komşu nöronların birbirini bastırmasıyla kabaca gerçekleşir. Modelde hiç kazanamayan nöronlar bulanık kalıyor; gerçek kedilerde o nöronlar görülen açılara kaydı. Bir de: burada “yatay” adını her çizgi için ayrı öğrendi; gerçek beyin, üst katmanlarda konumdan bağımsız “yatay” diyen nöronlarla genelleştirir.',
-      ai: 'Görüntü tanıyan yapay ağların ilk katmanı eğitimden sonra tam da böyle kenar ve çizgi dedektörlerine dönüşür; bu filtreler resim olarak çizilip incelenir. Olshausen ve Field (1996), etiketsiz doğa fotoğraflarından öğrenen bir ağın görme korteksindekilere çok benzeyen algı alanları geliştirdiğini gösterdi. “Önce etiketsiz çok veriyle görmeyi öğren, sonra az etiketle ad öğren” bugünkü yapay zekânın da temel tarifi (ön eğitim, sonra ince ayar).'
+        'Gerçek gözde milyonlarca nokta, görme korteksinde yüz milyonlarca nöron var; çizgiler her yerde, her açıda ve kalınlıkta. “Kazanan hepsini alır” beyinde, komşu nöronların birbirini bastırmasıyla kabaca gerçekleşir. Modelde hiç kazanamayan nöronlar bulanık kalıyor; gerçek kedilerde o nöronlar görülen açılara kaydı. Bir de: burada “yatay” adını her çizgi için ayrı öğrendi; gerçek beyin, üst katmanlarda konumdan bağımsız “yatay” diyen nöronlarla genelleştirir.'
     },
     deeper: `<p><b>Benzerlik:</b> resim ve nöronun bağları, ikisinin de “uzunluğu” 1 olacak biçimde ölçeklenir; sonra 9 noktanın her biri karşılığıyla çarpılıp toplanır. Aynı resim %100, hiç ortak noktası olmayan resim %0 verir.</p>
     <p><b>Örnek sayılar:</b> bulanık bir nöron her çizgiye %50–70 kadar benzer. Keskinleşmiş bir nöron kendi çizgisine %99, bir noktası eksik çizgiye yaklaşık %81, ortak tek noktası olan çizgiye yaklaşık %33 benzer. Pamuk %75’in altında “net göremiyor”.</p>
@@ -1471,8 +1494,7 @@ const LEVELS = [
       model:
         '59 duyu nöronu: görme 13 özellik, okuma 29 harf, koku 6 reseptör türü, işitme 6 frekans bandı, tat 5. Sonra 28 duyu alanı nöronu: 10 görsel nesne, 10 kelime, 5 koku ve 3 ses tanıyıcı. Bir tanıyıcı, gelen desenin tanıdığı desene benzerliği %55’i geçince yanar. Sonra 10 kavram nöronu: her biri kendi tanıyıcılarından ve tat nöronlarından gelen desteği toplar (tat daha hafif sayılır). Çıktıda kavramlar yarışır; en güçlüsü payın çoğunu alır ve ad (10) ile tür (meyve, hayvan, nesne) söylenir. Ağ eğitilmiş hâlde gelir: her tanıyıcının bağları, tanıdığı şeyin deseni.',
       limit:
-        'Buradaki görme nöronları hazır özellikler (sarı, yuvarlak, tüylü); gerçek göz ham ışık noktaları görür ve bu özellikleri katman katman kendisi çıkarır (yatay-dikey seviyesi bunun ilk adımıydı). Okuma yolu harflerin sırasına bakmıyor. İnsanda yaklaşık 400 koku reseptörü türü, on binlerce kavram var ve bir kavram tek bir nöronda değil, birçok nöronun birlikte yanmasında saklı; kavram hücreleri bunun görünen ucu. Bu ağ donmuş: yeni bir şey öğrenemiyor.',
-      ai: 'Çok kipli (multimodal) yapay zekâ modelleri resmi, metni ve sesi ayrı kodlayıcılarla işleyip ortak bir uzayda buluşturur; bir köpek fotoğrafı ile “köpek” kelimesi orada birbirine yakın düşer (ör. CLIP, 2021). Buradaki duyu alanları kodlayıcılara, kavram katmanı o ortak uzaya benziyor. Eğitilmiş bir modeli eğitmeden kullanmaya çıkarım denir: telefonundaki yüz tanıma her seferinde eğitilmez, eğitilmiş bağlarla sadece hesaplar.'
+        'Buradaki görme nöronları hazır özellikler (sarı, yuvarlak, tüylü); gerçek göz ham ışık noktaları görür ve bu özellikleri katman katman kendisi çıkarır (yatay-dikey seviyesi bunun ilk adımıydı). Okuma yolu harflerin sırasına bakmıyor. İnsanda yaklaşık 400 koku reseptörü türü, on binlerce kavram var ve bir kavram tek bir nöronda değil, birçok nöronun birlikte yanmasında saklı; kavram hücreleri bunun görünen ucu. Bu ağ donmuş: yeni bir şey öğrenemiyor.'
     },
     deeper: `<p><b>1 · Duyu nöronları:</b> kart, görme özelliklerini yakar (limon: sarı, yuvarlak, pürüzlü). Yazı, harf dedektörlerini yakar (SAAT: S bir kez, A iki kez, T bir kez). Koku 6 reseptörden 2–3’ünü, ses 6 frekans bandından birkaçını yakar. Tat, 5 tat nöronundan seçtiklerini yakar.</p>
     <p><b>2 · Duyu alanları:</b> her tanıyıcı, gelen deseni kendi deseniyle karşılaştırır (benzerlik 0–1, yatay-dikey seviyesindeki gibi). Benzerlik %55’in altındaysa susar, %100’e yaklaştıkça tam yanar: yanma = (benzerlik − 0,55) ÷ 0,45.</p>
@@ -1558,8 +1580,7 @@ const LEVELS = [
       model:
         'Ela’nın beyninde sekiz his nöronu var ve her biri ötekilerin hepsine bağlı. Yaşarken: aynı anda yanan her iki nöron arasındaki bağ 0,25 artar (en çok 1). Hatırlarken: verdiğin ipucu yanar; sonra her adımda bir nöron, o an yanan öbür nöronlardan aldığı bağların ortalaması %60’ı geçerse yanar, geçmezse söner. Bu, durum değişmeyene kadar sürer. Öğretmen, ödül ya da sürpriz yok; tek kural “birlikte”.',
       limit:
-        'Bu modelde bağlar sadece güçleniyor; beyinde bağlar zayıflayabilir de ve nöronlar toplam etkinliklerini dengede tutar. Gerçek bir anı sekiz değil binlerce nörona dağılmıştır ve her nöron birçok anıda yer alır. Beyin, benzer anıların karışmaması için onları hipokampusun bir bölümünde ayrı nöron gruplarına yayar (örüntü ayrıştırma); modelde böyle bir koruma yok. Bağlar burada iki yönde de aynı; gerçek sinapslar tek yönlüdür.',
-      ai: 'Bu ağ, Hopfield ağının (1982) küçük bir hâli: Hebb kuralıyla saklanan desenler, bir parçalarından tamamlanır. John Hopfield bu çalışmayla Geoffrey Hinton’la birlikte 2024 Nobel Fizik Ödülü’nü aldı. İçeriğinin bir parçasıyla ulaşılan bu tür belleğe içerikle adreslenen bellek denir. Kelimelerin anlamını, metinde hangi kelimelerle birlikte geçtiklerinden öğrenen kelime vektörleri de aynı fikre dayanır.'
+        'Bu modelde bağlar sadece güçleniyor; beyinde bağlar zayıflayabilir de ve nöronlar toplam etkinliklerini dengede tutar. Gerçek bir anı sekiz değil binlerce nörona dağılmıştır ve her nöron birçok anıda yer alır. Beyin, benzer anıların karışmaması için onları hipokampusun bir bölümünde ayrı nöron gruplarına yayar (örüntü ayrıştırma); modelde böyle bir koruma yok. Bağlar burada iki yönde de aynı; gerçek sinapslar tek yönlüdür.'
     },
     deeper: `<p><b>Yaşarken (Hebb kuralı):</b> aynı anda yanan her iki nöron arasındaki bağ += 0,25 (en çok 1). Yanmayan nöronların bağları değişmez. 🍋 Limonda dört his yanar, aralarındaki 4 × 3 ÷ 2 = 6 bağın her biri 0,25 artar. Dört kerede 1’e ulaşır.</p>
     <p><b>Hatırlarken:</b> bir nöronun desteği = o an yanan öteki nöronlardan ona gelen bağların ortalaması. Destek %60 ya da üstüyse yanar. İlk adımda ipucu yanık kalır, sonraki adımlarda o da destek ister.</p>
@@ -1569,7 +1590,7 @@ const LEVELS = [
   }
 ];
 
-// Yol haritası: bütün seviyeler sırasıyla. Hazır olanlar LEVELS'ta, ötekiler “yakında” ya da laboratuvarda.
+// Yol haritası: bütün seviyeler sırasıyla. Hazır olanlar LEVELS'ta, ötekiler “yakında” ya da serbest deneyde (lab.html).
 const ROADMAP = [
   { key: 'light' },
   { key: 'pair' },
@@ -1580,16 +1601,17 @@ const ROADMAP = [
   { key: 'fruit' },
   { key: 'two' },
   { key: 'lines' },
-  { key: 'senses' },
   {
     key: 'digits',
     part: 'C',
     title: 'Rakamları tanıma',
     lab: 'digits',
-    note: 'laboratuvar',
+    note: 'serbest deney',
     about:
       '5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'
   },
+  { key: 'senses' },
+
   { key: 'hebb' },
   {
     key: 'where',
@@ -1620,7 +1642,7 @@ const ROADMAP = [
     part: 'E',
     title: 'Kelimeler ve anlam',
     lab: 'words',
-    note: 'laboratuvar',
+    note: 'serbest deney',
     about:
       'Her kelime bir duyu nöronu, her anlam bir cevap nöronu. Eğitim ilerledikçe benzer anlamlı kelimeler gizli katmanda birbirine yaklaşır (anlam uzayı).'
   },
@@ -1629,7 +1651,7 @@ const ROADMAP = [
     part: 'E',
     title: 'Okuma ve kayma sorunu',
     lab: 'read',
-    note: 'laboratuvar',
+    note: 'serbest deney',
     about:
       'Kelimeyi piksel resmi olarak okumak: hiç görmediği kelimeleri tahmin etmesi, bir harf kayınca neden şaşırdığı ve paylaşımlı dedektörlerin çözümü.'
   }

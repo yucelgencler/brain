@@ -517,6 +517,16 @@
       paint();
     };
     st.LOBES = LOBES;
+    /* Kabuk yüzeyinden rastgele bir nokta ve dışa bakan normali (ana sayfadaki kıvılcımlar için) */
+    st.surfacePoint = function (out, nrm) {
+      const h = hemis[Math.random() < 0.5 ? 0 : 1],
+        a = h.geo.attributes.position,
+        n = h.geo.attributes.normal,
+        i = Math.floor(Math.random() * a.count);
+      out.set(a.getX(i), a.getY(i), a.getZ(i));
+      if (nrm) nrm.set(n.getX(i), n.getY(i), n.getZ(i));
+      return out;
+    };
 
     st.setXray = function (on) {
       st.xray = on;
@@ -610,8 +620,7 @@
       return {
         title: 'Beyin',
         scale: '≈ 15 cm',
-        body: 'Yaklaşık 1,4 kg ve 86 milyar nöron. Kıvrımlar, kabuğu kafatasına sığdırmak için katlanmış hâlidir: açılsa yaklaşık bir masa örtüsü kadar (≈2.000 cm²) yer kaplar. Bir lobun üzerine gel; tıklayınca o loba yaklaşırsın.',
-        ai: 'Yapay zekâda bunun karşılığı tek parça bir ağdır; ama beyinde her bölge farklı bir işe uzmanlaşmış ve birbirine kablolarla bağlıdır.'
+        body: 'Yaklaşık 1,4 kg ve 86 milyar nöron. Kıvrımlar, kabuğu kafatasına sığdırmak için katlanmış hâlidir: açılsa yaklaşık bir masa örtüsü kadar (≈2.000 cm²) yer kaplar. Bir lobun üzerine gel; tıklayınca o loba yaklaşırsın.'
       };
     };
     return st;

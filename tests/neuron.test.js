@@ -127,13 +127,48 @@ test('yol haritası: numaralar sıralı, hazır seviyeler yerinde', () => {
   ROADMAP.forEach((r, i) => assert.strictEqual(r.id, i + 1));
   assert.deepStrictEqual(
     LEVELS.map(l => l.id),
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12]
   );
   assert.strictEqual(ROADMAP[4].key, 'predict');
   assert.strictEqual(ROADMAP[6].key, 'fruit');
-  assert.strictEqual(ROADMAP[9].key, 'senses');
+  assert.strictEqual(ROADMAP[9].key, 'digits');
+  assert.strictEqual(ROADMAP[10].key, 'senses');
   assert.strictEqual(ROADMAP[11].key, 'hebb');
   for (const r of ROADMAP) assert.ok(r.title && r.part, r.key);
+});
+test('bölümler: her bölümün numarası, sorusu ve tanıtımı var; her seviye bir bölümde', () => {
+  const { PARTS, ROADMAP } = require('../js/levels.js');
+  PARTS.forEach((p, i) => {
+    assert.strictEqual(p.no, i + 1);
+    assert.ok(p.title.endsWith('?') || p.no === 5, p.title);
+    assert.ok(p.about.length > 20);
+  });
+  for (const r of ROADMAP)
+    assert.ok(
+      PARTS.some(p => p.id === r.part),
+      r.key
+    );
+});
+test('seviyeler yalnız gerçek beyne odaklı: "Yapay zekâda" kartı yok', () => {
+  for (const l of LEVELS) {
+    assert.deepStrictEqual(Object.keys(l.cards).sort(), ['brain', 'limit', 'model'], l.key);
+    assert.ok(!/yapay zek/i.test(JSON.stringify(l.cards) + l.deeper), l.key);
+  }
+});
+test('sözlük: terimler tekil, açıklamalı; bağlantılar var olan seviyelere gider', () => {
+  const { GLOSSARY } = require('../js/glossary.js');
+  const { ROADMAP } = require('../js/levels.js');
+  const seen = new Set();
+  for (const g of GLOSSARY) {
+    assert.ok(!seen.has(g.t), 'iki kez: ' + g.t);
+    seen.add(g.t);
+    assert.ok(g.d.length > 30, g.t);
+    if (g.see)
+      assert.ok(
+        ROADMAP.some(r => r.key === g.see),
+        g.t + ' → ' + g.see
+      );
+  }
 });
 test('öğrenme seviyelerinin her hedefi için gerçek hayat durumu var', () => {
   const { SCENARIOS } = require('../js/levels.js');

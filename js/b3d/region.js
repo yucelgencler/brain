@@ -333,8 +333,7 @@
       return {
         title: 'Kabuktan bir parça' + (nm ? ' · ' + nm : ''),
         scale: '≈ 1 cm',
-        body: 'Beyin kabuğu (gri madde) sadece 2–3 mm kalınlığında; nöronların gövdeleri burada. Altındaki beyaz madde, bölgeleri birbirine bağlayan aksonlardır; miyelin denen yağlı kılıf onları beyaz gösterir ve sinyali hızlandırır.',
-        ai: 'Gri madde hesap yapan birimlere, beyaz madde katmanlar arasındaki bağlantılara benzer.'
+        body: 'Beyin kabuğu (gri madde) sadece 2–3 mm kalınlığında; nöronların gövdeleri burada. Altındaki beyaz madde, bölgeleri birbirine bağlayan aksonlardır; miyelin denen yağlı kılıf onları beyaz gösterir ve sinyali hızlandırır.'
       };
     };
     return st;

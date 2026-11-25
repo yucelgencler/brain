@@ -449,7 +449,6 @@
           ') aralığa dökülür ve karşı taraftaki alıcılara oturur. Alıcılar açılınca iyonlar dikene akar ve öbür nöronun gerilimi ' +
           (exc ? 'biraz yükselir' : 'biraz düşer') +
           '. Gerçekte hepsi ~1 ms; burada ~2.000 kat yavaş.',
-        ai: 'Yapay ağdaki “ağırlık”, bu sinapsın gücüne karşılık gelir: kaç kesecik döküldüğü, kaç alıcı olduğu. Öğrenme çoğunlukla burada olur (4. ve 12. seviyeler).',
         action: { label: '⚡ Sinyal gönder', fn: () => st.release() },
         action2: {
           label: exc ? 'Susturan sinapsa çevir' : 'Uyarıcı sinapsa çevir',
