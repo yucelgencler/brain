@@ -1,101 +1,71 @@
 # Nörondan Beyne
 
-Beynin bilgiyi nasıl aldığını, nasıl karar verdiğini, nasıl öğrendiğini ve nasıl hatırladığını tek bir nörondan başlayarak **kendi deneylerinle** keşfettiğin bir öğrenme yolu. Tek bir ışık hücresi ve tek bir nöronla başlar, her seviyede tek bir yeni fikir ekler.
+Beynin bilgiyi nasıl aldığını, nasıl karar verdiğini, nasıl öğrendiğini ve nasıl hatırladığını **tek bir nörondan başlayarak kendi ellerinle** keşfettiğin, tarayıcıda çalışan bir öğrenme uygulaması.
 
-Kurulum veya derleme gerekmez: `index.html` dosyasını tarayıcıda açman yeterli. İlerlemen ve notların aynı tarayıcıda saklanır.
+Kurulum yok, ön bilgi gerekmez. Matematik ya da programlama bilmen gerekmez.
 
-## Öğrenme yolu
+**▶ Hemen dene:** <https://yucelgencler.github.io/brain/>
 
-Her seviye aynı yapıda: **soru → elle dene → (makineye öğret) → görevlerle fark et → İnsan beyninde / Bu modelde / Benzetmenin sınırı / Yapay zekâda** kartları, isteyene “Daha derine” ve kişisel not alanı.
+![Ana sayfa: dönen 3B beyin ve “Nörondan Beyne” başlığı](docs/img/ana-sayfa.jpg)
 
-| # | Bölüm | Seviye | Yeni fikir | Durum |
-|---|---|---|---|---|
-| 1 | Algı | Tek bir ışık hücresi | girdi, bağlantı, eşik, ya hep ya hiç | hazır |
-| 2 | Algı | İki ışık, bir karar | sinyalleri toplamak, VE / VEYA, karar haritası | hazır |
-| 3 | Algı | Susturan bağlantı | negatif bağlantı, kendiliğinden ateşleme, karanlık dedektörü | hazır |
-| 4 | Öğrenme | Öğretmenle öğrenme | etiketli eğitim verisi, hatadan düzeltme (algılayıcı kuralı), unutma | hazır |
-| 5 | Öğrenme | Tahmin ederek öğrenme | kedi Pamuk ve mama: öğretmen yok, cevabı bir sonraki an veriyor; sürpriz, dopamin, söndürme, engelleme | hazır |
-| 6 | Öğrenme | Tek nöronun duvarı | XOR: tek nöronun öğrenemediği şey | hazır |
-| 7 | Anlama | Muz ve armut: ortak nöronlar | birden çok nöron ve çıktı, ortak özellikler, desen | hazır |
-| 8 | Anlama | Duvarı aşmak: gizli nöronlar | gizli nöron, yumuşak eşik, geri yayılım (suç paylaştırma), simetri | hazır |
-| 9 | Anlama | Yatay mı dikey mi? | yavru Pamuk’un gözü: algı alanı, etiketsiz (rekabetçi) öğrenme, az etiketle ad, kritik dönem (Blakemore) | hazır |
-| 11 | Anlama | Beş duyu, tek kavram | eğitilmiş ağ: kart, yazı, tat, koku, ses → duyu alanları → kavram nöronları → ad; duyuları birleştirmek, kavram hücreleri | hazır |
-| 10 | Anlama | Rakamları tanıma | kapasite, bozuk deseni tamamlama | serbest deneyde |
-| 12 | Hafıza | Birlikte yanan, birlikte bağlanır | Ela, limon ve çilek: Hebb kuralı, örüntü tamamlama, yanlış ipucunu düzeltme, anıların karışması | hazır |
-| 13 | Hafıza | Hafıza nerede? | bilgi bağlantılara dağılmış | yakında |
-| 14 | Hafıza | Ezber ve genelleme | eğitim ve doğrulama (sınav) verisi | yakında |
-| 15 | Hafıza | Unutma ve uyku | yeni öğrenince eskiyi bozma, tekrar oynatma | yakında |
-| 16 | Anlam | Kelimeler ve anlam | anlam uzayı | laboratuvarda |
-| 17 | Anlam | Okuma ve kayma sorunu | şekilden okuma, paylaşımlı dedektörler | laboratuvarda |
+## Ne öğreneceksin?
 
-Seviye numaraları `js/levels.js` içindeki `ROADMAP` sırasından hesaplanır; ilerleme her seviyenin sabit `key` adıyla saklandığı için araya yeni seviye eklemek kayıtları bozmaz.
+Her seviye bir soruyla başlar. Küçük bir beyin devresiyle denersin, görevler seni adım adım bir keşfe götürür ve sonunda aynı şeyin gerçek beyinde nasıl olduğunu okursun. Kolaydan zora beş bölüm var:
 
-İlkeler: ekranda sadece o seviyenin getirdiği kontroller olur; hesaplar canlı sayılarla gösterilir; beyin benzetmesinin sınırları her seviyede açıkça yazılır.
-
-## Beyne yolculuk (3B)
-
-`beyin3d.html`, yaklaştıkça ayrıntıya inen üç boyutlu bir beyin. Tekerlek ya da iki parmakla yaklaşılır, sürükleyerek döndürülür; alttaki ölçek şeridinden durağa atlanabilir. Beş durak var, her biri kendi ölçeğinde ayrı bir sahne; aralarında iki sahne üst üste karıştırılarak geçilir:
-
-| Durak | Ölçek | Ne görülür |
+| Bölüm | Soru | Seviyeler |
 |---|---|---|
-| Beyin | ~15 cm | kodla üretilmiş kıvrımlar (gürültünün sıfır çizgileri oluk olur), yan yarık ve merkez oluk, loblar (üzerine gel / tıkla → “Buraya yaklaş”), beyincik, beyin sapı; “İçini göster” ile talamus |
-| Bölge | ~1 cm | kabuktan kesilmiş blok: kıvrım ve oluk, gri madde (yüzeyden ~2,6 mm) ve beyaz madde, damarlar; ense lobunda Gennari çizgisi |
-| Kolon | ~1 mm | altı katman, ~2.900 temsilî nöron; “Girdi gönder” ile talamustan gelen sinyal IV → II/III → V → VI sırasıyla yayılır |
-| Devre | ~100 µm | dendritli, aksonlu nöronlar; zar gerilimi ışıltı olarak, sinyaller akson boyunca ilerleyen darbeler olarak görünür. Nörona tıklayınca gerilim izi; “Sinyali takip et” ile kamera bir darbenin peşine düşer, varınca “Bu sinapsa yaklaş” |
-| Sinaps | ~1 µm | akson ucu, kesecikler, kalsiyum kapıları, glutamat/GABA, alıcılar, iyon akışı; uyarıcı ve susturan sinaps |
+| Başlangıç | Beynin içine bir bak | 3B tur: beyinden kabuğa, nöronlara ve sinapsa |
+| 1 | Bir nöron nasıl karar verir? | 1 Tek bir ışık hücresi · 2 İki ışık, bir karar · 3 Susturan bağlantı |
+| 2 | Nöron nasıl öğrenir? | 4 Öğretmenle öğrenme · 5 Tahmin ederek öğrenme · 6 Tek nöronun duvarı |
+| 3 | Nöronlar birlikte nasıl anlar? | 7 Muz ve armut · 8 Gizli nöronlar · 9 Yatay mı dikey mi? · 10 Şekil ve rakam tanıma · 11 Beş duyu, tek kavram |
+| 4 | Beyin nasıl hatırlar ve pekiştirir? | 12 Birlikte yanan, birlikte bağlanır · 13 Hafıza nerede? · 14 Ezber mi, anlamak mı? · 15 Unutma ve uyku |
+| 5 | Kelimeler ve anlam | 16 Kelimelerin anlamı · 17 Okumak |
+| Final | Hepsi bir arada | 3B: bir limona, çileğe ya da dondurmaya baktığında gözden kelimeye giden yol |
 
-**Limonun yolculuğu** (8 adım): göz → talamus → görme alanı (V1 devresinde “eğri kenar” ve “sarı leke” nöronları ateşler) → şakak lobu (özellik nöronları → LİMON kavram nöronu, susturan rakipleri bastırır) → Broca → hareket kabuğu → “Limon!”. Devredeki akım `js/b3d/sim.js` içindeki sızdıran topla-ateşle modeliyle hesaplanır (ms, mV, µm); ağır çekim kaydırıcısı simülasyon hızını değiştirir. `beyin3d.html?yolculuk` yolculuğu doğrudan açar.
+Hiçbir seviye kilitli değil; istediğin yerden başlayabilirsin. İlerlemen yalnızca kendi tarayıcında saklanır.
 
-Three.js (r149, MIT) `vendor/` içinde; internet gerekmez.
+| | |
+|---|---|
+| ![Seviye 13: yarım bir ipucundan anıyı geri getiren hafıza ağı](docs/img/seviye-13.jpg) | ![Seviye 10: şekil ve rakam tanıyan nöron ağı](docs/img/seviye-10.jpg) |
+| ![3B: nöronlar, dendritler ve sinyaller](docs/img/3b-noronlar.jpg) | ![3B: çilekten gelen ışık görme alanına gidiyor](docs/img/3b-yolculuk.jpg) |
 
-## Laboratuvar
+## Nasıl çalışır?
 
-`lab.html`, çok katmanlı sinir ağıyla serbest deney sayfası (rakamlar, kelimeleri duyarak ve okuyarak öğrenme). `lab.html?task=digits|words|read` doğrudan bir bölgeyi açar. Toplama ve çarpma bölgeleri kodda duruyor ama kapalı; açmak için `js/core.js` içindeki `TASKS` dizisine `addTask` ve `mulTask` eklenmeli.
+- **Dene:** Her seviyede birkaç nörondan oluşan bir beyin devresi var. Işığı açarsın, bir bağlantıyı güçlendirirsin, bir anıyı hatırlatırsın; sonucu anında görürsün.
+- **Fark et:** Parlayan düğme hep bir sonraki adımı gösterir. Her görevin sonunda neyi fark ettiğini anlatan kısa bir açıklama açılır.
+- **Gerçek beyinde:** Her seviyede üç kart var: *Gerçek beyinde* (bilim ne diyor), *Bu modelde* (ekranda ne var), *Modelin basitleştirdiği* (benzetmenin sınırı). Daha fazlasını isteyene “Daha derine”.
+- **3B beyin:** Bütün beyinden tek bir sinapsa kadar yakınlaşabilir, nöronları ateşletip sinyalin nasıl aktığını izleyebilirsin. Her seviyeden “🧠 3B’de gör” ile o konunun beynin neresinde olduğuna gidersin.
+- **Sözlük:** Nöron, sinaps, eşik gibi terimlerin sade açıklamaları.
+- **Serbest deney:** Ayarları açık, rehbersiz bir laboratuvar (rakamlar, kelimeler, okuma).
 
-## Dosya yapısı
+Modeller gerçek beyni bire bir taklit etmez; fikirleri kendi ellerinle görebilmen için sadeleştirilmiştir. Her seviye neyi basitleştirdiğini açıkça yazar.
 
-```
-index.html            Öğrenme yolu
-lab.html              Serbest laboratuvar
-css/style.css         Ortak görünüm (açık tema: boyanmış doku kesiti, koyu tema: floresan mikroskop)
-css/levels.css        Öğrenme yolu görünümü
-js/neuron.js          Tek nöron: ya hep ya hiç ateşleme, algılayıcı öğrenme kuralı. Arayüzden bağımsız.
-js/levels.js          Seviyelerin içeriği: sorular, görevler ve kontrolleri, kartlar
-js/path.js            Öğrenme yolu arayüzü: sahne, gösterge, tablo, karar haritası, öğrenme paneli
-js/multi.js           Seviye 7 arayüzü: birden çok nöron, karşılaştırma, bağlantı tablosu
-js/net.js             Seviye 8 arayüzü: iki ara nöron + lamba, elle kur / makine öğrensin
-js/predict.js         Seviye 5 arayüzü: oda (Pamuk koşar) + Pamuk’un beyni; ses çıkar → tahmin → mama ver/verme → sürpriz → öğren
-js/senses.js          Seviye 10 arayüzü: kart / yazı / tat / koku / ses → 59 duyu nöronu → 28 tanıyıcı → 10 kavram → ad ve tür (sesler Web Audio)
-js/hebb.js            Seviye 12 arayüzü: 8 his nöronu halkada; an yaşat (Hebb) / ipucu ver (tamamlama), bağ tablosu
-js/eye.js             Seviye 9 arayüzü: 3×3 göz → 6 görme nöronu (resimleriyle) → yatay/dikey adları; büyüt, yeni yavru
-js/core.js            Laboratuvarın çok katmanlı ağı (geri yayılım, Adam), PCA ve görevler
-js/app.js             Laboratuvar arayüzü
-beyin3d.html          Beyne yolculuk (3B)
-css/b3d.css           3B sayfanın görünümü
-js/b3d/util.js        Gürültü, ikosfer, incelen tüp, parlayan noktalar, etiketler
-js/b3d/sim.js         Devre simülasyonu (sızdıran topla-ateşle) ve devre tarifleri: serbest, V1, şakak lobu. Arayüzden bağımsız.
-js/b3d/brain.js       Durak 1: beyin, loblar, yolculuk yolları
-js/b3d/region.js      Durak 2: kabuk kesiti
-js/b3d/column.js      Durak 3: altı katman ve kolon
-js/b3d/micro.js       Durak 4: nöron devresi, darbeler, takip
-js/b3d/synapse.js     Durak 5: sinaps
-js/b3d/main.js        Kamera, sürekli yakınlaştırma ve geçiş, kartlar, limonun yolculuğu
-vendor/three.min.js   Three.js r149 (MIT, lisans: vendor/THREE-LICENSE)
-tests/neuron.test.js  Tek nöron ve seviye görevleri testleri
-tests/core.test.js    Laboratuvar çekirdeği testleri
-tests/b3d.test.js     3B sayfanın devre simülasyonu testleri
-```
+## Kendi bilgisayarında açmak
 
-## Yeni bir seviye eklemek
+En kolayı: sayfanın yukarısındaki **Code → Download ZIP** ile indir, klasörü aç ve `index.html` dosyasına çift tıkla. İnternet bağlantısı gerekmez (yazı tipleri internetsizken sistem yazı tipine döner).
 
-`js/levels.js` başındaki açıklamada seviye nesnesinin alanları var: `key`, `kind` (`single` ya da `pair`), `ranges`, `init()`, `missions` (her biri `check(st)` ve tamamlanınca görünen `aha` metniyle), `cards` ve `deeper`. Öğrenme paneli için `learning: true` ve `targets`. Görevlerin kontrolleri arayüzden bağımsız olduğu için Node ile test edilebilir. Seviyeyi `ROADMAP` içinde doğru yere de koy.
-
-## Testler
+Yerel bir sunucuyla açmak istersen:
 
 ```
-node tests/neuron.test.js
-node tests/core.test.js
-node tests/b3d.test.js
+npm start          # http://localhost:8765
 ```
 
-3B sayfa `file://` ile de açılır; tarayıcı eski dosyayı gösterirse Cmd+Shift+R.
+## Katkı
+
+Yeni bir seviye fikrin, bir düzeltmen ya da bir önerin mi var? Çok sevinirim. Nasıl çalıştığını ve bir seviyenin nasıl eklendiğini [CONTRIBUTING.md](CONTRIBUTING.md) anlatıyor. Bir hata ya da öneri için “Issues” sekmesinden yazabilirsin.
+
+## Geliştiriciler için kısaca
+
+- Saf HTML, CSS ve JavaScript; derleme adımı yok. Tek dış kütüphane Three.js (r149, `vendor/` içinde).
+- `npm test` bütün testleri çalıştırır (Node.js yeter, bağımlılık yok). Her seviyenin görevleri arayüzden bağımsız test edilir.
+- `npm run format` kodu Prettier ile biçimlendirir. GitHub Actions her push ve pull request’te testleri ve biçimi denetler.
+
+## Lisans
+
+[MIT](LICENSE). Three.js de MIT lisanslıdır (`vendor/THREE-LICENSE`).
+
+---
+
+### In English
+
+**Nörondan Beyne** (“From a Neuron to the Brain”) is a browser-based, hands-on course on how the brain perceives, decides, learns and remembers, starting from a single neuron. It has 17 guided levels in five chapters plus an interactive 3D brain you can zoom from the whole brain down to a single synapse. The interface is in Turkish. No build step, no dependencies: open `index.html`. Run the tests with `npm test`. MIT licensed.
