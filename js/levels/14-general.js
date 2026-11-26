@@ -107,6 +107,7 @@
 
   const level = Lv.registerLevel({
     key: 'general',
+    q: 'Ezberlemek ile anlamak aynı şey mi?',
     layered: true,
     brainShort:
       'Beyninde iki tür öğrenme yan yana çalışır. Hipokampus bir olayı tek seferde, ayrıntılarıyla kaydeder; beyin kabuğu ise birçok deneyimden yavaş yavaş ortak kuralı çıkarır. Ezber bildiğin soruda, anlamak yeni soruda işe yarar.',
@@ -136,6 +137,7 @@
     missions: [
       {
         id: 'one',
+        do: '<b>Öğret:</b> bu bir artı.',
         shows: [],
         text: 'Gözde hazır bir artı var. Adı “Artı” seçili; <b>Öğret</b>’e bas. İki öğrenci de aynı tek örneği görecek.',
         check: st => st.examples.length >= 1,
@@ -143,6 +145,7 @@
       },
       {
         id: 'over',
+        do: '<b>Bir kare çiz ve sor.</b>',
         shows: ['ask'],
         text: 'Şimdi “Kare”yi seç, <b>Örnek çiz</b> ile bir kare çiz ve <b>Sor</b>. İkisi ne diyor?',
         check: st => !!st.flags.over,
@@ -150,6 +153,7 @@
       },
       {
         id: 'all',
+        do: '<b>Her şekilden 2 örnek öğret.</b>',
         shows: ['ask'],
         text: 'Her şekilden en az <b>2 örnek</b> öğret: artı, çarpı, kare.',
         check: st => st.counts.every(c => c >= 2),
@@ -157,6 +161,7 @@
       },
       {
         id: 'new',
+        do: '<b>Yeni bir çizim sor.</b>',
         shows: ['ask'],
         text: 'Öğretmediğin, biraz yamuk yeni bir çizim yap ve <b>Sor</b>. Kavrayan bilsin, ezberci bilemesin.',
         check: st => !!st.flags.newGen,
@@ -164,6 +169,7 @@
       },
       {
         id: 'exam',
+        do: '<b>Sınava sok.</b>',
         shows: ['ask', 'exam'],
         text: '<b>Sınava sok</b>: ikisine de hiç görmedikleri 30 çizim. Hangisi kaçını bilecek?',
         check: st => !!st.flags.exam,

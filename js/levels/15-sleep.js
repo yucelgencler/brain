@@ -96,6 +96,7 @@
 
   const level = Lv.registerLevel({
     key: 'sleep',
+    q: 'Uyku öğrenmeye nasıl yardım eder?',
     layered: true,
     brainShort:
       'Gün içinde yaşadıklarını önce hipokampus hızlıca kaydeder. Uyurken bu yeni anılar eskilerle birlikte tekrar oynatılır ve beyin kabuğu ikisini birden pekiştirir. Bu yüzden iyi bir uykudan sonra öğrendiklerini daha iyi hatırlarsın.',
@@ -116,6 +117,7 @@
     missions: [
       {
         id: 'day1',
+        do: '<b>1. günü yaşa.</b>',
         shows: [],
         text: '<b>1. günü yaşa</b>: ağ artı ve çarpıyı öğrensin.',
         check: st => !!st.flags.day1,
@@ -123,6 +125,7 @@
       },
       {
         id: 'forget',
+        do: '<b>2. günü yaşa.</b>',
         shows: ['day2'],
         text: 'Şimdi <b>2. günü yaşa</b>: bu gün yalnız kare görülüyor (gece uyku yok). Artı ile çarpıya ne oluyor?',
         check: st => !!st.flags.forgot,
@@ -130,6 +133,7 @@
       },
       {
         id: 'sleep',
+        do: '<b>Baştan al, uykuyu aç,</b> iki günü yaşa.',
         shows: ['day2', 'sleep'],
         text: '<b>Baştan al</b>, uykuyu <b>aç</b> ve iki günü yeniden yaşa. Gece eski anılar tekrar oynatılacak.',
         check: st => !!st.flags.slept,
@@ -137,6 +141,7 @@
       },
       {
         id: 'little',
+        do: '<b>Gece tekrarını en aza indir.</b>',
         extra: true,
         shows: ['day2', 'sleep', 'rep', 'log'],
         text: 'Gece tekrarını <b>en aza</b> indir (her 12 yeni anıya 1 eski) ve iki günü yeniden yaşa. Bu kadarı yetiyor mu?',

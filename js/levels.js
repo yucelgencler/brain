@@ -749,6 +749,7 @@ const LEVELS = [
   /* ------------------------------ 1 ------------------------------ */
   {
     key: 'light',
+    q: 'Göz ışığı nasıl fark eder?',
     ver: 2,
     layered: true,
     goal: 'Bir nöronun girdiyi nasıl bir karara (sinyal gönder ya da sus) çevirdiğini görmek.',
@@ -770,6 +771,7 @@ const LEVELS = [
     missions: [
       {
         id: 'on',
+        do: '<b>Işığı yak.</b>',
         glow: ['in'],
         shows: [],
         text: 'Soldaki <b>ışık kutusuna dokun</b>: ışığı yak.',
@@ -778,6 +780,7 @@ const LEVELS = [
       },
       {
         id: 'dim',
+        do: '<b>Işığı kıs.</b> Nöron nerede susuyor?',
         glow: ['b'],
         shows: ['b'],
         text: 'Şimdi <b>ışığı yavaş yavaş kıs</b>. Işık hâlâ varken nöron bir yerde susuyor mu?',
@@ -786,6 +789,7 @@ const LEVELS = [
       },
       {
         id: 'bright',
+        do: '<b>Eşiği yükselt:</b> yalnız 0,8’de ateşlesin.',
         glow: ['theta'],
         shows: ['b', 'theta', 'gauge'],
         text: 'Eşiği değiştir: nöron <b>yalnız çok parlak ışıkta</b> (0,8) ateşlesin, 0,7’de sussun.',
@@ -794,6 +798,7 @@ const LEVELS = [
       },
       {
         id: 'cut',
+        do: '<b>Bağlantıyı 0’a indir.</b>',
         glow: ['w'],
         shows: ['b', 'w', 'theta', 'gauge'],
         text: 'Işık hücresiyle nöron arasındaki <b>bağlantıyı 0’a indir</b>. Işık ne kadar parlak olursa olsun ne oluyor?',
@@ -816,6 +821,7 @@ const LEVELS = [
   /* ------------------------------ 2 ------------------------------ */
   {
     key: 'pair',
+    q: 'Bir nöron birçok sinyalden nasıl karar verir?',
     ver: 2,
     layered: true,
     goal: 'Bir nöronun birden çok sinyali toplayarak nasıl tek bir karar verdiğini görmek.',
@@ -837,6 +843,7 @@ const LEVELS = [
     missions: [
       {
         id: 'try',
+        do: '<b>Önce bir ışığı, sonra ikisini yak.</b>',
         glow: ['in'],
         shows: [],
         text: 'Işıklara dokun: önce <b>yalnız birini</b>, sonra <b>ikisini birden</b> yak. Nöron ne zaman ateşliyor?',
@@ -845,6 +852,7 @@ const LEVELS = [
       },
       {
         id: 'or',
+        do: '<b>Tek ışık da yetsin.</b>',
         target: 'or',
         glow: ['theta'],
         shows: ['w', 'theta', 'table'],
@@ -854,6 +862,7 @@ const LEVELS = [
       },
       {
         id: 'switch',
+        do: '<b>Yalnız eşikle</b> ilk hâline dön.',
         target: 'and',
         glow: ['theta'],
         shows: ['w', 'theta', 'table'],
@@ -880,6 +889,7 @@ const LEVELS = [
   /* ------------------------------ 3 ------------------------------ */
   {
     key: 'inhibit',
+    q: 'Bir sinyal nöronu susturabilir mi?',
     ver: 2,
     layered: true,
     goal: 'Bir sinyalin nöronu susturabildiğini ve bir hücrenin bir şeyin yokluğunu bile fark edebildiğini görmek.',
@@ -898,6 +908,7 @@ const LEVELS = [
     missions: [
       {
         id: 'hush',
+        do: '<b>A’yı yak, sonra B’yi.</b>',
         glow: ['in'],
         shows: [],
         text: 'Önce <b>A ışığını yak</b>, sonra <b>B’yi de yak</b>. B yanınca nöron ne yapıyor?',
@@ -906,6 +917,7 @@ const LEVELS = [
       },
       {
         id: 'spont',
+        do: '<b>Işıkları söndür, eşiği sıfırın altına indir.</b>',
         target: null,
         glow: ['theta'],
         shows: ['theta'],
@@ -915,6 +927,7 @@ const LEVELS = [
       },
       {
         id: 'nor',
+        do: '<b>Karanlıkta ateşlesin.</b>',
         target: 'nor',
         glow: ['w'],
         shows: ['w', 'theta', 'table'],
@@ -937,6 +950,7 @@ const LEVELS = [
   /* ------------------------------ 4 ------------------------------ */
   {
     key: 'learn',
+    q: 'Nöron doğru bağlantıları kendisi bulabilir mi?',
     ver: 3,
     layered: true,
     brainShort:
@@ -961,6 +975,7 @@ const LEVELS = [
     missions: [
       {
         id: 'learnAnd',
+        do: '<b>Bir örnek göster:</b> hata bitene kadar.',
         glow: ['one'],
         target: 'and',
         shows: [],
@@ -970,6 +985,7 @@ const LEVELS = [
       },
       {
         id: 'zero',
+        do: '<b>Bir kart daha göster.</b> Ne değişiyor?',
         glow: ['one'],
         shows: ['strip', 'table'],
         text: 'Bir kart daha göster ve aşağıdaki adımlara bak: <b>doğru bildiği</b> bir kartta bağlantılar değişiyor mu?',
@@ -978,6 +994,7 @@ const LEVELS = [
       },
       {
         id: 'other',
+        do: '<b>Başka bir şey öğret:</b> Kapıya bakayım mı?',
         glow: st => (st.targetKey === 'and' ? ['tsel'] : ['one']),
         shows: ['strip', 'table', 'side'],
         text: 'Ona bambaşka bir şey öğret: sağda <b>Öğretilecek durum</b>dan <b>Kapıya bakayım mı?</b> seç ve yine öğret.',
@@ -986,6 +1003,7 @@ const LEVELS = [
       },
       {
         id: 'repair',
+        do: '<b>Bir bağlantıyı boz,</b> yeniden öğret.',
         extra: true,
         shows: ['strip', 'table', 'side', 'manual', 'w', 'theta'],
         text: 'Öğrendikten sonra bir bağlantıyı elle boz. Sonra yeniden öğret: kendini onarabiliyor mu?',
@@ -994,6 +1012,7 @@ const LEVELS = [
       },
       {
         id: 'forget',
+        do: '<b>Muz’u öğret, sonra Kapı’yı.</b> Muz’u hatırlıyor mu?',
         extra: true,
         shows: ['strip', 'table', 'side'],
         text: '<b>Unutma deneyi:</b> Muz’u öğret, sonra başka bir durumu (ör. Kapı) öğret, sonra “Muz olgun mu?”ya geri dön. Hâlâ biliyor mu?',
@@ -1017,6 +1036,7 @@ const LEVELS = [
   /* ------------------------------ 5: tahmin ederek öğrenme ------------------------------ */
   {
     key: 'predict',
+    q: 'Kedi poşet sesine neden koşar?',
     ver: 3,
     layered: true,
     brainShort:
@@ -1069,6 +1089,7 @@ const LEVELS = [
     missions: [
       {
         id: 'learn',
+        do: '<b>🛍️ Hışırdat, sonra 🐟 mama ver.</b>',
         shows: [],
         text: '<b>🛍️ Poşeti hışırdat</b>, sonra <b>🐟 mama ver</b>. Pamuk poşet sesini duyar duymaz kabına koşana kadar tekrarla.',
         check: st => !!st.flags.learned,
@@ -1076,6 +1097,7 @@ const LEVELS = [
       },
       {
         id: 'miss',
+        do: '<b>🛍️ Hışırdat, 🚫 mama verme.</b>',
         shows: ['chart'],
         text: 'Pamuk artık poşet sesine koşuyor. Bu sefer <b>🛍️ poşeti hışırdat</b> ama <b>🚫 mama verme</b>. Ne oluyor?',
         check: st => !!st.flags.miss,
@@ -1083,6 +1105,7 @@ const LEVELS = [
       },
       {
         id: 'extinct',
+        do: '<b>Mama vermeden devam et.</b>',
         shows: ['chart', 'repeat'],
         text: 'Poşeti hışırdatmaya devam et ama mama verme (<b>↻ Son anı 5 kez tekrarla</b> da olur). Pamuk poşet sesine <b>koşmayı bıraksın</b>.',
         check: st => !!st.flags.extinct,
@@ -1090,6 +1113,7 @@ const LEVELS = [
       },
       {
         id: 'half',
+        do: '<b>🎲 Yazı-tura</b> ile bazen ver.',
         extra: true,
         shows: ['chart', 'dice', 'strip'],
         text: 'Bazen ver, bazen verme: <b>🎲 Yazı-tura × 10</b> düğmesine iki kez bas. Pamuk ne kadar bekliyor, sürpriz bitiyor mu?',
@@ -1098,6 +1122,7 @@ const LEVELS = [
       },
       {
         id: 'block',
+        do: '<b>Engelleme deneyi.</b>',
         extra: true,
         shows: ['chart', 'pisi', 'kitten', 'strip', 'log'],
         text: 'Engelleme deneyi: <b>🐣 Yeni yavru kedi</b> al. Önce poşet + mama ile öğret (%85 üstü). Sonra <b>🛍️+🗣️ ikisini birden</b> yap ve mama ver (en az 8 kez). En sonda <b>sadece 🗣️ “pisi pisi”</b> de: Pamuk geliyor mu?',
@@ -1106,6 +1131,7 @@ const LEVELS = [
       },
       {
         id: 'control',
+        do: '<b>Kontrol deneyi.</b>',
         extra: true,
         shows: ['chart', 'pisi', 'kitten', 'strip', 'log'],
         text: 'Kontrol deneyi: yine <b>🐣 Yeni yavru kedi</b> al ve baştan <b>🛍️+🗣️ ikisini birden</b> yapıp mama ver (en az 8 kez). Sonra <b>sadece 🗣️ “pisi pisi”</b> de. Bu sefer geliyor mu?',
@@ -1131,6 +1157,7 @@ const LEVELS = [
   /* ------------------------------ 6: XOR ------------------------------ */
   {
     key: 'xor',
+    q: 'Tek bir nöronun yapamayacağı bir şey var mı?',
     ver: 2,
     layered: true,
     brainShort:
@@ -1154,6 +1181,7 @@ const LEVELS = [
     missions: [
       {
         id: 'hand',
+        do: '<b>Lambayı elle kur:</b> tek anahtar açıkken yansın.',
         shows: ['manual', 'w', 'theta', 'table'],
         glow: ['manual'],
         text: '<b>Merdiven lambası</b>: lamba yalnız <b>tam olarak bir anahtar</b> açıkken yansın. Bağlantıları elle ayarla: aşağıdaki tablonun dört satırının kaçını tutturabiliyorsun?',
@@ -1162,6 +1190,7 @@ const LEVELS = [
       },
       {
         id: 'rounds',
+        do: '<b>Kendisi öğrensin:</b> Otomatik.',
         shows: ['table', 'side'],
         glow: st => (st.flags.rounds || 0 ? ['auto'] : ['one']),
         text: 'Belki kendisi öğrenir? <b>“Bir örnek göster”</b>e, bir tur bitince <b>“Otomatik”</b>e bas ve 15 tur izle. Hata sıfıra iniyor mu?',
@@ -1170,6 +1199,7 @@ const LEVELS = [
       },
       {
         id: 'why',
+        do: '<b>Derinleş’i aç:</b> neden olmuyor?',
         shows: ['table', 'side'],
         glow: ['deep'],
         text: 'Neden olmuyor? Aşağıdaki <b>Derinleş</b>’i aç ve karar haritasına bak.',
@@ -1198,6 +1228,7 @@ const LEVELS = [
   /* ------------------------------ 7: muz ve armut ------------------------------ */
   {
     key: 'fruit',
+    q: 'Muzu ve armudu aynı nöronlar mı tanır?',
     ver: 2,
     layered: true,
     brainShort:
@@ -1249,6 +1280,7 @@ const LEVELS = [
     missions: [
       {
         id: 'learn',
+        do: '<b>Kart göster:</b> altısını da bilsin.',
         shows: ['more', 'deck'],
         glow: ['one'],
         text: '<b>“Bir kart göster”</b>e bas: iki nöron (🍌 muz ve 🍐 armut) aynı anda öğrensin. Altı kartın hepsini doğru bilene kadar devam et; <b>Otomatik</b> da olur.',
@@ -1257,6 +1289,7 @@ const LEVELS = [
       },
       {
         id: 'compare',
+        do: '<b>İki meyveyi karşılaştır.</b>',
         shows: ['more', 'deck', 'cmp'],
         glow: ['cmp'],
         text: 'Aşağıdaki <b>Ortak mı, farklı mı?</b> panelinde iki kartı karşılaştır (ör. olgun muz ile olgun armut). Hangi özellikler ikisinde de var?',
@@ -1265,6 +1298,7 @@ const LEVELS = [
       },
       {
         id: 'shared',
+        do: '<b>Yalnız 🟡 sarı ve 🧽 yumuşak</b> açık kalsın.',
         shows: ['more', 'deck', 'cmp', 'own'],
         glow: ['own'],
         text: 'Kendi meyveni yap: soldaki özellik nöronlarına tıklayarak <b>yalnız 🟡 sarı ve 🧽 yumuşak</b> açık kalsın. Nöronlar ne diyor?',
@@ -1273,6 +1307,7 @@ const LEVELS = [
       },
       {
         id: 'mixed',
+        do: '<b>İki şekli birlikte aç.</b>',
         extra: true,
         shows: ['more', 'deck', 'cmp', 'own', 'wt'],
         text: 'Şimdi <b>🌙 uzun, kavisli</b> ile <b>💧 damla şekli</b>ni birlikte aç: hem muz hem armut şekli. Ne oluyor?',
@@ -1295,6 +1330,7 @@ const LEVELS = [
   /* ------------------------------ 8: duvarı aşmak ------------------------------ */
   {
     key: 'two',
+    q: 'Birkaç nöron birlikte duvarı aşabilir mi?',
     ver: 2,
     layered: true,
     brainShort:
@@ -1333,6 +1369,7 @@ const LEVELS = [
     missions: [
       {
         id: 'g1',
+        do: '<b>Ara nöron 1:</b> yalnız alt yukarıyken.',
         shows: ['h1', 'table'],
         glow: ['h1'],
         text: 'Merdiven lambasını üç nöronla çözeceğiz. Önce <b>Ara nöron 1</b>’i ayarla: yalnız <b>alt anahtar yukarı, üst aşağı</b>yken ateşlesin. İpucu: birine susturan bağlantı ver.',
@@ -1341,6 +1378,7 @@ const LEVELS = [
       },
       {
         id: 'g2',
+        do: '<b>Ara nöron 2:</b> yalnız üst yukarıyken.',
         shows: ['h1', 'h2', 'table'],
         glow: ['h2'],
         text: '<b>Ara nöron 2</b> de tersini yakalasın: sadece <b>üst yukarı, alt aşağı</b>yken ateşlesin.',
@@ -1349,6 +1387,7 @@ const LEVELS = [
       },
       {
         id: 'wall',
+        do: '<b>Lambayı bağla:</b> biri ateşlerse yansın.',
         shows: ['h1', 'h2', 'out', 'table', 'map'],
         glow: ['out'],
         text: 'Şimdi <b>lamba nöronunu</b> bağla: ara nöronlardan <b>biri</b> ateşlerse yansın. Dört durumun dördü de doğru mu?',
@@ -1357,6 +1396,7 @@ const LEVELS = [
       },
       {
         id: 'learn',
+        do: '<b>Makine öğrensin.</b>',
         shows: ['h1', 'h2', 'out', 'table', 'map', 'mode', 'hid'],
         glow: (st, rec) =>
           st.mode === 'manual' ? ['mode'] : (rec.rounds || []).length ? ['auto'] : ['one'],
@@ -1366,6 +1406,7 @@ const LEVELS = [
       },
       {
         id: 'compare',
+        do: '<b>Çözümleri karşılaştır.</b>',
         extra: true,
         shows: ['h1', 'h2', 'out', 'table', 'map', 'mode', 'hid', 'strip'],
         text: 'Öğrendikten sonra <b>“Ara nöronlar ne yakalıyor?”</b> panelinde <b>“Benim çözümümle karşılaştır”</b>a bas. Makine senin yolunu mu buldu?',
@@ -1374,6 +1415,7 @@ const LEVELS = [
       },
       {
         id: 'zero',
+        do: '<b>Sıfırdan başlat,</b> 200 tur öğret.',
         extra: true,
         shows: ['h1', 'h2', 'out', 'table', 'map', 'mode', 'hid', 'strip'],
         text: 'Deney: <b>“Tamamen sıfırla”</b> ile bütün bağlantıları 0 yapıp en az 200 tur öğret. Ne oluyor?',
@@ -1399,6 +1441,7 @@ const LEVELS = [
   /* ------------------------------ 9: yatay mı dikey mi? (yavru Pamuk’un gözü) ------------------------------ */
   {
     key: 'lines',
+    q: 'Yavru kedi çizgileri görmeyi nasıl öğrenir?',
     ver: 2,
     layered: true,
     brainShort:
@@ -1453,6 +1496,7 @@ const LEVELS = [
     missions: [
       {
         id: 'first',
+        do: '<b>Pamuk’a ━ üst çizgiyi göster.</b>',
         shows: [],
         text: 'Yavru Pamuk’a bir çizgi göster: soldaki <b>━ üst</b> düğmesine bas. Gözündeki altı nöronun hangisi kazandı, resmine ne oldu?',
         check: st => !!st.flags.first,
@@ -1460,6 +1504,7 @@ const LEVELS = [
       },
       {
         id: 'tuned',
+        do: '<b>Altı çizgiyi de göster.</b>',
         shows: ['grow'],
         text: 'Altı çizginin hepsini birkaç kez göster (ya da <b>🌱 Büyüt</b>). Her çizginin <b>kendi keskin nöronu</b> olsun.',
         check: st => eyeTuned(st.W),
@@ -1467,6 +1512,7 @@ const LEVELS = [
       },
       {
         id: 'name',
+        do: '<b>Adını öğret:</b> yatay mı, dikey mi?',
         shows: ['grow', 'name'],
         text: 'Şimdi adını öğret: bir çizgi göster, sonra <b>━ Bu yatay</b> ya da <b>┃ Bu dikey</b> de. Altı çizginin hepsine doğru adı versin.',
         check: st => eyeNamedAll(st),
@@ -1474,6 +1520,7 @@ const LEVELS = [
       },
       {
         id: 'noisy',
+        do: '<b>Bir çizgiyi boz,</b> yine göster.',
         extra: true,
         shows: ['grow', 'name', 'draw', 'strip', 'log'],
         text: 'Bozuk çizgi: soldaki bir çizgiyi göster, sonra gözdeki <b>bir noktaya tıklayarak</b> onu boz (bir noktayı söndür ya da fazladan bir nokta yak). Ardından <b>👁 Göster</b>. Pamuk yine doğru adı söylüyor mu?',
@@ -1482,6 +1529,7 @@ const LEVELS = [
       },
       {
         id: 'blake',
+        do: '<b>Dikey dünyada büyüt.</b>',
         extra: true,
         shows: ['grow', 'name', 'blake', 'age'],
         text: 'Blakemore deneyi: <b>🐣 Yeni yavru</b> al ve <b>🌱 Sadece dikey dünyada büyüt</b>. Pamuk büyüyünce ona bir <b>yatay</b> çizgi göster. Görebiliyor mu?',
@@ -1505,6 +1553,7 @@ const LEVELS = [
   /* ------------------------------ 10: beş duyu, tek kavram ------------------------------ */
   {
     key: 'senses',
+    q: 'Farklı duyular aynı kavramda nasıl buluşur?',
     ver: 2,
     layered: true,
     brainShort:
@@ -1558,6 +1607,7 @@ const LEVELS = [
     missions: [
       {
         id: 'card',
+        do: '<b>🍋 kartını göster.</b>',
         shows: [],
         text: 'Bir kart göster: soldaki <b>🍋</b> kartına bas. Sinyal soldan sağa nöronlardan geçiyor; sonunda ne diyor?',
         check: st => !!st.flags.card,
@@ -1565,6 +1615,7 @@ const LEVELS = [
       },
       {
         id: 'word',
+        do: '<b>LİMON yaz,</b> göster.',
         shows: ['word'],
         text: 'Aynı şeyi yazıyla göster: yazı kutusuna <b>LİMON</b> yaz ve <b>Göster</b>’e bas. Bu sefer bambaşka nöronlardan geçiyor; sonunda hangi kavram nöronu yanıyor?',
         check: st => !!st.flags.word,
@@ -1572,6 +1623,7 @@ const LEVELS = [
       },
       {
         id: 'sound',
+        do: '<b>Yalnız bir ses çal.</b>',
         extra: true,
         shows: ['word', 'sound', 'clear', 'taste', 'smell'],
         text: 'Gözler kapalı: önce <b>🧹 Hepsini temizle</b>, sonra sadece bir ses çal (ör. <b>🔊 miyav</b>). Ses kulakta nasıl ayrılıyor?',
@@ -1580,6 +1632,7 @@ const LEVELS = [
       },
       {
         id: 'ambig',
+        do: '<b>Temizle, yalnız 😋 tatlı ver.</b>',
         shows: ['word', 'clear', 'taste'],
         text: 'Tek bir duyu yetmeyebilir: <b>🧹 Hepsini temizle</b>, sonra yalnız <b>😋 tatlı</b> tat ver. Ne diyor?',
         check: st => !!st.flags.ambig,
@@ -1587,6 +1640,7 @@ const LEVELS = [
       },
       {
         id: 'combine',
+        do: '<b>🍓 çilek kokusu ekle.</b>',
         shows: ['word', 'clear', 'taste', 'smell'],
         text: 'Şimdi tatlıya bir koku ekle: <b>👃 🍓 çilek kokusu</b>. Kararsızlık bitiyor mu?',
         check: st => !!st.flags.combine,
@@ -1594,6 +1648,7 @@ const LEVELS = [
       },
       {
         id: 'typo',
+        do: '<b>KÖPEG yaz.</b> Tanıyor mu?',
         extra: true,
         shows: ['word', 'sound', 'clear', 'taste', 'smell', 'mat', 'log'],
         text: 'Yanlış yazılmış kelime: temizle ve yazı kutusuna <b>KÖPEG</b> yaz (ya da ELNA, kedı…). Yine tanıyor mu?',
@@ -1618,6 +1673,7 @@ const LEVELS = [
   /* ------------------------------ 12: birlikte yanan, birlikte bağlanır (Ela, limon ve çilek) ------------------------------ */
   {
     key: 'hebb',
+    q: 'Bir koku bütün bir anıyı nasıl geri getirir?',
     ver: 2,
     layered: true,
     brainShort:
@@ -1662,6 +1718,7 @@ const LEVELS = [
     missions: [
       {
         id: 'wire',
+        do: '<b>🍋 Limon’a 4 kez bas.</b>',
         shows: [],
         text: 'Ela limonla tanışıyor: <b>🍋 Limon</b> düğmesine <b>4 kez</b> bas. Her seferinde dört his birlikte gelir: sarı renk, ekşi tat, keskin koku, pürüzlü kabuk.',
         check: st => hebbMinIn(st.W, HEBB.things.lim.x) >= 0.99,
@@ -1669,6 +1726,7 @@ const LEVELS = [
       },
       {
         id: 'complete',
+        do: '<b>Yalnız 👃 kokuyu ver.</b>',
         shows: ['cue', 'koku'],
         text: 'Parçadan bütüne: Ela’ya sadece <b>👃 keskin kokuyu</b> ver (gözleri kapalı, limonu koklatıyorsun). Beyni ne hatırlıyor?',
         check: st => !!st.flags.complete,
@@ -1676,6 +1734,7 @@ const LEVELS = [
       },
       {
         id: 'two',
+        do: '<b>🍓 Çilek’e 4 kez bas,</b> sonra 🔴 kırmızı.',
         shows: ['cue', 'koku', 'cil', 'kir'],
         text: 'İkinci şey: <b>🍓 Çilek</b> düğmesine <b>4 kez</b> bas. Sonra sadece <b>🔴 kırmızı</b> ipucunu ver. Limon mu geliyor, çilek mi?',
         check: st => !!st.flags.two,
@@ -1683,6 +1742,7 @@ const LEVELS = [
       },
       {
         id: 'clean',
+        do: '<b>Karışık ipucu ver.</b>',
         shows: ['cue', 'koku', 'cil', 'kir', 'noisy'],
         text: 'Yanlış ipucu: <b>🟡 sarı + 😖 ekşi + 😋 tatlı</b> ver. Tatlı tat limona ait değil. Ela ne hatırlıyor?',
         check: st => !!st.flags.clean,
@@ -1690,6 +1750,7 @@ const LEVELS = [
       },
       {
         id: 'mix',
+        do: '<b>Çilekli limonata, sonra koku.</b>',
         extra: true,
         shows: ['cue', 'koku', 'cil', 'kir', 'noisy', 'mix', 'self', 'new', 'mat', 'log', 'strip'],
         text: 'Karışan anılar: <b>🍋🍓 Çilekli limonata</b> düğmesine <b>3 kez</b> bas (iki meyve hep birlikte). Sonra yine sadece <b>👃 keskin koku</b> ver. Şimdi ne geliyor?',

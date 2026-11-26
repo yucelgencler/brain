@@ -193,6 +193,11 @@ function dailyHTML(lv) {
     ? `<section class="daily" aria-label="Bunu sen de yaşadın"><h3>${esc(lv.dailyTitle || 'Bunu sen de yaşadın: beyin her an tahmin ediyor')}</h3><div class="daily-row">${lv.daily.map(d => `<article class="dcard"><div class="dc-i" aria-hidden="true">${d.icon}</div><h4>${esc(d.title)}</h4><p>${esc(d.text)}</p></article>`).join('')}</div></section>`
     : '';
 }
+// Sorunun yalnız ilk cümlesi (başlığın yanında tek satır)
+function qShort(q) {
+  const m = String(q).match(/^.+?\?/);
+  return m ? m[0] : q;
+}
 function classicReadingHTML(lv) {
   return `${dailyHTML(lv)}
       <section class="cards3" aria-label="Beyinde ve modelde">
@@ -205,8 +210,8 @@ function classicReadingHTML(lv) {
 }
 // Katmanlı seviye: bitince kısa “Beyninde de böyle”, geri kalan her şey kapalı “Derinleş” içinde
 function layeredReadingHTML(lv) {
-  return `<section class="brain-short" id="brainShort"><h3>🧠 Beyninde de böyle</h3><p>${esc(lv.brainShort)}</p></section>
-      <details class="deeper lay-deep" id="deeper"><summary data-glow="deep"><b>Derinleş</b> <span>hesap, karar haritası, bilim ve bütün görevler</span></summary><div class="deeper-body">
+  return `<section class="brain-short" id="brainShort"><h3>🧠 Beyninde de böyle</h3><p>${esc(lv.brainShort)}</p>${brainLinkHTML(lv.key)}</section>
+      <details class="deeper lay-deep" id="deeper"><summary data-glow="deep"><b>Derinleş</b> <span>hesap, harita ve bilim</span></summary><div class="deeper-body">
         ${lv.kind === 'single' || lv.kind === 'pair' ? mapHTML(lv) : ''}
         ${dailyHTML(lv)}
         <section class="cards3" aria-label="Beyinde ve modelde">
@@ -215,7 +220,6 @@ function layeredReadingHTML(lv) {
           <article class="icard limit"><h3>Modelin basitleştirdiği</h3><p>${esc(lv.cards.limit)}</p></article>
         </section>
         <div class="deeper-txt">${lv.deeper}</div>
-        <section class="panel all-missions"><div class="ph"><h3>Bütün görevler ve açıklamaları</h3><span class="pc" id="msCount"></span></div><ol class="missions" id="missions"></ol></section>
       </div></details>`;
 }
 function buildLevel() {
@@ -240,8 +244,8 @@ function buildLevel() {
   el.innerHTML = `
     <div class="lv-head">
       <div><p class="kicker crumb">Bölüm ${part.no} · Seviye ${lv.id}</p><h2>${esc(lv.title)}</h2></div>
-      <p class="lv-q">${esc(lv.question)}</p>
-      ${brainLinkHTML(lv.key)}
+      <p class="lv-q">${esc(lv.layered ? lv.q || qShort(lv.question) : lv.question)}</p>
+      ${lv.layered ? '' : brainLinkHTML(lv.key)}
     </div>
     ${
       lv.layered
@@ -293,7 +297,37 @@ function buildLevel() {
     }, 3500);
   };
   if (rec.st.targetKey === undefined) rec.st.targetKey = null;
+  if (lv.layered) infoize();
   refresh();
+}
+// Panellerdeki sabit açıklamalar gizlenir; başlıktaki ⓘ ile isteyince açılır
+function infoize() {
+  const boxes = new Map();
+  $('#lv')
+    .querySelectorAll('p.hint:not([id])')
+    .forEach(p => {
+      if (p.closest('.reading, #mission')) return;
+      const box = p.closest('.panel, .bench-card, .bench-scene') || p.parentElement;
+      p.classList.add('hint-x');
+      if (!boxes.has(box)) boxes.set(box, []);
+      boxes.get(box).push(p);
+    });
+  boxes.forEach((ps, box) => {
+    const b = document.createElement('button');
+    b.className = 'info';
+    b.type = 'button';
+    b.textContent = 'i';
+    b.title = 'Açıklama';
+    b.setAttribute('aria-label', 'Açıklamayı göster');
+    b.setAttribute('aria-expanded', 'false');
+    b.onclick = () => {
+      const on = box.classList.toggle('hint-open');
+      b.setAttribute('aria-expanded', String(on));
+    };
+    const h = box.querySelector('h3');
+    if (h) h.appendChild(b);
+    else ps[0].before(b);
+  });
 }
 // Tezgâh: (kart) → sahne → cevap, altında adım şeridi ve yardımcı paneller
 function mapHTML(lv) {
@@ -811,40 +845,79 @@ function applyLayers(lv, rec) {
     .querySelectorAll('#scene .inpx')
     .forEach(g => g.classList.toggle('psug', glow.includes('in')));
 }
+// Açıklamanın ilk cümlesi her zaman, gerisi “Neden?” ile
+function ahaSplit(t) {
+  const m = String(t).match(/^(.+?[.!?])\s+(.+)$/s);
+  return m ? [m[1], m[2]] : [t, ''];
+}
+// Görevin kısa hâli (bantta); uzun metin “?” ile açılır
+const misShort = m => m.do || m.text;
 function renderMissions(lv, rec) {
   const core = coreMissions(lv),
     extras = lv.missions.filter(m => m.extra),
     n = core.length,
     allDone = coreDone(lv, rec);
-  // görev noktaları: bandın içinde, görevin hemen yanında
+  // görev noktaları: bandın içinde. Bitmiş bir noktaya basınca açıklaması yeniden görünür;
+  // temel görevler bitince ek deneyler “+” noktaları olarak gelir.
+  const dot = (m, label) => {
+    const done = rec.done.includes(m.id),
+      act = rec.active === m.id && !rec.aha && !(allDone && !m.extra && done);
+    return `<button class="bm ${done ? 'done' : ''} ${act ? 'active' : ''} ${m.extra ? 'ex' : ''}" data-id="${m.id}" title="${esc(plain(misShort(m)))}" aria-label="${m.extra ? 'Ek deney' : 'Görev ' + label}${done ? ', tamamlandı' : ''}">${done ? '✓' : label}</button>`;
+  };
   const dots =
     `<span class="mis-dots" role="group" aria-label="Görevler">` +
-    core
-      .map((m, k) => {
-        const done = rec.done.includes(m.id),
-          act = rec.active === m.id && !allDone;
-        return `<button class="bm ${done ? 'done' : ''} ${act ? 'active' : ''}" data-id="${m.id}" title="${esc(plain(m.text))}" aria-label="Görev ${k + 1}${done ? ', tamamlandı' : ''}">${done ? '✓' : k + 1}</button>`;
-      })
-      .join('') +
+    core.map((m, k) => dot(m, k + 1)).join('') +
+    (allDone && extras.length ? extras.map(m => dot(m, '+')).join('') : '') +
     `</span>`;
-  // tezgâhın üstündeki bant: şimdiki görev ya da az önce tamamlananın açıklaması
   const act = lv.missions.find(m => m.id === rec.active),
     idx = core.indexOf(act),
     ahaM = rec.aha && lv.missions.find(m => m.id === rec.aha);
+  const more = m =>
+    m.do && plain(m.do) !== plain(m.text)
+      ? `<button class="mis-more" aria-expanded="false" title="Ayrıntı">?</button><span class="mis-long" hidden>${m.text}</span>`
+      : '';
   let h = '';
-  if (ahaM)
-    h = `<div class="aha-box"><div class="aha-main"><div class="aha-h">✓ ${ahaM.text}</div><p>${termify(ahaM.aha)}</p></div>
-      <button class="btn small ${allDone ? '' : 'primary'}" id="ahaOk">${allDone ? 'Tamam' : `Sıradaki görev (${idx + 1}/${n}) →`}</button></div>`;
-  else if (act && act.extra && !rec.done.includes(act.id))
-    h = `<div class="mis-cur"><span class="mis-n">Ek deney</span><span class="mis-t">${act.text}</span></div>`;
+  if (ahaM) {
+    const [first, rest] = ahaSplit(ahaM.aha),
+      nextBtn = allDone ? 'Tamam' : `Sıradaki görev →`;
+    h = `<div class="aha-box"><div class="aha-main">${dots}<p><b>${termify(first)}</b>${
+      rest
+        ? ` <button class="why" aria-expanded="false">Neden? ▸</button><span class="why-t" hidden> ${termify(rest)}</span>`
+        : ''
+    }</p></div><button class="btn small ${allDone ? '' : 'primary'}" id="ahaOk">${nextBtn}</button></div>`;
+  } else if (act && act.extra && !rec.done.includes(act.id))
+    h = `<div class="mis-cur"><span class="mis-n">Ek deney</span>${dots}<span class="mis-t">${misShort(act)}${more(act)}</span></div>`;
   else if (allDone)
-    h = `<div class="mis-cur done"><span class="mis-n">✓ ${n}/${n}</span>${dots}<span class="mis-t">${lv.layered ? `Hepsi tamam! Aşağıda bunun beynindeki karşılığını oku, sonra sıradaki seviyeye geç.${extras.length ? ` Meraklısına “Derinleş”te ${extras.length} ek deney var.` : ''}` : 'Bu seviyenin bütün görevleri tamam. Aşağıdaki kartları okuyabilir ya da sonraki seviyeye geçebilirsin.'}</span></div>`;
+    h = `<div class="mis-cur done"><span class="mis-n">✓ Tamam</span>${dots}<span class="mis-t">${
+      lv.layered
+        ? `Aşağıda beynindeki karşılığını oku.${extras.length ? ' Meraklısına “+” ek deneyler.' : ''}`
+        : 'Bu seviyenin bütün görevleri tamam.'
+    }</span></div>`;
   else
-    h = `<div class="mis-cur"><span class="mis-n">Görev ${idx + 1}/${n}</span>${dots}<span class="mis-t">${act.text}</span></div>`;
+    h = `<div class="mis-cur"><span class="mis-n">Görev ${idx + 1}/${n}</span>${dots}<span class="mis-t">${misShort(act)}${more(act)}</span></div>`;
   $('#mission').innerHTML = h;
   $('#mission')
     .querySelectorAll('.bm')
-    .forEach(b => (b.onclick = () => pickMission(lv, rec, b.dataset.id)));
+    .forEach(
+      b =>
+        (b.onclick = () => {
+          const m = lv.missions.find(x => x.id === b.dataset.id);
+          if (rec.done.includes(m.id) && !m.extra) {
+            rec.aha = m.id; // bitmiş görev: açıklamasını yeniden göster
+            refresh();
+          } else pickMission(lv, rec, m.id);
+        })
+    );
+  const tog = (btn, el, open, closed) => {
+    if (!btn) return;
+    btn.onclick = () => {
+      el.hidden = !el.hidden;
+      btn.setAttribute('aria-expanded', String(!el.hidden));
+      if (open) btn.textContent = el.hidden ? closed : open;
+    };
+  };
+  tog($('#mission .why'), $('#mission .why-t'), 'Kısalt ◂', 'Neden? ▸');
+  tog($('#mission .mis-more'), $('#mission .mis-long'));
   applyLayers(lv, rec);
   const ok = $('#ahaOk');
   if (ok)
@@ -857,31 +930,6 @@ function renderMissions(lv, rec) {
     man.open = true;
     man.dataset.auto = '1';
   }
-  // okuma kısmındaki tam liste
-  const ol = $('#missions');
-  $('#msCount').textContent = `${core.filter(m => rec.done.includes(m.id)).length}/${n}`;
-  const li = (m, dot) => {
-    const done = rec.done.includes(m.id),
-      a = rec.active === m.id;
-    return `<li class="${done ? 'done' : ''} ${a ? 'active' : ''} ${m.extra ? 'extra' : ''}"><button class="ms" data-id="${m.id}" aria-pressed="${a}">
-      <span class="ms-dot" aria-hidden="true">${done ? '✓' : dot}</span><span class="ms-text">${m.text}</span></button>
-      ${done ? `<p class="aha">${termify(m.aha)}</p>` : ''}</li>`;
-  };
-  ol.innerHTML =
-    core.map((m, k) => li(m, k + 1)).join('') +
-    (extras.length
-      ? `<li class="ms-sep">Ek deneyler (isteğe bağlı)</li>` + extras.map(m => li(m, '+')).join('')
-      : '');
-  ol.querySelectorAll('.ms').forEach(
-    b =>
-      (b.onclick = () => {
-        pickMission(lv, rec, b.dataset.id);
-        $('#mission').scrollIntoView({
-          behavior: reducedMotion ? 'auto' : 'smooth',
-          block: 'center'
-        });
-      })
-  );
 }
 
 /* ---------- Doğruluk tablosu ---------- */

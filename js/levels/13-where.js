@@ -163,6 +163,7 @@
 
   const level = Lv.registerLevel({
     key: 'where',
+    q: 'Bir anı beynin neresinde durur?',
     layered: true,
     brainShort:
       'Bir anı beyninde tek bir hücrede değil, birçok nöronun arasındaki bağlantılara dağılmış olarak durur. Bu yüzden her gün nöron kaybetsen de anıların yerinde kalır; ağır hasarda bile anı bir anda değil, yavaş yavaş bulanıklaşarak zayıflar.',
@@ -194,6 +195,7 @@
     missions: [
       {
         id: 'recall',
+        do: '<b>Pamuk’un yarısını ver, hatırlat.</b>',
         shows: [],
         text: '<b>Pamuk’un yarısını</b> ipucu olarak ver ve <b>Hatırla</b>’ya bas.',
         check: st => !!st.flags.recalled,
@@ -201,6 +203,7 @@
       },
       {
         id: 'one',
+        do: '<b>Bir nöron sil,</b> yeniden hatırlat.',
         shows: ['kill'],
         text: '<b>Nöron sil</b>’i aç, ağdan bir nöronu sil ve yeniden hatırlat. Pamuk o nöronla birlikte gitti mi?',
         check: st => !!st.flags.oneDead,
@@ -208,6 +211,7 @@
       },
       {
         id: 'many',
+        do: '<b>6 nöron sil,</b> üç anıyı da hatırlat.',
         shows: ['kill', 'more'],
         text: 'En az <b>6 nöron</b> sil ve üç anıyı da (Pamuk, ev, şemsiye) sırayla hatırlat.',
         check: st => !!(st.flags.many && st.flags.many.length >= 3),
@@ -215,6 +219,7 @@
       },
       {
         id: 'cut',
+        do: '<b>Onar, bağlantıların yarısını kopar.</b>',
         shows: ['kill', 'more', 'cut'],
         text: 'Nöronları <b>onar</b>, sonra bağlantıların <b>yarısını kopar</b> (%50) ve hatırlat.',
         check: st => !!st.flags.cutHalf,
@@ -222,6 +227,7 @@
       },
       {
         id: 'lost',
+        do: '<b>Hasarı %85’e çıkar.</b>',
         extra: true,
         shows: ['kill', 'more', 'cut', 'noisy', 'self', 'log'],
         text: 'Hasarı <b>%85</b>’e çıkar ve üç anıyı hatırlat. Anı birden mi kayboluyor, yoksa bulanıklaşıp başka anılarla mı karışıyor?',

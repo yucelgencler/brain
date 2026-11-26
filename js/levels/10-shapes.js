@@ -157,6 +157,7 @@
 
   const level = Lv.registerLevel({
     key: 'shapes',
+    q: 'Hiç görmediğin bir el yazısını nasıl tanırsın?',
     ver: 1,
     layered: true,
     brainShort:
@@ -188,6 +189,7 @@
     missions: [
       {
         id: 'teach',
+        do: '<b>Öğret:</b> bu bir artı.',
         shows: [],
         text: 'Göze bir şekil çiz (hazır bir <b>artı</b> var), adını seç ve <b>Öğret</b>’e bas.',
         check: st => st.examples.length >= 1,
@@ -195,6 +197,7 @@
       },
       {
         id: 'all',
+        do: '<b>Her şekilden 2 örnek öğret.</b>',
         shows: ['tray'],
         text: 'Her şekilden en az <b>2 örnek</b> öğret: artı, çarpı, kare. “Örnek çiz” düğmesi sana biraz bozuk birer çizim verir.',
         check: st => st.counts.every(c => c >= 2),
@@ -202,6 +205,7 @@
       },
       {
         id: 'test',
+        do: '<b>Yeni bir çizim çiz ve sına.</b>',
         shows: ['tray'],
         text: 'Öğretmediğin, biraz yamuk yeni bir çizim yap, ne olduğunu seç ve <b>Sına</b>. Doğru bilsin.',
         check: st => !!st.flags.newRight,
@@ -209,6 +213,7 @@
       },
       {
         id: 'fix',
+        do: '<b>Yanıldığı çizimi düzelt.</b>',
         extra: true,
         shows: ['tray', 'adv'],
         text: 'Yanıldığı bir çizim bul (ör. iki şeklin arasında bir şey çiz). Ona doğrusunu <b>öğret</b>, sonra aynı çizimi yeniden <b>sına</b>.',
@@ -217,6 +222,7 @@
       },
       {
         id: 'ten',
+        do: '<b>Gelişmiş:</b> on rakamı eğit.',
         extra: true,
         shows: ['tray', 'adv'],
         text: '<b>Gelişmiş</b>’e geç ve on rakamı öğret: <b>Eğit</b>’e bas, gördüklerini %90’ın üstünde bilsin.',
@@ -225,6 +231,7 @@
       },
       {
         id: 'small',
+        do: '<b>Ağı 2 nörona indir.</b>',
         extra: true,
         shows: ['tray', 'adv'],
         text: 'Ağ büyüklüğünü <b>2 nörona</b> indir ve yeniden eğit. Ne kadarını bilebiliyor, hangi rakamları karıştırıyor?',
@@ -233,6 +240,7 @@
       },
       {
         id: 'noise',
+        do: '<b>Bozukluğu 6’ya çıkar.</b>',
         extra: true,
         shows: ['tray', 'adv'],
         text: 'Ağı yeniden 16 nörona çıkar, <b>bozukluğu 6 piksele</b> getir ve eğit. Gördüklerini ve hiç görmediklerini bilme oranlarını karşılaştır.',

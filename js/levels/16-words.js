@@ -117,6 +117,7 @@
 
   const level = Lv.registerLevel({
     key: 'words',
+    q: 'Kelimelerin anlamı beyinde nerede?',
     layered: true,
     brainShort:
       'Bir kelimenin anlamı beyninde tek bir yerde durmaz. Benzer anlamlı kelimeler birbirine benzeyen nöron gruplarını yakar; “kedi”yi duyunca “köpek” bu yüzden aklına daha hızlı gelir. Yeni bir kelimeyi de bildiğin kavramların arasına yerleştirirsin.',
@@ -138,6 +139,7 @@
     missions: [
       {
         id: 'train',
+        do: '<b>Eğit.</b> Harita nasıl değişiyor?',
         shows: [],
         text: '<b>Eğit</b>’e bas: ağ 14 kelimeyi türleriyle (hayvan, meyve, renk, şehir) öğrensin. Anlam haritasında ne oluyor?',
         check: st => !!st.flags.trained,
@@ -145,6 +147,7 @@
       },
       {
         id: 'near',
+        do: '<b>Bir kelimeye tıkla:</b> komşuları kim?',
         shows: [],
         text: 'Haritadan bir kelimeye tıkla: <b>en yakın komşuları</b> kimler?',
         check: st => !!st.flags.near,
@@ -152,6 +155,7 @@
       },
       {
         id: 'new',
+        do: '<b>Yeni kelime öğret:</b> zürafa.',
         shows: ['add'],
         text: 'Yeni bir kelime öğret (ör. <b>zürafa = hayvan</b>), yeniden eğit ve haritada ona tıkla: nereye yerleşti?',
         check: st => !!st.flags.newPlaced,
@@ -159,6 +163,7 @@
       },
       {
         id: 'unknown',
+        do: '<b>Hiç öğretmediğin bir kelime sor.</b>',
         shows: ['add', 'ask'],
         text: 'Hiç öğretmediğin bir kelimeyi sor (ör. <b>kaplan</b>). Ne diyor?',
         check: st => !!st.flags.unknown,

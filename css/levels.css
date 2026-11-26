@@ -3206,3 +3206,98 @@ details.manual[open] > summary {
   border-radius: 10px;
   animation: psug 1.6s ease-in-out infinite;
 }
+
+/* ---------- Az yazı: ayrıntı isteyince ---------- */
+.lv.lay .hint-x {
+  display: none;
+}
+.lv.lay .hint-open .hint-x {
+  display: block;
+  animation: layIn 0.3s ease-out;
+}
+button.info {
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font:
+    italic 600 11px/16px Georgia,
+    serif;
+  cursor: pointer;
+  vertical-align: 2px;
+}
+button.info:hover,
+button.info[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* sıradaki adımı tekrar eden kutular: bant zaten söylüyor */
+.lv.lay .pnext,
+.lv.lay #lNext,
+.lv.lay #mNext,
+.lv.lay #nInfo {
+  display: none;
+}
+/* görev bandı: kısa cümle, “?” ile uzun hâli */
+.mis-more {
+  margin-left: 8px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mis-more[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.mis-long {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.mis-long[hidden] {
+  display: none;
+}
+.aha-main .mis-dots {
+  float: right;
+  margin: 2px 0 0 10px;
+}
+.aha-box .why {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.aha-box p {
+  margin: 2px 0;
+}
+.bm.ex {
+  border-style: dashed;
+}
+.brain-short .brain-link {
+  display: inline-block;
+  margin: 10px 0 0;
+}
+.sveil {
+  fill: var(--surface);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.sveil.on {
+  opacity: 0.78;
+}

@@ -560,3 +560,82 @@ body.hero-ready .hero-in {
     white-space: normal;
   }
 }
+
+/* ---------- Ana sayfa: sade yol haritası ---------- */
+.roadmap h2 {
+  margin-bottom: 14px;
+}
+.hpath {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 720px;
+  display: grid;
+  gap: 8px;
+}
+.hpath a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.hpath a:hover {
+  border-color: var(--accent);
+  transform: translateX(3px);
+}
+.pa-n {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--accent);
+}
+.hpath .extra .pa-n {
+  font-size: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+.hpath .cur a {
+  border-color: var(--accent);
+}
+.pa-t {
+  flex: 1;
+  font-weight: 600;
+  font-size: 16.5px;
+}
+.pa-s {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.pa-s.full {
+  color: var(--ok);
+}
+.pa-s.dim {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.home-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 36px 0 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.home-foot a {
+  color: var(--ink-2);
+}

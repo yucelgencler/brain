@@ -29,9 +29,9 @@ Hiçbir seviye kilitli değil; istediğin yerden başlayabilirsin. İlerlemen ya
 
 ## Nasıl çalışır?
 
-- **Dene:** Her seviyede birkaç nörondan oluşan bir beyin devresi var. Işığı açarsın, bir bağlantıyı güçlendirirsin, bir anıyı hatırlatırsın; sonucu anında görürsün.
-- **Fark et:** Parlayan düğme hep bir sonraki adımı gösterir. Her görevin sonunda neyi fark ettiğini anlatan kısa bir açıklama açılır.
-- **Gerçek beyinde:** Her seviyede üç kart var: _Gerçek beyinde_ (bilim ne diyor), _Bu modelde_ (ekranda ne var), _Modelin basitleştirdiği_ (benzetmenin sınırı). Daha fazlasını isteyene “Daha derine”.
+- **Dene:** Her seviye tek bir dokunuşla başlar: ışığı yak, bir kart göster, bir ipucu ver. Sonucu anında görürsün.
+- **Keşfet:** Görevler kısa ve sırayla gelir; yeni kontroller ancak gerekince açılır. Parlayan düğme hep sıradaki adımı gösterir; görev bitince tek cümlelik bir açıklama, isteyene “Neden?”.
+- **Derinleş:** Seviye bitince kısa bir “Beyninde de böyle” kartı çıkar. Hesaplar, bilimsel kaynaklar ve ek deneyler isteyene “Derinleş” bölümünde.
 - **3B beyin:** Bütün beyinden tek bir sinapsa kadar yakınlaşabilir, nöronları ateşletip sinyalin nasıl aktığını izleyebilirsin. Her seviyeden “🧠 3B’de gör” ile o konunun beynin neresinde olduğuna gidersin.
 - **Sözlük:** Nöron, sinaps, eşik gibi terimlerin sade açıklamaları.
 - **Serbest deney:** Ayarları açık, rehbersiz bir laboratuvar (rakamlar, kelimeler, okuma).

@@ -47,49 +47,46 @@ function buildHome() {
   note.hidden = !started;
   if (started) note.textContent = `Son baktığın: Seviye ${cur.id} · ${cur.title}`;
 
-  const card = (cls, kicker, title, about, body, foot) =>
-    `<article class="chap ${cls}"><p class="chap-k">${kicker}</p><h3>${title}</h3><p class="chap-a">${about}</p>${body}${foot}</article>`;
-  const intro = card(
-    'extra',
-    'Başlangıç · 5 dakika',
-    'Beynin içine bir bak',
-    'Bütün beyinden kabuğa, bir nörona ve iki nöronun buluştuğu sinapsa kadar yakınlaş. Sinyalin nasıl aktığını izle.',
-    '',
-    `<a class="btn" href="beyin3d.html">3B turu başlat →</a>`
-  );
-  const chapters = PARTS.map(p => {
+  // Yol haritası: her bölüm tek satır (sorusu); tıklayınca sıradaki seviyesi açılır.
+  // İlerleme yalnız başlandıysa görünür.
+  const row = (cls, num, title, href, side) =>
+    `<li class="${cls}"><a href="${href}"><span class="pa-n">${num}</span><span class="pa-t">${title}</span>${side}</a></li>`;
+  const rows = PARTS.map(p => {
     const c = chapterStats(p),
-      pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
-    const list = c.items
-      .map(r => {
+      n = c.items.length,
+      lvDone = c.items.filter(r => {
         const pr = levelProgress(r);
-        const mark = pr
-          ? pr.done === pr.total
-            ? '<span class="cl-s full" aria-label="tamamlandı">✓</span>'
-            : `<span class="cl-s">${pr.done}/${pr.total}</span>`
-          : `<span class="cl-s soon">${esc(r.note || 'yakında')}</span>`;
-        return `<li><a href="#seviye-${r.id}"><span class="cl-n">${r.id}</span><span class="cl-t">${esc(r.title)}</span>${mark}</a></li>`;
-      })
-      .join('');
-    const verb = c.done === 0 ? 'Başla' : c.done >= c.total ? 'Yeniden bak' : 'Devam et';
-    return card(
-      '',
-      `Bölüm ${p.no} · ${c.items.length} seviye`,
+        return pr && pr.done === pr.total;
+      }).length,
+      side = c.done
+        ? lvDone === n
+          ? '<span class="pa-s full" aria-label="tamamlandı">✓</span>'
+          : `<span class="pa-s">${lvDone}/${n} seviye</span>`
+        : `<span class="pa-s dim">${n} seviye</span>`;
+    return row(
+      c.done && c.done < c.total ? 'cur' : '',
+      p.no,
       esc(p.title),
-      esc(p.about),
-      `<ol class="chap-list">${list}</ol>`,
-      `<div class="chap-foot"><div class="chap-bar" role="progressbar" aria-label="Bölüm ${p.no} ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div><a class="btn ${c.done === 0 && p.no === 1 ? 'primary' : ''}" href="#seviye-${c.next.id}">${verb} →</a></div>`
+      `#seviye-${c.next.id}`,
+      side
     );
   });
-  const final = card(
-    'extra final',
-    'Final · 8 adım',
-    'Hepsi bir arada: gözden kelimeye',
-    'Bir limona, çileğe ya da dondurmaya baktığında ışığın gözden görme alanına, oradan kavrama ve ağzından çıkan kelimeye kadar izlediği yol. Nesneyi değiştirip hangi nöronların değiştiğini karşılaştır. Önceki bölümlerde tek tek kurduğun parçalar bir beynin içinde birlikte çalışır.',
-    '',
-    `<a class="btn" href="beyin3d.html?yolculuk">Yolculuğa çık →</a>`
-  );
-  $('#chapters').innerHTML = intro + chapters.join('') + final;
+  $('#chapters').innerHTML =
+    row(
+      'extra',
+      '3B',
+      'Beynin içine bir bak',
+      'beyin3d.html',
+      '<span class="pa-s dim">5 dk</span>'
+    ) +
+    rows.join('') +
+    row(
+      'extra',
+      '3B',
+      'Final: gözden kelimeye',
+      'beyin3d.html?yolculuk',
+      '<span class="pa-s dim">8 adım</span>'
+    );
   heroStart();
 }
 

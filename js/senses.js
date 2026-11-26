@@ -141,6 +141,11 @@ function wireSenses(lv) {
     h += `<circle class="soma sk" id="oc${j}" cx="${SZ.ex + 29}" cy="${y}" r="28"/><text class="pemo" x="${SZ.ex + 29}" y="${y + 7}" style="font-size:20px">${c.icon}</text>
     <text class="soma-sub" x="${SZ.ex + 29}" y="${y + 46}" style="font-size:13px">${c.name}</text><text class="skp" id="op${j}" x="${SZ.ex + 29}" y="${y + 62}" style="text-anchor:middle"></text>`;
   });
+  // kullanılmayan duyuların satırları soluklaşır (dikkat kullanılan yola gitsin)
+  SV_SENSE.forEach(s => {
+    const [y0, y1] = R0[s.k];
+    h += `<rect class="sveil" id="sveil-${s.k}" x="4" y="${y0 - 2}" width="${SZ.cx + 174}" height="${y1 - y0}" rx="10"/>`;
+  });
   svg.innerHTML = h;
   // girdiler
   const st = () => R().st,
@@ -323,7 +328,22 @@ function svSuggest(lv, rec) {
   };
 }
 
+function sensesVeil(lv, st) {
+  const on = {
+      vis: st.card != null,
+      word: !!(st.word || '').trim(),
+      smell: st.smell != null,
+      sound: st.sound != null,
+      taste: st.taste.some(Boolean)
+    },
+    any = Object.values(on).some(Boolean);
+  SV_SENSE.forEach(s => {
+    const v = document.getElementById('sveil-' + s.k);
+    if (v) v.classList.toggle('on', !!lv.layered && (any ? !on[s.k] : s.k !== 'vis'));
+  });
+}
 function updateSenses(lv, rec) {
+  sensesVeil(lv, rec.st);
   const st = rec.st,
     r = sensesRun(st),
     T = SENSES.things,

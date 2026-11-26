@@ -261,8 +261,14 @@ test('bütün seviyeler katmanlı: kısa beyin kartı, en az iki temel görev, a
     const l = r.level;
     if (!l) continue;
     assert.ok(l.layered, l.key + ' katmanlı');
+    assert.ok(l.q && l.q.split(/\s+/).length <= 8 && l.q.endsWith('?'), l.key + ' kısa soru');
     assert.ok(l.brainShort && l.brainShort.length <= 320, l.key + ' brainShort');
     const core = l.missions.filter(m => !m.extra);
+    for (const m of l.missions)
+      assert.ok(
+        m.do && m.do.replace(/<[^>]+>/g, '').split(/\s+/).length <= 10,
+        `${l.key}/${m.id}: bantta en çok 10 kelime`
+      );
     assert.ok(core.length >= 2, l.key + ' temel görev');
     // her “shows” anahtarı ya tezgâh kontrolü ya da görünümde bir data-lay
     for (const m of l.missions)

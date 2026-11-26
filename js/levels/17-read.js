@@ -109,6 +109,7 @@
 
   const level = Lv.registerLevel({
     key: 'read',
+    q: 'Okurken harfleri mi görürsün, kelimeyi mi?',
     layered: true,
     brainShort:
       'Okumayı öğrendiğinde beyninin sol arka tarafında kelimelere özelleşen bir alan gelişir. Deneyimli bir okur kelimeyi bütün olarak, yerinden ve yazı tipinden bağımsız tanır; bu yüzden yanlış yazılmış bir kelimeyi çoğu zaman fark etmeden okursun.',
@@ -130,6 +131,7 @@
     missions: [
       {
         id: 'train',
+        do: '<b>Eğit.</b>',
         shows: [],
         text: '<b>Eğit</b>’e bas: ağ 14 kelimeyi piksel resmi olarak okumayı öğrensin.',
         check: st => st.trained >= 1,
@@ -137,6 +139,7 @@
       },
       {
         id: 'typo',
+        do: '<b>Yanlış yaz:</b> elme. Sor.',
         shows: ['typo'],
         text: 'Bir harfi <b>yanlış yaz</b> (ör. <b>elme</b> ya da <b>mavy</b>) ve sor. Yine anlıyor mu?',
         check: st => !!st.flags.typo,
@@ -144,6 +147,7 @@
       },
       {
         id: 'suffix',
+        do: '<b>Ek getir:</b> kediler. Sor.',
         extra: true,
         shows: ['typo', 'suffix'],
         text: 'Bilinen bir kelimeye <b>ek getir</b> (ör. <b>kediler</b>, <b>elmalar</b>) ve sor. Ne diyor?',
@@ -152,6 +156,7 @@
       },
       {
         id: 'shift',
+        do: '<b>Kelimeyi bir harf kaydır.</b>',
         shows: ['typo', 'shift'],
         text: 'Bilinen bir kelimeyi yaz ve <b>→</b> ile bir harf <b>sağa kaydır</b>. Tanıyor mu?',
         check: st => !!st.flags.shiftFail,
@@ -159,6 +164,7 @@
       },
       {
         id: 'fix',
+        do: '<b>Farklı yerlerde göstererek eğit.</b>',
         shows: ['typo', 'shift', 'aug'],
         text: '<b>Farklı yerlerde de göster</b>’i aç, yeniden <b>eğit</b> ve kaydırılmış kelimeyi yine sor.',
         check: st => !!st.flags.shiftFixed,
