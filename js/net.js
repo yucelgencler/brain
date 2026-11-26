@@ -67,15 +67,15 @@ function netGridHTML(lv) {
   ];
   return `<section class="bench has-card">
       <div class="bench-card">
-        <div class="seg modesel" id="nMode" role="group" aria-label="Mod"><button data-m="manual">Elle kur</button><button data-m="learn">Makine öğrensin</button></div>
+        <div class="seg modesel" id="nMode" role="group" aria-label="Mod" data-lay="mode" data-glow="mode"><button data-m="manual">Elle kur</button><button data-m="learn">Makine öğrensin</button></div>
         <div class="nm-manual">
           <p class="hint">Bir durum seç: nörona o durum gösterilir.</p>
           <div class="ncombos" id="nCombos"></div>
         </div>
         <div class="nm-learn">
           <div class="tcard-wrap" id="ncard"></div>
-          <button class="btn primary big" id="nOne">Bir kart göster</button>
-          <div class="bench-more"><button class="btn small" id="nRound">Bir tur</button><button class="btn small" id="nAuto" aria-pressed="false">Otomatik ▶</button></div>
+          <button class="btn primary big" id="nOne" data-glow="one">Bir kart göster</button>
+          <div class="bench-more"><button class="btn small" id="nRound">Bir tur</button><button class="btn small" id="nAuto" aria-pressed="false" data-glow="auto">Otomatik ▶</button></div>
           <div class="bench-more"><button class="btn ghost small" id="nRand">Rastgele başlat</button><button class="btn ghost small" id="nZero">Tamamen sıfırla</button></div>
           <p class="hint" id="nInfo"></p>
         </div>
@@ -85,7 +85,7 @@ function netGridHTML(lv) {
         <div class="nsliders nm-manual">${sliders
           .map(
             ([t, items]) =>
-              `<div class="nsg"><h4>${t}</h4>${items
+              `<div class="nsg" data-lay="${['h1', 'h2', 'out'][sliders.findIndex(g => g[0] === t)]}" data-glow="${['h1', 'h2', 'out'][sliders.findIndex(g => g[0] === t)]}"><h4>${t}</h4>${items
                 .map(
                   ([k, l]) => `<label class="sl"><span class="sl-l">${l}</span>
           <input type="range" id="ns-${k}" min="-2" max="2" step="0.1"><output id="no-${k}" data-fl="no-${k}"></output></label>`
@@ -96,14 +96,14 @@ function netGridHTML(lv) {
       </div>
       <div class="bench-answer panel" id="nanswer" aria-live="polite"></div>
     </section>
-    <section class="strip nm-learn" id="nstep" aria-live="polite"></section>
+    <section class="strip nm-learn" id="nstep" aria-live="polite" data-lay="strip"></section>
     <section class="bench-bottom three">
-      <div class="panel"><div class="ph"><h3>Dört durum</h3><span class="pc" id="nScore"></span></div>
+      <div class="panel" data-lay="table"><div class="ph"><h3>Dört durum</h3><span class="pc" id="nScore"></span></div>
         <p class="hint">Her satırda ara nöronların ve lambanın cevabı. Bir satıra tıklarsan o durum gösterilir.</p><table class="tt" id="ntt"></table></div>
-      <div class="panel"><h3>Karar haritası</h3>
+      <div class="panel" data-lay="map"><h3>Karar haritası</h3>
         <svg id="nmap" class="map2" viewBox="0 0 260 250" role="img" aria-label="Ağın karar haritası"></svg>
         <p class="hint">Boyalı bölgede lamba yanar. Kesikli çizgiler iki ara nöronun kendi sınırları: tek nöron tek çizgi çizebiliyordu, şimdi iki çizgi birleşiyor.</p></div>
-      <div class="panel"><h3>Ara nöronlar ne yakalıyor?</h3>
+      <div class="panel" data-lay="hid"><h3>Ara nöronlar ne yakalıyor?</h3>
         <div id="nhid"></div>
         <button class="btn small" id="nCmp">Benim çözümümle karşılaştır</button>
         <div id="ncmp"></div>

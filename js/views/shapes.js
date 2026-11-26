@@ -43,7 +43,7 @@ function shapesGridHTML(lv) {
   for (let i = 0; i < 35; i++)
     cells += `<button class="sh-cell" data-i="${i}" aria-label="Piksel ${Math.floor(i / 5) + 1}. satır ${(i % 5) + 1}. sütun" aria-pressed="false"></button>`;
   return `
-  <div class="sh-mode" role="group" aria-label="Zorluk">
+  <div class="sh-mode" role="group" aria-label="Zorluk" data-lay="adv">
     <button class="sh-mbtn" id="shSimple" aria-pressed="true">Basit: 3 şekil</button>
     <button class="sh-mbtn" id="shAdvBtn" aria-pressed="false">Gelişmiş: 10 rakam</button>
   </div>
@@ -66,7 +66,7 @@ function shapesGridHTML(lv) {
     </div>
     <div class="panel sh-ans" id="shAns" aria-live="polite"></div>
   </section>
-  <section class="panel sh-tray" id="shTray"></section>
+  <section class="panel sh-tray" id="shTray" data-lay="tray"></section>
   <section id="shAdvBox" hidden>
     <div class="sh-ctl panel">
       <button class="btn primary" id="shTrain" aria-pressed="false">▶ Eğit</button>

@@ -158,6 +158,9 @@
   const level = Lv.registerLevel({
     key: 'shapes',
     ver: 1,
+    layered: true,
+    brainShort:
+      'Beynin bir şekli tanırken önce kenarları ve çizgileri, sonra onların birleşimlerini yakalar. Hiçbir yerde “artının resmi” saklanmaz; artı, belli nöronların birlikte ateşleme desenidir. Bu yüzden hiç görmediğin bir el yazısını da tanırsın.',
     part: 'C',
     kind: 'shapes',
     title: 'Şekil ve rakam tanıma',
@@ -185,42 +188,53 @@
     missions: [
       {
         id: 'teach',
+        shows: [],
         text: 'Göze bir şekil çiz (hazır bir <b>artı</b> var), adını seç ve <b>Öğret</b>’e bas.',
         check: st => st.examples.length >= 1,
         aha: 'İlk örnek. Ağ bu çizimi seçtiğin cevap nöronuna bağlayan bağlantıları güçlendirdi. Tek bir örnekle henüz her çizimi aynı şey sanar; bunu cevap çubuklarında görebilirsin.'
       },
       {
         id: 'all',
+        shows: ['tray'],
         text: 'Her şekilden en az <b>2 örnek</b> öğret: artı, çarpı, kare. “Örnek çiz” düğmesi sana biraz bozuk birer çizim verir.',
         check: st => st.counts.every(c => c >= 2),
         aha: 'Her şekil için birkaç örnek gördü. Ara nöronlar artık çizginin nerede olduğuna göre ayrışıyor: ortadaki dikey çizgi artıyı, dört köşe kareyi, çapraz çizgiler çarpıyı ele veriyor.'
       },
       {
         id: 'test',
+        shows: ['tray'],
         text: 'Öğretmediğin, biraz yamuk yeni bir çizim yap, ne olduğunu seç ve <b>Sına</b>. Doğru bilsin.',
         check: st => !!st.flags.newRight,
-        aha: 'Hiç görmediği bir çizimi doğru tanıdı. Buna genelleme denir. Sen de bir harfin yüzlerce farklı el yazısını, her birini ayrı ayrı ezberlemeden tanırsın.'
+        aha: 'Hiç görmediği bir çizimi doğru tanıdı. Buna [[genelleme]] denir. Sen de bir harfin yüzlerce farklı el yazısını, her birini ayrı ayrı ezberlemeden tanırsın.'
       },
       {
         id: 'fix',
+        extra: true,
+        shows: ['tray', 'adv'],
         text: 'Yanıldığı bir çizim bul (ör. iki şeklin arasında bir şey çiz). Ona doğrusunu <b>öğret</b>, sonra aynı çizimi yeniden <b>sına</b>.',
         check: st => !!st.flags.fixed,
         aha: 'Yanlıştan öğrendi: hata, bağlantıları tam o çizimi düzeltecek yönde değiştirdi. Beynin en çok yanıldığı ya da şaşırdığı yerde öğrendiğini 5. seviyede görmüştün.'
       },
       {
         id: 'ten',
+        extra: true,
+        shows: ['tray', 'adv'],
         text: '<b>Gelişmiş</b>’e geç ve on rakamı öğret: <b>Eğit</b>’e bas, gördüklerini %90’ın üstünde bilsin.',
         check: st => !!st.flags.adv90,
         aha: 'On rakam, yüzlerce örnek. Hiçbir yerde “3’ün resmi” saklanmıyor: 3, belli bağlantıların birlikte ateşlenme deseni. Bozuk bir 3’ü yine tanıması, beynin de eksik bir deseni tamamlamasına benzer.'
       },
       {
         id: 'small',
+        extra: true,
+        shows: ['tray', 'adv'],
         text: 'Ağ büyüklüğünü <b>2 nörona</b> indir ve yeniden eğit. Ne kadarını bilebiliyor, hangi rakamları karıştırıyor?',
         check: st => !!st.flags.smallDone,
         aha: 'İki ara nöron on rakamı birbirinden ayırmaya yetmiyor; benzer rakamlar (3 ile 8, 5 ile 6 gibi) karışıyor. Bir beyin bölgesinin kaç şeyi ayırt edebileceği oradaki nöron ve bağlantı sayısına bağlı.'
       },
       {
         id: 'noise',
+        extra: true,
+        shows: ['tray', 'adv'],
         text: 'Ağı yeniden 16 nörona çıkar, <b>bozukluğu 6 piksele</b> getir ve eğit. Gördüklerini ve hiç görmediklerini bilme oranlarını karşılaştır.',
         check: st => !!st.flags.noiseDone,
         aha: 'Bu kez hiç görmediklerini bilme, gördüklerini bilmenin gerisinde kaldı: çok bozuk bir çizimde rakamın kendisi kaybolmaya başlıyor ve ağ gördüklerini bir ölçüde ezberliyor. Yine de çeşitli örnek görmek, hiç görmediği bozuk çizimlerin çoğunu tanımasını sağladı. Ezber ile genelleme arasındaki bu fark 14. seviyenin konusu.'

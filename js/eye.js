@@ -76,23 +76,23 @@ function eyeGridHTML(lv) {
       <div class="bench-card pact">
         <div class="pstep-h"><span class="pdot">1</span> Pamuk’a bir çizgi göster</div>
         <div class="ebtns">${EYE.lines.map((l, i) => `<button class="btn eline" id="e${i}" title="${esc(eyeLineName(i))}">${ePic(l.x, 26, 1)}<span>${EYE.words[l.o].icon} ${esc(l.short)}</span></button>`).join('')}</div>
-        <p class="hint ehint">ya da sahnedeki gözün noktalarına tıklayıp kendin çiz, sonra göster:</p>
-        <div class="pbtns two"><button class="btn" id="eDraw">👁 Göster</button><button class="btn ghost" id="eClr">🧽 Temizle</button></div>
-        <div class="pstep-h"><span class="pdot">2</span> Adını öğret</div>
-        <div class="pbtns two"><button class="btn" id="n0">━ Bu yatay</button><button class="btn" id="n1">┃ Bu dikey</button></div>
+        <p class="hint ehint" data-lay="draw">ya da sahnedeki gözün noktalarına tıklayıp kendin çiz, sonra göster:</p>
+        <div class="pbtns two" data-lay="draw"><button class="btn" id="eDraw">👁 Göster</button><button class="btn ghost" id="eClr">🧽 Temizle</button></div>
+        <div class="pstep-h" data-lay="name"><span class="pdot">2</span> Adını öğret</div>
+        <div class="pbtns two" data-lay="name"><button class="btn" id="n0">━ Bu yatay</button><button class="btn" id="n1">┃ Bu dikey</button></div>
         <p class="pnext" id="eNext" aria-live="polite"></p>
-        <div class="bench-more pquick"><button class="btn small" id="qGrow">🌱 Büyüt (her çizgiden)</button><button class="btn small" id="qGrowV">🌱 Sadece dikey dünyada büyüt</button><button class="btn ghost small" id="qKit">🐣 Yeni yavru</button></div>
+        <div class="bench-more pquick"><button class="btn small" id="qGrow" data-lay="grow">🌱 Büyüt (her çizgiden)</button><button class="btn small" id="qGrowV" data-lay="blake">🌱 Sadece dikey dünyada büyüt</button><button class="btn ghost small" id="qKit" data-lay="blake">🐣 Yeni yavru</button></div>
       </div>
       <div class="bench-scene"><div class="stage scene-wrap"><svg id="escene" viewBox="0 0 860 340" role="img" aria-label="Solda Pamuk’un gözü (3×3 nokta), ortada altı görme nöronu ve her birinin baktığı resim, sağda yatay ve dikey kelime nöronları"></svg></div></div>
       <div class="bench-answer panel" id="eanswer" aria-live="polite"></div>
     </section>
-    <section class="strip" id="estep" aria-live="polite"></section>
+    <section class="strip" id="estep" aria-live="polite" data-lay="strip"></section>
     <section class="bench-bottom">
-      <div class="panel"><div class="ph"><h3>Yavruluk: kritik dönem</h3><span class="pc" id="eAgeN"></span></div>
+      <div class="panel" data-lay="age"><div class="ph"><h3>Yavruluk: kritik dönem</h3><span class="pc" id="eAgeN"></span></div>
         <div class="eage"><i id="eAgeBar"></i></div>
         <p class="hint" id="eAgeHint"></p>
         <div class="eworld" id="eWorld"></div></div>
-      <div class="panel"><h3>Son bakışlar</h3><div class="llog-wrap"><table class="tt" id="elog"></table></div></div>
+      <div class="panel" data-lay="log"><h3>Son bakışlar</h3><div class="llog-wrap"><table class="tt" id="elog"></table></div></div>
     </section>`;
 }
 

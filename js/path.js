@@ -796,7 +796,9 @@ function applyLayers(lv, rec) {
   el.classList.toggle('sh-done', allDone);
   // parlayan adım
   const g0 = !allDone && !rec.aha && act ? act.glow || [] : [],
-    glow = (typeof g0 === 'function' ? g0(rec.st) : g0).filter(g => !(g === 'auto' && auto));
+    glow = (typeof g0 === 'function' ? g0(rec.st, rec) : g0).filter(
+      g => !(g === 'auto' && (auto || nAuto))
+    );
   document
     .querySelectorAll('#lv .sl')
     .forEach(l => l.classList.toggle('psug', glow.includes(l.dataset.k)));

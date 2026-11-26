@@ -1295,6 +1295,10 @@ const LEVELS = [
   /* ------------------------------ 8: duvarı aşmak ------------------------------ */
   {
     key: 'two',
+    ver: 2,
+    layered: true,
+    brainShort:
+      'Beynin bilgiyi kat kat işler: ilk nöronlar basit parçaları (bir kenar, bir renk), sonrakiler bu parçaların birleşimlerini yakalar. Aradaki nöronlar ne gördüğün şeydir ne de verdiğin cevap; ama zor kararlar onlar sayesinde mümkün olur.',
     goal: 'Tek nöronun öğrenemediği merdiven lambasını, nöronları üst üste koyarak çözmek; sonra makinenin aradaki (gizli) nöronların ne yapacağını kendisinin bulmasını izlemek.',
     todo: [
       'Önce “Elle kur” bölümünde: iki ara nöronu ve lamba nöronunu kaydırıcılarla ayarla. 2. ve 3. seviyede öğrendiğin iki şey yetecek.',
@@ -1329,36 +1333,49 @@ const LEVELS = [
     missions: [
       {
         id: 'g1',
-        text: 'Elle kur: <b>Ara nöron 1</b> sadece <b>alt anahtar yukarı, üst aşağı</b>yken ateşlesin. (İpucu: 3. seviyedeki susturan bağlantı.)',
+        shows: ['h1', 'table'],
+        glow: ['h1'],
+        text: 'Merdiven lambasını üç nöronla çözeceğiz. Önce <b>Ara nöron 1</b>’i ayarla: yalnız <b>alt anahtar yukarı, üst aşağı</b>yken ateşlesin. İpucu: birine susturan bağlantı ver.',
         check: st => NN.netPattern(st.man, false, 0) === '0100',
-        aha: 'Ara nöron 1 artık bir dedektör: “alt yukarı, üst aşağı” durumunu yakalıyor. Bunu 3. seviyede tek başına yapmıştın; şimdi bu nöron daha büyük bir ağın parçası.'
+        aha: 'Ara nöron 1 artık bir durumu yakalıyor: “alt yukarı, üst aşağı”. 3. seviyede tek başına yaptığın şey, şimdi daha büyük bir ağın parçası.'
       },
       {
         id: 'g2',
+        shows: ['h1', 'h2', 'table'],
+        glow: ['h2'],
         text: '<b>Ara nöron 2</b> de tersini yakalasın: sadece <b>üst yukarı, alt aşağı</b>yken ateşlesin.',
         check: st => NN.netPattern(st.man, false, 1) === '0010',
         aha: 'İki ara nöron, problemi iki kolay parçaya böldü. Her biri tek başına düz bir çizgiyle çözülebilen bir şey yakalıyor.'
       },
       {
         id: 'wall',
+        shows: ['h1', 'h2', 'out', 'table', 'map'],
+        glow: ['out'],
         text: 'Şimdi <b>lamba nöronunu</b> bağla: ara nöronlardan <b>biri</b> ateşlerse yansın. Dört durumun dördü de doğru mu?',
         check: st => NN.netSolves(st.man, false, NN.GATES.xor.target),
-        aha: 'Duvar aşıldı! Tek nöronun asla yapamadığını üç nöron birlikte yaptı: iki ara nöron birer parça yakalıyor, lamba nöronu onları VEYA ile birleştiriyor. Karar haritasına bak: artık tek bir çizgi değil, iki çizgi var; lambanın yandığı bölge, tek bir düz çizginin asla çizemeyeceği bir şekil aldı (senin çözümünde iki ayrı köşe parçası). Beyin de karmaşık kararları basit parçaları katman katman birleştirerek verir.'
+        aha: 'Duvar aşıldı! Tek nöronun yapamadığını üç nöron birlikte yaptı: iki [[ara nöron]] birer parça yakalıyor, lamba nöronu ikisini birleştiriyor.'
       },
       {
         id: 'learn',
-        text: '<b>“Makine öğrensin”</b>e geç ve öğret: rastgele bağlantılarla başlayan ağ, lambayı kendisi öğrenebilir mi?',
+        shows: ['h1', 'h2', 'out', 'table', 'map', 'mode', 'hid'],
+        glow: (st, rec) =>
+          st.mode === 'manual' ? ['mode'] : (rec.rounds || []).length ? ['auto'] : ['one'],
+        text: 'Şimdi üstteki <b>Makine öğrensin</b>’e geç ve <b>Bir kart göster</b>e bas: rastgele başlayan ağ lambayı kendisi öğrenebilir mi? (<b>Otomatik</b> da olur.)',
         check: st => !!st.flags.learned,
-        aha: 'Öğrendi. Kimse ara nöronlara ne yakalamaları gerektiğini söylemedi; sadece lambanın doğru cevabı biliniyordu. Lamba her yanıldığında hata, ara nöronlara bağlantıları oranında paylaştırıldı ve her biri kendi payına göre düzeltildi. Buna geri yayılım denir. Beynin tam olarak bu yolla öğrenip öğrenmediği hâlâ tartışılıyor; aşağıdaki “Benzetmenin sınırı” kartına bak.'
+        aha: 'Öğrendi. Kimse ara nöronlara ne yakalamaları gerektiğini söylemedi; yalnız lambanın doğru cevabı biliniyordu. Lamba her yanıldığında hata ara nöronlara paylaştırıldı ve her biri kendi payına göre düzeldi.'
       },
       {
         id: 'compare',
+        extra: true,
+        shows: ['h1', 'h2', 'out', 'table', 'map', 'mode', 'hid', 'strip'],
         text: 'Öğrendikten sonra <b>“Ara nöronlar ne yakalıyor?”</b> panelinde <b>“Benim çözümümle karşılaştır”</b>a bas. Makine senin yolunu mu buldu?',
         check: st => !!st.flags.learned && !!st.flags.compared,
         aha: 'Makine bazen senin çözümünü (biri “sadece alt”, biri “sadece üst”), çoğu zaman başka bir yolu buluyor: örneğin biri “ikisi de aşağı”, öbürü “ikisi birden yukarı değil” olur ve lamba “ikisi birden değil ama hiçbiri de değil” der. Doğru cevaba giden tek bir yol yok. Beyinde de aynı beceriyi iki kişi farklı iç temsillerle öğrenebilir; ara nöronların ne yakaladığını dışarıdan görmek zordur.'
       },
       {
         id: 'zero',
+        extra: true,
+        shows: ['h1', 'h2', 'out', 'table', 'map', 'mode', 'hid', 'strip'],
         text: 'Deney: <b>“Tamamen sıfırla”</b> ile bütün bağlantıları 0 yapıp en az 200 tur öğret. Ne oluyor?',
         check: st => !!st.flags.symmetry,
         aha: 'Hiç öğrenemiyor. Bütün bağlantılar aynı başlayınca iki ara nöron her kartta birebir aynı payı alıyor ve sonsuza kadar ikiz kalıyor: ağ, aslında tek bir ara nöronu olan bir ağ gibi çalışıyor ve duvara takılıyor. Bu yüzden hem yapay ağlar hem beyin farklı, düzensiz bağlantılarla başlar; bu çeşitlilik, nöronların farklı şeyler öğrenebilmesinin ön koşulu (simetriyi kırmak).'
@@ -1382,6 +1399,10 @@ const LEVELS = [
   /* ------------------------------ 9: yatay mı dikey mi? (yavru Pamuk’un gözü) ------------------------------ */
   {
     key: 'lines',
+    ver: 2,
+    layered: true,
+    brainShort:
+      'Beyninin arka tarafındaki görme kabuğunda her nöron belli bir açıdaki çizgiye ateşler. Bu nöronlar neye bakacaklarını doğumdan sonra, baktıkça öğrenir. Bebeklikte gördüklerin görme nöronlarını ayarlar; bu yüzden göz tembelliği küçük yaşta tedavi edilir.',
     goal: 'Gözün neye bakacağını kimseden öğrenmeden, sadece bakarak öğrendiğini görmek: her görme nöronu sık gördüğü bir şekle ayarlanır. Bir nöronun “baktığı” şekil resim olarak çizilebilir.',
     todo: [
       'Pamuk yeni doğmuş bir yavru kedi; gözü 3×3 noktadan oluşuyor. Soldaki çizgi düğmeleriyle ona çizgi göster. Gözündeki altı nöronun her birinin baktığı şekil, kartının içinde küçük bir resim olarak duruyor.',
@@ -1432,30 +1453,37 @@ const LEVELS = [
     missions: [
       {
         id: 'first',
+        shows: [],
         text: 'Yavru Pamuk’a bir çizgi göster: soldaki <b>━ üst</b> düğmesine bas. Gözündeki altı nöronun hangisi kazandı, resmine ne oldu?',
         check: st => !!st.flags.first,
-        aha: 'Altı nöronun hepsi başta bulanık griydi: her şeye biraz benziyorlardı. Gördüğü çizgiye en çok benzeyen nöron kazandı ve bağları o çizgiye doğru kaydı; resmi artık o çizgiye benziyor. Kimse Pamuk’a “bu bir çizgi” demedi. Sadece baktı.'
+        aha: 'Nöronların hepsi başta bulanık griydi. Gördüğü çizgiye en çok benzeyen nöron kazandı ve resmi o çizgiye doğru kaydı. Kimse Pamuk’a “bu bir çizgi” demedi; yalnız baktı.'
       },
       {
         id: 'tuned',
-        text: 'Altı çizginin hepsini göster. Her çizginin <b>kendi keskin nöronu</b> olsun (benzerlik %90’ın üstünde).',
+        shows: ['grow'],
+        text: 'Altı çizginin hepsini birkaç kez göster (ya da <b>🌱 Büyüt</b>). Her çizginin <b>kendi keskin nöronu</b> olsun.',
         check: st => eyeTuned(st.W),
-        aha: 'Altı nöron altı çizgiye ayrıldı. Neden hepsi aynı çizgiye kaymadı? Bir nöron bir çizgiye ayarlanınca öteki çizgilere daha az benzemeye başlar; yeni bir çizgi gelince onu hâlâ bulanık olan bir nöron kazanır. Hubel ve Wiesel 1959’da kedinin görme korteksinde tam böyle nöronlar buldu: her biri yalnızca belirli bir yerdeki, belirli açıdaki bir çubuğa tepki veriyordu. Bir nöronun “baktığı” bu desene algı alanı denir.'
+        aha: 'Altı nöron altı çizgiye ayrıldı: her biri kendi yönüne bakıyor. Hubel ve Wiesel 1959’da kedinin görme kabuğunda tam böyle, belli açıdaki bir çizgiye ateşleyen nöronlar buldu.'
       },
       {
         id: 'name',
-        text: 'Adını öğret: bir çizgi göster, sonra <b>━ Bu yatay</b> ya da <b>┃ Bu dikey</b> de. Pamuk altı çizginin hepsine doğru adı versin.',
+        shows: ['grow', 'name'],
+        text: 'Şimdi adını öğret: bir çizgi göster, sonra <b>━ Bu yatay</b> ya da <b>┃ Bu dikey</b> de. Altı çizginin hepsine doğru adı versin.',
         check: st => eyeNamedAll(st),
-        aha: 'Görmeyi kendi kendine öğrenmişti; ad için her çizgiye bir kez söylemen yetti. Çünkü işin zor kısmını, çizgileri birbirinden ayırmayı, göz zaten yapmıştı. Ad, kazanan nörondan kelime nöronuna giden tek bir bağ. Çocuklar da bir kelimeyi çok az örnekle öğrenir: şekli zaten görebiliyorlar. Bir de dikkat et: “üst yatay”ın adını öğrenince “alt yatay”ı kendiliğinden bilmedi; bu küçük dünyada ikisinin ortak tek noktası yok.'
+        aha: 'Ad için her çizgiye bir kez söylemen yetti, çünkü çizgileri birbirinden ayırmayı göz zaten öğrenmişti. Çocuklar da “köpek” kelimesini birkaç kez duyunca öğrenir; köpeği görmeyi çoktan öğrenmişlerdir.'
       },
       {
         id: 'noisy',
+        extra: true,
+        shows: ['grow', 'name', 'draw', 'strip', 'log'],
         text: 'Bozuk çizgi: soldaki bir çizgiyi göster, sonra gözdeki <b>bir noktaya tıklayarak</b> onu boz (bir noktayı söndür ya da fazladan bir nokta yak). Ardından <b>👁 Göster</b>. Pamuk yine doğru adı söylüyor mu?',
         check: st => !!st.flags.noisy,
         aha: 'Bozuk çizgi de en çok kendi nöronuna benziyor (%80 civarı). Kazanan değişmedi, ad da değişmedi. Silik bir yazıyı, kötü bir el yazısını, yarısı kapalı bir tabelayı da böyle okursun: tam eşleşme gerekmez, en çok benzeyen desen kazanır.'
       },
       {
         id: 'blake',
+        extra: true,
+        shows: ['grow', 'name', 'blake', 'age'],
         text: 'Blakemore deneyi: <b>🐣 Yeni yavru</b> al ve <b>🌱 Sadece dikey dünyada büyüt</b>. Pamuk büyüyünce ona bir <b>yatay</b> çizgi göster. Görebiliyor mu?',
         check: st => !!st.flags.blake,
         aha: 'Pamuk yatay çizgiyi net göremiyor: hiçbir nöronu ona ayarlanmadı ve büyüdüğü için artık ayarlanamıyor. Blakemore ve Cooper 1970’te yavru kedileri yalnızca dikey çizgili bir silindirin içinde büyüttü. Kediler büyüyünce yatay şeyleri fark etmekte zorlandı ve görme korteksleri incelendiğinde yatay çizgiye tepki veren nöron neredeyse yoktu. Gözün neye ayarlanacağını büyürken gördükleri belirliyor ve bunun bir zaman penceresi var: kritik dönem. Çocuklarda tembel gözün erken tedavi edilmesi bu yüzden önemli.'
