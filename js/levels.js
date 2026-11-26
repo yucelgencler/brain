@@ -880,12 +880,10 @@ const LEVELS = [
   /* ------------------------------ 3 ------------------------------ */
   {
     key: 'inhibit',
+    ver: 2,
+    layered: true,
     goal: 'Bir sinyalin nöronu susturabildiğini ve bir hücrenin bir şeyin yokluğunu bile fark edebildiğini görmek.',
-    todo: [
-      'Bir bağlantıyı sıfırın altına indir: pembe çizgi susturan bağlantı demek.',
-      'Görevlerdeki üç davranışı kur.',
-      'Karar haritasında çizginin yönünün nasıl döndüğüne bak.'
-    ],
+    todo: [],
     part: 'A',
     title: 'Susturan bağlantı',
     question:
@@ -893,29 +891,36 @@ const LEVELS = [
     kind: 'pair',
     ranges: { w: [-2, 2, 0.1], theta: [-2, 2, 0.1] },
     init() {
-      return { x: [1, 1], w: [0.6, 0.6], theta: 1, targetKey: 'aNotB' };
+      return { x: [0, 0], w: [1, -1], theta: 0.5, targetKey: null };
     },
+    brainShort:
+      'Beynindeki bağlantıların bir kısmı nöronu uyarır, bir kısmı susturur. Susturan nöronlar olmasa her şey aynı anda ateşlerdi; düşünmek de görmek de bu dengeyle mümkün. Gözünde ışık azalınca ateşleyen hücreler bile var: karanlığı fark eden hücreler.',
     missions: [
       {
-        id: 'aNotB',
-        target: 'aNotB',
-        text: '<b>A yansın, B yanmasın</b>: nöron sadece A yanık ve B sönükken ateşlesin. Bağlantılar artık negatif olabilir.',
-        check: st => NN.solves(st.w, st.theta, NN.GATES.aNotB.target),
-        aha: 'B’nin bağlantısı negatif: B yanınca toplamı düşürüyor ve nöronu susturuyor. Buna baskılayıcı (ketleyici) bağlantı denir. Pembe çizgi bunu gösteriyor.'
+        id: 'hush',
+        glow: ['in'],
+        shows: [],
+        text: 'Önce <b>A ışığını yak</b>, sonra <b>B’yi de yak</b>. B yanınca nöron ne yapıyor?',
+        check: st => !!(st.flags.aYes && st.flags.bothNo),
+        aha: 'B yanınca nöron sustu! B’nin bağlantısı nöronu ateşletmek yerine susturuyor; pembe çizgi bu demek. Buna [[susturan bağlantı]] denir: gelen sinyal toplamı büyütmek yerine küçültüyor.'
       },
       {
         id: 'spont',
         target: null,
-        text: 'Eşiği sıfırın altına indir. Hiçbir ışık yokken ne oluyor?',
-        check: st => st.theta < -1e-9,
-        aha: 'Toplam sıfır olduğu hâlde eşiği aşıyor: nöron kendiliğinden ateşliyor. Gerçek nöronların çoğu da hiç uyarı yokken belli bir hızda ateşler; sinyal, bu temel ritmin artması ya da azalmasıyla da taşınabilir.'
+        glow: ['theta'],
+        shows: ['theta'],
+        text: 'Işıkları söndür ve <b>eşiği sıfırın altına</b> indir. Hiç ışık yokken ne oluyor?',
+        check: st => st.theta < -1e-9 && st.x[0] + st.x[1] === 0,
+        aha: 'Hiç sinyal gelmediği hâlde nöron ateşliyor: kendiliğinden ateşleme. Beynindeki nöronların çoğu da hiç uyarı yokken belli bir hızda ateşler; haber, bu ritmin hızlanması ya da yavaşlamasıyla da taşınabilir.'
       },
       {
         id: 'nor',
         target: 'nor',
-        text: '<b>Karanlık dedektörü</b> kur: nöron sadece hiçbir ışık yanmıyorken ateşlesin.',
+        glow: ['w'],
+        shows: ['w', 'theta', 'table'],
+        text: '<b>Karanlık dedektörü</b> kur: nöron yalnız <b>hiçbir ışık yanmıyorken</b> ateşlesin. İki bağlantıyı da susturan yap.',
         check: st => NN.solves(st.w, st.theta, NN.GATES.nor.target),
-        aha: 'Retinada gerçekten böyle hücreler var: “OFF” hücreleri ışık azalınca daha çok ateşler. Kendiliğinden ateşleme ve susturan bağlantılar birlikte, bir şeyin yokluğunu fark eden bir hücre kuruyor.'
+        aha: 'Gözünde gerçekten böyle hücreler var: ışık azalınca daha çok ateşleyen “OFF” hücreleri. Kendiliğinden ateşleme ve susturan bağlantılar birlikte bir şeyin yokluğunu fark eden bir hücre kurdu.'
       }
     ],
     cards: {
@@ -932,7 +937,10 @@ const LEVELS = [
   /* ------------------------------ 4 ------------------------------ */
   {
     key: 'learn',
-    ver: 2,
+    ver: 3,
+    layered: true,
+    brainShort:
+      'Sen bir şeyi öğrendiğinde beynindeki bazı bağlantılar güçlenir, bazıları zayıflar. Yanıldığında ve doğrusunu gördüğünde bu ayar biraz değişir. Doğru bildiğin şeyde değişecek bir şey yoktur; öğrenme, hatadan beslenir.',
     goal: 'Doğru bağlantıların kimse elle ayarlamadan, örnekler ve geri bildirimle nasıl ortaya çıktığını görmek. Öğrenmek, bağlantıların ayarlanmasıdır; hafıza, bu ayarın kalıcı olmasıdır.',
     todo: [
       'Sağdaki tablo öğretmenin elindeki eğitim verisi: 4 kart, her kartta iki özellik ve doğru cevap. İlk durum “Muz olgun mu?”: kabuğu sarı mı (A), dokununca yumuşak mı (B)? Olgun muz ikisi birden.',
@@ -953,31 +961,41 @@ const LEVELS = [
     missions: [
       {
         id: 'learnAnd',
+        glow: ['one'],
         target: 'and',
-        text: 'Makineye <b>Muz olgun mu?</b> sorusunu öğret. “Bir örnek göster”e basarak her kartta ne değiştiğini izle.',
+        shows: [],
+        text: 'Nörona <b>muzun olgun olup olmadığını</b> öğret: soldaki <b>“Bir örnek göster”</b>e hatası bitene kadar bas.',
         check: st => !!(st.flags.learned && st.flags.learned.and),
-        aha: 'Kimse ona bağlantıların kaç olması gerektiğini söylemedi; sadece her örnekte doğru cevabı söyledin. Nöron hatalarından küçük düzeltmeler çıkardı ve bir noktada durdu: artık hata yok, değişiklik de yok.'
+        aha: 'Öğrendi! Kimse ona bağlantıların kaç olması gerektiğini söylemedi; her kartta yalnız doğru cevabı gördü. Her yanıldığında [[bağlantı gücü|bağlantıları]] biraz düzeltildi, sonunda hata bitti.'
       },
       {
         id: 'zero',
-        text: 'Doğru bildiği bir örneği göster. Bağlantılarda ne değişiyor?',
+        glow: ['one'],
+        shows: ['strip', 'table'],
+        text: 'Bir kart daha göster ve aşağıdaki adımlara bak: <b>doğru bildiği</b> bir kartta bağlantılar değişiyor mu?',
         check: st => !!st.flags.zeroErr,
-        aha: 'Hiçbir şey. Hata yoksa öğrenme de yok: bu kural sadece yanıldığında öğrenir. Ayrıca yanılınca bile sadece o kartta var olan (1 olan) özelliklerin bağlantısı değişir; 0 olan özellik o hatada rol oynamadı.'
+        aha: 'Hiçbir şey değişmedi: hata yoksa öğrenme de yok. Nöron yalnız yanıldığında öğrenir, o zaman da yalnız o kartta var olan özelliklerin bağlantısı değişir.'
       },
       {
         id: 'other',
-        text: 'Başka bir durum seç (ör. <b>Kapıya bakmalı mıyım?</b> ya da kendi tablon) ve onu da öğret.',
+        glow: st => (st.targetKey === 'and' ? ['tsel'] : ['one']),
+        shows: ['strip', 'table', 'side'],
+        text: 'Ona bambaşka bir şey öğret: sağda <b>Öğretilecek durum</b>dan <b>Kapıya bakayım mı?</b> seç ve yine öğret.',
         check: st => !!st.flags.learned && Object.keys(st.flags.learned).some(k => k !== 'and'),
         aha: 'Aynı kural, hiç değişmeden, bambaşka bir şey öğrendi: muz olgunluğu ile kapıya bakmak arasında kural açısından hiçbir fark yok, fark sadece eğitim verisinde. Beyinde de öğrenme mekanizması konudan bağımsız; konuyu deneyim belirliyor. Öğrenilen şey bağlantılarda saklanıyor.'
       },
       {
         id: 'repair',
+        extra: true,
+        shows: ['strip', 'table', 'side', 'manual', 'w', 'theta'],
         text: 'Öğrendikten sonra bir bağlantıyı elle boz. Sonra yeniden öğret: kendini onarabiliyor mu?',
         check: st => !!st.flags.repaired,
         aha: 'Bozduğun yeri hataları sayesinde yeniden buldu. Öğrenen bir sistem hasarı aynı yoldan onarabilir. Beyindeki iyileşmenin, örneğin felçten sonraki rehabilitasyonun, önemli bir kısmı da yeniden öğrenmedir.'
       },
       {
         id: 'forget',
+        extra: true,
+        shows: ['strip', 'table', 'side'],
         text: '<b>Unutma deneyi:</b> Muz’u öğret, sonra başka bir durumu (ör. Kapı) öğret, sonra “Muz olgun mu?”ya geri dön. Hâlâ biliyor mu?',
         check: st => !!st.flags.forgot,
         aha: 'Unuttu. Bu nöronun bütün bilgisi iki bağlantı ve bir eşikte; yeni durumu öğrenirken aynı sayıların üzerine yazıldı. İki durum en az bir kartta farklı cevap istediği için tek nöron ikisini aynı anda bilemez; kartta “hangi soru soruluyor?” bilgisi de yok. Bu model abartılı: burada muzun “sarı kabuk” bilgisi ile kapının “zil” bilgisi aynı A kablosundan geliyor, beyinde ise bunlar tamamen ayrı nöronlardır. Asıl karışma muz ile armut gibi özellikleri ortak olan şeyler arasında olur (sonraki bölüm). Beynin bununla nasıl başa çıktığı ise “Unutma ve uyku” seviyesinin konusu.'
@@ -999,7 +1017,10 @@ const LEVELS = [
   /* ------------------------------ 5: tahmin ederek öğrenme ------------------------------ */
   {
     key: 'predict',
-    ver: 2,
+    ver: 3,
+    layered: true,
+    brainShort:
+      'Beynin her an bir sonrakini tahmin eder, sonra olanla karşılaştırır. Beklemediğin iyi bir şey olunca dopamin nöronları coşar, beklediğin gelmeyince susar. Bu sürpriz sinyali, neyin neyi haber verdiğini öğretmenin olmadığı yerde de öğrenmeni sağlar.',
     goal: 'Öğretmen olmadan öğrenmeyi görmek: beyin her an bir sonrakini tahmin eder, sonra olanla karşılaştırır. Aradaki fark (sürpriz) kadar öğrenir; sürpriz yoksa öğrenecek bir şey de yoktur.',
     todo: [
       'Sen kedi Pamuk’un sahibisin. Önce bir ses çıkar (🛍️ poşeti hışırdat). Pamuk duyduğu sese göre ne kadar mama beklediğini gösterir: beklediği kadar kabına doğru koşar.',
@@ -1048,36 +1069,45 @@ const LEVELS = [
     missions: [
       {
         id: 'learn',
-        text: '<b>🛍️ Poşeti hışırdat</b>, Pamuk’un ne yaptığına bak, sonra <b>🐟 mama ver</b>. Pamuk poşet sesini duyar duymaz kabının başına koşana kadar (beklenti <b>%90</b>) tekrarla.',
+        shows: [],
+        text: '<b>🛍️ Poşeti hışırdat</b>, sonra <b>🐟 mama ver</b>. Pamuk poşet sesini duyar duymaz kabına koşana kadar tekrarla.',
         check: st => !!st.flags.learned,
-        aha: 'Kimse Pamuk’a “poşet sesi, mama demek” demedi; doğru cevabı bir sonraki an verdi. İlk seferde hiç beklemiyordu, mama gelince sürpriz en büyüktü (+1) ve bağ bir anda 0,3 arttı. Sonra her seferinde sürpriz küçüldü, bağ da daha az arttı. Grafiğe bak: öğrenme başta hızlı, sonra yavaş. Senin telefonunun bildirim sesine uzanman da böyle öğrenildi.'
+        aha: 'Kimse Pamuk’a “poşet sesi mama demek” demedi; sesten sonra ne geldiğini gördü ve tahmin etmeyi öğrendi. İlk seferde mama büyük bir sürprizdi; sonra her seferinde sürpriz küçüldü, öğrenme de yavaşladı. Bu sürpriz sinyalini beyinde [[dopamin]] nöronları taşır.'
       },
       {
         id: 'miss',
-        text: 'Eksik basamak: Pamuk artık poşet sesine koşuyor. Bu sefer <b>🛍️ poşeti hışırdat</b> ama <b>🚫 mama verme</b>.',
+        shows: ['chart'],
+        text: 'Pamuk artık poşet sesine koşuyor. Bu sefer <b>🛍️ poşeti hışırdat</b> ama <b>🚫 mama verme</b>. Ne oluyor?',
         check: st => !!st.flags.miss,
-        aha: 'Pamuk koştu, kap boş: sürpriz eksi çıktı. Dopamin nöronu o an sustu; normal, sakin atışı bile durdu. Bağ aynı kuralla azaldı. Karanlıkta olmayan basamağa basınca sarsılman da bu: beyin bir şey bekliyordu ve gelmedi. O sarsıntı, beklentinin orada olduğunun kanıtı.'
+        aha: 'Pamuk koştu, kap boş: bu sefer sürpriz eksi, yani hayal kırıklığı. Dopamin nöronu o an sustu. Karanlıkta olmayan bir basamağa basınca sarsılman da bu: beklediğin şey gelmedi. Bu farka [[tahmin hatası]] denir.'
       },
       {
         id: 'extinct',
-        text: 'Poşeti hışırdatmaya devam et ama mama verme (<b>↻ Son anı 5 kez tekrarla</b> da olur). Pamuk poşet sesine koşmayı bıraksın: beklenti <b>%20’nin altına</b> insin.',
+        shows: ['chart', 'repeat'],
+        text: 'Poşeti hışırdatmaya devam et ama mama verme (<b>↻ Son anı 5 kez tekrarla</b> da olur). Pamuk poşet sesine <b>koşmayı bıraksın</b>.',
         check: st => !!st.flags.extinct,
-        aha: 'Pamuk artık poşet sesine kalkmıyor; buna söndürme denir. Modelde bağ gerçekten küçüldü. Gerçek beyinde ise eski öğrenme silinmez: üstüne “artık mama gelmiyor” diye yeni bir öğrenme eklenir. Bir süre sonra ya da başka bir odada poşet sesi yine Pamuk’u kaldırabilir. Pavlov bunu köpeklerde gördü: söndürülen tepki ertesi gün kendiliğinden geri gelebiliyordu.'
+        aha: 'Pamuk artık poşet sesine kalkmıyor; buna söndürme denir. Gerçek beyinde eski öğrenme silinmez, üstüne “artık mama gelmiyor” diye yeni bir öğrenme eklenir; bir süre sonra poşet sesi Pamuk’u yine kaldırabilir.'
       },
       {
         id: 'half',
-        text: 'Bazen ver, bazen verme: <b>🎲 Yazı-tura × 10</b> düğmesine iki kez bas (ya da elle, arka arkaya 20 kez poşeti hışırdatıp yarısında mama ver). Pamuk ne kadar bekliyor, sürpriz bitiyor mu?',
+        extra: true,
+        shows: ['chart', 'dice', 'strip'],
+        text: 'Bazen ver, bazen verme: <b>🎲 Yazı-tura × 10</b> düğmesine iki kez bas. Pamuk ne kadar bekliyor, sürpriz bitiyor mu?',
         check: st => !!st.flags.half,
         aha: 'Pamuk’un beklentisi %50 civarında dolaşıyor ve sürpriz hiç bitmiyor: mama gelince yaklaşık +0,5 sevinç, gelmeyince −0,5 hayal kırıklığı. Pamuk olasılığı öğrendi; beklentisi, ortalama sonuç. Ama tek tek anları bilemediği için sürpriz hiç sıfırlanmıyor. Dopamin nöronlarının ödül en belirsizken (yarı yarıya) en uzun süreli etkinliği gösterdiği bulundu (Fiorillo ve arkadaşları, 2003). Şans oyunlarının ve “belki bir mesaj gelmiştir” diye telefona bakmanın bu kadar çekici olmasının bir nedeninin bu olduğu düşünülüyor.'
       },
       {
         id: 'block',
+        extra: true,
+        shows: ['chart', 'pisi', 'kitten', 'strip', 'log'],
         text: 'Engelleme deneyi: <b>🐣 Yeni yavru kedi</b> al. Önce poşet + mama ile öğret (%85 üstü). Sonra <b>🛍️+🗣️ ikisini birden</b> yap ve mama ver (en az 8 kez). En sonda <b>sadece 🗣️ “pisi pisi”</b> de: Pamuk geliyor mu?',
         check: st => !!(st.flags.blocked && st.flags.blockProbed),
         aha: 'Pamuk “pisi pisi”ye neredeyse hiç kalkmıyor, oysa bu ses 8 kez mamayla birlikte geldi! Poşet sesi mamayı zaten haber veriyordu: sürpriz yoktu, öğrenecek bir şey de kalmadı. Öğrenme “birlikte gelme”yle değil, sürprizle oluyor. Bu, Kamin’in 1969’daki engelleme deneyi; öğrenmenin tahmin hatasıyla olduğunun en güçlü kanıtlarından biri. Evde bir kediyle sen de deneyebilirsin.'
       },
       {
         id: 'control',
+        extra: true,
+        shows: ['chart', 'pisi', 'kitten', 'strip', 'log'],
         text: 'Kontrol deneyi: yine <b>🐣 Yeni yavru kedi</b> al ve baştan <b>🛍️+🗣️ ikisini birden</b> yapıp mama ver (en az 8 kez). Sonra <b>sadece 🗣️ “pisi pisi”</b> de. Bu sefer geliyor mu?',
         check: st => !!(st.flags.control && st.flags.controlProbed),
         aha: 'Bu sefer Pamuk “pisi pisi”ye de yarı yola kadar koşuyor: iki ses sürprizi paylaştı. Aynı sayıda an, aynı mama; tek fark, poşet sesinin önceden bilinmesiydi. Kontrol deneyi, engellemenin gerçekten “zaten biliyordum”dan kaynaklandığını gösteriyor. Beyin yeni bir işarete ancak eski bilgisi yetmediğinde dikkat eder.'
@@ -1101,6 +1131,10 @@ const LEVELS = [
   /* ------------------------------ 6: XOR ------------------------------ */
   {
     key: 'xor',
+    ver: 2,
+    layered: true,
+    brainShort:
+      'Bazı kararlar tek bir nöronun yapamayacağı kadar karmaşıktır; “ya o ya bu” gibi. Beynin bunları birbirine bağlı nöron gruplarıyla çözer: biri bir durumu, öbürü öbür durumu yakalar, üstteki nöron ikisini birleştirir. Sıradaki bölüm bunun hakkında.',
     goal: 'Tek bir nöronun asla öğrenemeyeceği bir şey olduğunu ve neden birden çok nörona ihtiyaç olduğunu görmek.',
     todo: [
       'Önce elle dene: tablodaki dört satırı tutturmaya çalış.',
@@ -1120,19 +1154,25 @@ const LEVELS = [
     missions: [
       {
         id: 'hand',
-        text: 'Elle dene: <b>merdiven lambası</b> iki anahtar farklı konumdayken yansın, aynı konumdayken sönsün (tam olarak biri yukarıdaysa yanar). Dört satırın kaçını tutturabiliyorsun?',
+        shows: ['manual', 'w', 'theta', 'table'],
+        glow: ['manual'],
+        text: '<b>Merdiven lambası</b>: lamba yalnız <b>tam olarak bir anahtar</b> açıkken yansın. Bağlantıları elle ayarla: aşağıdaki tablonun dört satırının kaçını tutturabiliyorsun?',
         check: st => NN.score(st.w, st.theta, NN.GATES.xor.target) >= 3,
-        aha: '3 satırı tutturdun. Ama dördüncüsü hep bozuluyor: en fazla 3. Bu senin becerinle ilgili değil; tek bir nöron bunu yapamaz.'
+        aha: '3 satır tuttu, ama dördüncüsü hep bozuluyor. Bu senin becerinle ilgili değil: tek bir nöron bunu hiçbir ayarla yapamaz.'
       },
       {
         id: 'rounds',
-        text: 'Makineye öğretmeyi dene: “Otomatik”e bas ve en az 15 tur izle. Tur başına hata sayısı sıfıra iniyor mu?',
+        shows: ['table', 'side'],
+        glow: st => (st.flags.rounds || 0 ? ['auto'] : ['one']),
+        text: 'Belki kendisi öğrenir? <b>“Bir örnek göster”</b>e, bir tur bitince <b>“Otomatik”</b>e bas ve 15 tur izle. Hata sıfıra iniyor mu?',
         check: st => (st.flags.rounds || 0) >= 15,
-        aha: 'Hata sayısı hiç sıfıra inmiyor; karar çizgisi bir o yana bir bu yana gidip geliyor. VE’de birkaç turda duran kural burada sonsuza kadar döner.'
+        aha: 'Hata hiç sıfıra inmiyor; nöron bir şeyi düzeltirken başka bir şeyi bozuyor. 4. seviyede birkaç turda biten öğrenme burada sonsuza kadar döner.'
       },
       {
         id: 'why',
-        text: 'Karar haritasına bak ve aşağıdaki “Daha derine”yi aç: neden olmuyor?',
+        shows: ['table', 'side'],
+        glow: ['deep'],
+        text: 'Neden olmuyor? Aşağıdaki <b>Derinleş</b>’i aç ve karar haritasına bak.',
         check: st => !!st.flags.openedDeeper,
         aha: 'Tek nöron haritayı tek bir düz çizgiyle ikiye bölebilir. Bu tabloda ateşlemesi gereken iki köşe çaprazda duruyor; onları öbür ikisinden ayıran düz bir çizgi yok. Çözüm için birden fazla nöronun birlikte çalışması gerekiyor: sıradaki bölümün konusu.'
       }

@@ -48,7 +48,7 @@ function wireGeneral(lv) {
   };
   $('#gnSample').onclick = () => {
     // “yeni çizim” görevinde öğretilenlerden belirgin farklı bir çizim
-    const fresh = R().active === 'new' && R().done.length < lv.missions.length;
+    const fresh = curMission(lv, R()) === 'new';
     st.bits = noisyBits(
       GEN.protos[st.label],
       fresh ? 3 : 1 + Math.floor(Math.random() * 2),
@@ -86,7 +86,7 @@ function wireGeneral(lv) {
 }
 function gnSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active,
+    act = curMission(lv, rec),
     on = st.bits.reduce((a, b) => a + b, 0),
     same = (a, b) => a.every((v, i) => v === b[i]),
     taught = st.examples.some(e => same(e.bits, st.bits)),

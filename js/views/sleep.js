@@ -197,7 +197,7 @@ function updateSleepNow(st) {
 }
 function slSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active;
+    act = curMission(lv, rec);
   if (slRaf) return [];
   if (act === 'day1') return [st.stage === 0 ? 'slDay1' : 'slReset'];
   if (act === 'forget')

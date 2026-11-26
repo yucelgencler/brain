@@ -274,7 +274,7 @@ function svSuggest(lv, rec) {
   const st = rec.st,
     r = sensesRun(st),
     g = r.given,
-    act = rec.done.length === lv.missions.length ? null : rec.active;
+    act = curMission(lv, rec);
   const others = keys => Object.keys(g).some(k => g[k] && !keys.includes(k));
   const clr = m => ({ ids: ['sClr'], m: `${m} Önce <b>🧹 Hepsini temizle</b>.` });
   if (act === 'card') {

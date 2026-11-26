@@ -144,7 +144,7 @@ function drawRead(st) {
 }
 function rdSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active,
+    act = curMission(lv, rec),
     L = readList(),
     w = (st.text || '').toLocaleLowerCase('tr-TR').trim(),
     known = L.some(p => p.w === w),

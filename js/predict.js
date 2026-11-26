@@ -63,21 +63,21 @@ function predictGridHTML(lv) {
   return `<section class="bench has-card">
       <div class="bench-card pact">
         <div class="pstep-h"><span class="pdot">1</span> Bir ses çıkar</div>
-        <div class="pbtns">${PREDICT.cues.map((c, i) => `<button class="btn" id="c${i}">${c.icon} ${esc(c.btn)}</button>`).join('')}<button class="btn" id="cB">${PREDICT.cues.map(c => c.icon).join('+')} İkisi birden</button></div>
+        <div class="pbtns">${PREDICT.cues.map((c, i) => `<button class="btn" id="c${i}"${i ? ' data-lay="pisi"' : ''}>${c.icon} ${esc(c.btn)}</button>`).join('')}<button class="btn" id="cB" data-lay="pisi">${PREDICT.cues.map(c => c.icon).join('+')} İkisi birden</button></div>
         <div class="pstep-h"><span class="pdot">2</span> Mama verecek misin?</div>
         <div class="pbtns two"><button class="btn" id="gYes">🐟 Mama ver</button><button class="btn" id="gNo">🚫 Verme</button></div>
         <p class="pnext" id="pNext" aria-live="polite"></p>
-        <div class="bench-more pquick"><button class="btn small" id="qRep">↻ Son anı 5 kez tekrarla</button><button class="btn small" id="qDice">🎲 Yazı-tura × 10</button><button class="btn ghost small" id="qNew">🐣 Yeni yavru kedi</button></div>
+        <div class="bench-more pquick"><button class="btn small" id="qRep" data-lay="repeat">↻ Son anı 5 kez tekrarla</button><button class="btn small" id="qDice" data-lay="dice">🎲 Yazı-tura × 10</button><button class="btn ghost small" id="qNew" data-lay="kitten">🐣 Yeni yavru kedi</button></div>
       </div>
       <div class="bench-scene"><div class="stage scene-wrap"><svg id="pscene" viewBox="0 0 860 348" role="img" aria-label="Üstte oda: Pamuk ve mama kabı. Altta Pamuk’un beyni: ses nöronları, tahmin nöronu, dopamin nöronu"></svg></div></div>
       <div class="bench-answer panel" id="panswer" aria-live="polite"></div>
     </section>
-    <section class="strip" id="pstep" aria-live="polite"></section>
+    <section class="strip" id="pstep" aria-live="polite" data-lay="strip"></section>
     <section class="bench-bottom">
-      <div class="panel"><div class="ph"><h3>Beklenti ve sürpriz, an an</h3><span class="pc" id="pChartN"></span></div>
+      <div class="panel" data-lay="chart"><div class="ph"><h3>Beklenti ve sürpriz, an an</h3><span class="pc" id="pChartN"></span></div>
         <svg id="pchart" viewBox="0 0 600 206" aria-hidden="true"></svg>
         <p class="hint" id="pChartHint"></p></div>
-      <div class="panel"><h3>Pamuk’un beynindeki bağlar ve son anlar</h3>
+      <div class="panel" data-lay="log"><h3>Pamuk’un beynindeki bağlar ve son anlar</h3>
         <div class="pweights" id="pweights"></div>
         <div class="llog-wrap"><table class="tt" id="plog"></table></div></div>
     </section>`;
@@ -215,7 +215,7 @@ function pSuggest(lv, rec) {
     f = st.flags,
     ph = st.pend,
     pos = st.w[0],
-    act = rec.done.length === lv.missions.length ? null : rec.active;
+    act = curMission(lv, rec);
   const cueFirst = (id, m1) =>
     ph
       ? { ids: [id], m: m1 }
@@ -391,7 +391,7 @@ function pAnswer(st, rec) {
     ph = st.pend;
   const row = (x, lab) => {
     const v = weightedSum(x, st.w);
-    return `<div class="prow"><span class="prow-l">${lab}</span><span class="pbar"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></span><b data-fl="pa${x.join('')}">${pPct(v)}</b></div>`;
+    return `<div class="prow"${x[1] ? ' data-lay="pisi"' : ''}><span class="prow-l">${lab}</span><span class="pbar"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></span><b data-fl="pa${x.join('')}">${pPct(v)}</b></div>`;
   };
   $('#panswer').innerHTML = `<div class="ans-l">Pamuk ne bekliyor?</div>
     <p class="ans-sub" style="margin:0 0 4px">Bu sesi duyarsa ne kadar mama bekler (ve kabına ne kadar koşar)</p>

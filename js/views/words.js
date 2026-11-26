@@ -210,7 +210,7 @@ function drawWords(st) {
 }
 function wdSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active;
+    act = curMission(lv, rec);
   if (wdRaf) return [];
   if (act === 'train') return ['wdTrain'];
   if (act === 'near') return st.flags.trained ? ['wdCanvas'] : ['wdTrain'];

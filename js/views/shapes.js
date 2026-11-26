@@ -422,7 +422,7 @@ const B3fmtSteps = n => n.toLocaleString('tr-TR') + ' adım';
 /* ---------- Güncelle ---------- */
 function shSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active,
+    act = curMission(lv, rec),
     on = st.bits.reduce((a, b) => a + b, 0);
   const s = { ids: [], grid: false, chip: -1 };
   const same = (a, b) => a.every((v, i) => v === b[i]);

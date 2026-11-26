@@ -11,7 +11,8 @@
 function levelProgress(r) {
   if (!r.level) return null;
   const rec = P.rec[r.level.key];
-  return { done: rec.done.length, total: r.level.missions.length };
+  const core = coreMissions(r.level);
+  return { done: core.filter(m => rec.done.includes(m.id)).length, total: core.length };
 }
 function chapterStats(part) {
   const items = ROADMAP.filter(r => r.part === part.id);

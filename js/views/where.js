@@ -130,7 +130,7 @@ function wireWhere(lv) {
 
 function whSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active;
+    act = curMission(lv, rec);
   const s = [];
   const go = () => s.push('whGo');
   if (act === 'recall') {

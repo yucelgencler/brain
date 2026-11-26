@@ -207,7 +207,7 @@ function eGrow(world) {
 // Şimdi ne yapmalı?
 function eSuggest(lv, rec) {
   const st = rec.st,
-    act = rec.done.length === lv.missions.length ? null : rec.active,
+    act = curMission(lv, rec),
     last = st.last,
     grown = st.age >= EYE.age;
   const lineIdx = x => EYE.lines.findIndex(l => l.x.every((v, i) => v === x[i]));

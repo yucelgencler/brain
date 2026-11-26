@@ -87,7 +87,7 @@ test('seviye 2 görevleri başlangıçta açık, çözümle kapanıyor', () => {
 test('seviye 3 görevleri', () => {
   const s0 = { ...lv('inhibit').init(), flags: {} };
   for (const m of lv('inhibit').missions) assert.ok(!m.check(s0), m.id);
-  assert.ok(mission('inhibit', 'aNotB').check(pair([1, -1], 0.5)));
+  assert.ok(mission('inhibit', 'hush').check(pair([1, -1], 0.5, { aYes: true, bothNo: true })));
   assert.ok(mission('inhibit', 'nor').check(pair([-1, -1], -0.5)));
   assert.ok(mission('inhibit', 'spont').check(pair([0, 0], -0.1)));
 });
@@ -609,11 +609,13 @@ test('seviye 10: altı görev sırayla', () => {
   assert.strictEqual(sDone(st).length, 6);
 });
 test('katmanlı seviyeler: sade başlar, her görevin açtığı ve parlattığı belli', () => {
-  for (const key of ['light', 'pair']) {
+  for (const key of ['light', 'pair', 'inhibit', 'learn', 'xor']) {
     const l = lv(key);
     assert.ok(l.layered && l.brainShort && l.brainShort.length < 320, key);
-    assert.deepStrictEqual(l.missions[0].shows, [], key + ': ilk adımda hiç kontrol yok');
-    for (const m of l.missions) assert.ok(Array.isArray(m.glow) && m.glow.length, key + '/' + m.id);
+    assert.ok(l.missions[0].shows.length <= 4, key + ': ilk adım sade');
+    for (const m of l.missions)
+      if (!m.extra)
+        assert.ok(m.glow && (typeof m.glow === 'function' || m.glow.length), key + '/' + m.id);
   }
 });
 console.log(`\n${passed} test geçti.`);

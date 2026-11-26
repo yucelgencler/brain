@@ -3072,7 +3072,6 @@ details.manual[open] > summary {
 .lv.lay:not(.sh-w) .sl[data-k='w'],
 .lv.lay:not(.sh-theta) .sl[data-k='theta'],
 .lv.lay:not(.sh-gauge) #gauge,
-.lv.lay:not(.sh-table) .lay-bottom,
 .lv.lay:not(.sh-all) .calc,
 .lv.lay:not(.sh-done) #brainShort,
 .lv.lay:not(.sh-w) #scene .wtext,
@@ -3195,4 +3194,20 @@ details.manual[open] > summary {
 }
 .lvm-links a {
   color: var(--ink-2);
+}
+.lv.lay .lay-off {
+  display: none !important;
+}
+.missions .ms-sep {
+  list-style: none;
+  margin: 14px 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+[data-glow].psug:not(.btn) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 10px;
+  animation: psug 1.6s ease-in-out infinite;
 }

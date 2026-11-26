@@ -163,7 +163,7 @@ function hCue(cue) {
 function hSuggest(lv, rec) {
   const st = rec.st,
     T = HEBB.things,
-    act = rec.done.length === lv.missions.length ? null : rec.active;
+    act = curMission(lv, rec);
   const lim = hebbMinIn(st.W, T.lim.x),
     cil = hebbMinIn(st.W, T.cil.x),
     cross = hebbMinCross(st.W, T.lim.x, T.cil.x),
