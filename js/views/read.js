@@ -22,25 +22,25 @@ function readGridHTML(lv) {
     <div class="panel rd-left">
       <div class="ph"><h3>Yaz ve sor</h3><span class="pc">bilinen 14 kelime</span></div>
       <div class="wd-row"><input id="rdText" maxlength="8" autocomplete="off" aria-label="Kelime" /><button class="btn primary" id="rdAsk">Sor</button></div>
-      <div class="rd-shift"><span class="hint">Kaydır:</span><button class="btn small" id="rdL" aria-label="Bir harf sola">←</button><output id="rdShiftOut"></output><button class="btn small" id="rdR" aria-label="Bir harf sağa">→</button></div>
-      <span class="hint">Dene:</span>
-      <div class="rd-tries">${tries.map(t => `<button class="btn small" data-t="${t}">${t}</button>`).join('')}</div>
-      <span class="hint">Bildiği kelimeler:</span>
-      <div class="rd-known" id="rdKnown"></div>
+      <div class="rd-shift" data-lay="shift"><span class="hint">Kaydır:</span><button class="btn small" id="rdL" aria-label="Bir harf sola">←</button><output id="rdShiftOut"></output><button class="btn small" id="rdR" aria-label="Bir harf sağa">→</button></div>
+      <span class="hint" data-lay="typo suffix">Dene:</span>
+      <div class="rd-tries">${tries.map((t, i) => `<button class="btn small" data-t="${t}" data-lay="${i < 3 ? 'typo' : 'suffix'}">${t}</button>`).join('')}</div>
+      <span class="hint" data-lay="shift">Bildiği kelimeler:</span>
+      <div class="rd-known" id="rdKnown" data-lay="shift"></div>
     </div>
     <div class="panel rd-eye">
       <div class="ph"><h3>Gözün gördüğü</h3><span class="pc">6 × 31 = 186 göz nöronu</span></div>
       <canvas id="rdCanvas" role="img" aria-label="Kelimenin piksel resmi"></canvas>
       <div class="rd-train">
         <button class="btn primary" id="rdTrain">▶ Eğit</button>
-        <label class="ctl" id="rdAugL"><input type="checkbox" id="rdAug" /> Farklı yerlerde de göster</label>
+        <label class="ctl" id="rdAugL" data-lay="aug"><input type="checkbox" id="rdAug" /> Farklı yerlerde de göster</label>
         <span class="rd-prog"><i id="rdProg"></i></span>
       </div>
       <p class="hint" id="rdStatus"></p>
     </div>
     <div class="panel rd-ans" id="rdAns" aria-live="polite"></div>
   </section>
-  <section class="panel rd-logp"><div class="ph"><h3>Son sorular</h3></div><div class="llog-wrap"><table class="tt" id="rdLog"></table></div></section>`;
+  <section class="panel rd-logp" data-lay="log"><div class="ph"><h3>Son sorular</h3></div><div class="llog-wrap"><table class="tt" id="rdLog"></table></div></section>`;
 }
 function wireRead(lv) {
   const st = R().st;

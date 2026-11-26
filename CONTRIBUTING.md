@@ -95,7 +95,7 @@ Bir seviye iki parçadır: **içerik ve model** (arayüzden bağımsız, Node’
 
 - `check(st)` yalnız durumu (`st`) okur; arayüzü değil. Görevin tamamlandığını model fonksiyonların `st.flags` içine yazar.
 - **Önce yaşa, sonra adını koy.** Görev açıklamalarında (`aha`) bir terimi ilk kez kullanırken `[[eşik]]` ya da `[[bağlantı gücü|bağlantı]]` yaz: üstüne gelince sözlükteki tek cümlelik açıklama görünür.
-- **Katmanlı seviye** (1. ve 2. seviye örnek): `layered: true` ile sayfa en sade hâliyle açılır. Her görevin `shows` listesi o görevle açılan kontrolleri (`b`, `w`, `theta`, `gauge`, `table`), `glow` listesi parlayacak kontrolü söyler. Seviye bitince `brainShort` (2–3 cümle) “Beyninde de böyle” kartı olarak çıkar; kartlar, hesap ve harita kapalı “Derinleş” bölümündedir.
+- **Katmanlı seviye** (bütün seviyeler böyle): `layered: true` ile sayfa en sade hâliyle açılır. Görünümdeki bir panele `data-lay="anahtar"` verirsen, o anahtarı `shows` listesinde taşıyan görev gelince görünür; `data-glow="anahtar"` verilen kontrol, görevin `glow` listesinde (ya da `glow: (st, rec) => [...]` fonksiyonunda) varsa parlar. Temel olmayan görevlere `extra: true` ver: ilerlemeye sayılmaz, “Derinleş”teki listede “ek deney” olarak durur. Seviye bitince `brainShort` (2–3 cümle) “Beyninde de böyle” kartı olarak çıkar; kartlar, hesap ve harita kapalı “Derinleş” bölümündedir.
 - Seviyenin yeri `js/levels.js` içindeki `ROADMAP` dizisinde belirlenir (oraya `{ key: 'ornek', part: 'C', title: '…' }` ekle). Numara sıradan hesaplanır.
 
 ### 2. Görünüm: `js/views/ad.js`

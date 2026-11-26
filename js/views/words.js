@@ -41,13 +41,13 @@ function wordsGridHTML(lv) {
     <div class="panel wd-left">
       <div class="ph"><h3>Kelimeler</h3><span class="pc" id="wdN"></span></div>
       <div class="wd-chips" id="wdChips"></div>
-      <div class="wd-form">
+      <div class="wd-form" data-lay="add">
         <label for="wdNewW">Yeni kelime öğret</label>
         <div class="wd-row"><input id="wdNewW" placeholder="ör. zürafa" maxlength="14" autocomplete="off" />
           <select id="wdNewC" aria-label="Türü">${WORDS.cats.map(c => `<option>${c}</option>`).join('')}</select>
           <button class="btn small" id="wdAdd">Öğret</button></div>
       </div>
-      <div class="wd-form">
+      <div class="wd-form" data-lay="ask">
         <label for="wdAskW">Bir kelime sor</label>
         <div class="wd-row"><input id="wdAskW" placeholder="ör. kaplan" maxlength="14" autocomplete="off" /><button class="btn small" id="wdAsk">Sor</button></div>
         <p class="wd-askres" id="wdAskRes" aria-live="polite"></p>
@@ -56,7 +56,7 @@ function wordsGridHTML(lv) {
     <div class="panel wd-map">
       <div class="ph"><h3>Anlam haritası</h3><span class="pc" id="wdSub"></span></div>
       <canvas id="wdCanvas" role="img" aria-label="Kelimelerin ara nöron desenlerine göre yerleştiği harita; yakın duranlar benzer"></canvas>
-      <div class="wd-ctl"><button class="btn primary" id="wdTrain">▶ Eğit</button><button class="btn ghost" id="wdReset">↺ Boş ağla başla</button>
+      <div class="wd-ctl"><button class="btn primary" id="wdTrain">▶ Eğit</button><button class="btn ghost" id="wdReset" data-lay="reset">↺ Boş ağla başla</button>
         <span class="hint wd-leg">${WORDS.cats.map((c, i) => `<span style="color:var(${WD_COL[i]})">● ${c}</span>`).join(' ')}</span></div>
     </div>
     <div class="panel wd-sel" id="wdSel" aria-live="polite"></div>

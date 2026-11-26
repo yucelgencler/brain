@@ -245,4 +245,34 @@ test('model hiçbir yerde “küçük beyin” diye anılmaz (Türkçede beyinci
     assert.ok(!/küçük (bir )?beyin|küçük beyn/i.test(fs.readFileSync(f, 'utf8')), f);
 });
 
+test('bütün seviyeler katmanlı: kısa beyin kartı, en az iki temel görev, açılan paneller tanımlı', () => {
+  const fs = require('fs'),
+    path = require('path');
+  const views = ['js', 'js/views']
+    .flatMap(d =>
+      fs
+        .readdirSync(path.join(__dirname, '..', d))
+        .filter(f => f.endsWith('.js'))
+        .map(f => fs.readFileSync(path.join(__dirname, '..', d, f), 'utf8'))
+    )
+    .join('\n');
+  const bench = ['b', 'w', 'theta', 'gauge', 'table'];
+  for (const r of Lv.ROADMAP) {
+    const l = r.level;
+    if (!l) continue;
+    assert.ok(l.layered, l.key + ' katmanlı');
+    assert.ok(l.brainShort && l.brainShort.length <= 320, l.key + ' brainShort');
+    const core = l.missions.filter(m => !m.extra);
+    assert.ok(core.length >= 2, l.key + ' temel görev');
+    // her “shows” anahtarı ya tezgâh kontrolü ya da görünümde bir data-lay
+    for (const m of l.missions)
+      for (const k of m.shows || [])
+        assert.ok(
+          bench.includes(k) ||
+            new RegExp(`data-lay="[^"]*\\b${k}\\b`).test(views) ||
+            views.includes(`'${k}'`),
+          `${l.key}/${m.id}: ${k}`
+        );
+  }
+});
 console.log(`\n${passed} test geçti.`);

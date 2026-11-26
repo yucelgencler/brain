@@ -109,6 +109,9 @@
 
   const level = Lv.registerLevel({
     key: 'read',
+    layered: true,
+    brainShort:
+      'Okumayı öğrendiğinde beyninin sol arka tarafında kelimelere özelleşen bir alan gelişir. Deneyimli bir okur kelimeyi bütün olarak, yerinden ve yazı tipinden bağımsız tanır; bu yüzden yanlış yazılmış bir kelimeyi çoğu zaman fark etmeden okursun.',
     ver: 1,
     part: 'E',
     kind: 'read',
@@ -127,33 +130,39 @@
     missions: [
       {
         id: 'train',
+        shows: [],
         text: '<b>Eğit</b>’e bas: ağ 14 kelimeyi piksel resmi olarak okumayı öğrensin.',
         check: st => st.trained >= 1,
         aha: 'Ağ artık 14 kelimenin resmini türüne bağlıyor. Hiçbir yerde “k harfi” diye bir nöron yok; ağ kelimenin bütün şeklini görüyor.'
       },
       {
         id: 'typo',
+        shows: ['typo'],
         text: 'Bir harfi <b>yanlış yaz</b> (ör. <b>elme</b> ya da <b>mavy</b>) ve sor. Yine anlıyor mu?',
         check: st => !!st.flags.typo,
         aha: 'Anladı: kelimenin şeklinin büyük kısmı aynı kaldı. Sen de yanlış yazılmış bir kelimeyi çoğu zaman fark etmeden okursun; beyin kelimeyi harf harf hecelemek yerine bütün olarak tanır.'
       },
       {
         id: 'suffix',
+        extra: true,
+        shows: ['typo', 'suffix'],
         text: 'Bilinen bir kelimeye <b>ek getir</b> (ör. <b>kediler</b>, <b>elmalar</b>) ve sor. Ne diyor?',
         check: st => !!st.flags.suffix,
         aha: 'Ek, kelimenin şeklini uzattı ve resmin daha önce yalnız uzun kelimelerde (ör. renk adlarında) dolu olan yerlerine mürekkep koydu. Bu ağ harfleri yerlerine bağlı bir bütün olarak gördüğü için şaşırabiliyor. Sen ise “kediler”de “kedi” kökünü ve “-ler” ekini ayrı parçalar olarak tanırsın; çocuklar ekleri okumayı yıllar içinde öğrenir.'
       },
       {
         id: 'shift',
+        shows: ['typo', 'shift'],
         text: 'Bilinen bir kelimeyi yaz ve <b>→</b> ile bir harf <b>sağa kaydır</b>. Tanıyor mu?',
         check: st => !!st.flags.shiftFail,
-        aha: 'Kelime aynı, yalnız yeri değişti; ama ağ şaşırdı. Çünkü her ara nöron resmin belli yerlerine bakmayı öğrendi: “kedi” hep solda göründü. Senin için bir kelimenin sayfanın neresinde durduğu fark etmez.'
+        aha: 'Kelime aynı, yalnız yeri değişti; ama ağ şaşırdı. Her ara nöron resmin belli yerlerine bakmayı öğrendi: “kedi” hep solda göründü. Senin için kelimenin sayfanın neresinde durduğu fark etmez.'
       },
       {
         id: 'fix',
+        shows: ['typo', 'shift', 'aug'],
         text: '<b>Farklı yerlerde de göster</b>’i aç, yeniden <b>eğit</b> ve kaydırılmış kelimeyi yine sor.',
         check: st => !!st.flags.shiftFixed,
-        aha: 'Kelimeleri farklı yerlerde de görerek eğitilince kaymaya dayanıklı oldu. Beyin de okumayı öğrenirken kelimeleri her yerde, her boyutta görür. Görme yolunda aynı şekle farklı yerlerde tepki veren dedektörler katman katman birleşir; sol şakak-ense bölgesinde okumaya özelleşen alan, kelimeyi nerede olursa olsun tanır.'
+        aha: 'Kelimeleri farklı yerlerde de görerek eğitilince kaymaya dayanıklı oldu. Sen de okumayı öğrenirken kelimeleri her yerde, her boyutta gördün; beynindeki okuma alanı kelimeyi nerede olursa olsun tanır.'
       }
     ],
     cards: {

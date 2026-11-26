@@ -117,6 +117,9 @@
 
   const level = Lv.registerLevel({
     key: 'words',
+    layered: true,
+    brainShort:
+      'Bir kelimenin anlamı beyninde tek bir yerde durmaz. Benzer anlamlı kelimeler birbirine benzeyen nöron gruplarını yakar; “kedi”yi duyunca “köpek” bu yüzden aklına daha hızlı gelir. Yeni bir kelimeyi de bildiğin kavramların arasına yerleştirirsin.',
     ver: 1,
     part: 'E',
     kind: 'words',
@@ -135,27 +138,31 @@
     missions: [
       {
         id: 'train',
+        shows: [],
         text: '<b>Eğit</b>’e bas: ağ 14 kelimeyi türleriyle (hayvan, meyve, renk, şehir) öğrensin. Anlam haritasında ne oluyor?',
         check: st => !!st.flags.trained,
-        aha: 'Başta dağınık duran kelimeler türlerine göre öbeklendi. Kimse ağa “kedi ile köpek benzer” demedi; yalnız ikisinin de hayvan olduğunu öğrendi. Aynı cevaba giden kelimeler ara nöronlarda benzer desenler bırakmaya başladı.'
+        aha: 'Başta dağınık duran kelimeler türlerine göre öbeklendi. Kimse ağa “kedi ile köpek benzer” demedi; yalnız ikisinin de hayvan olduğunu öğrendi. Aynı cevaba giden kelimeler ara nöronlarda benzer desenler bıraktı.'
       },
       {
         id: 'near',
+        shows: [],
         text: 'Haritadan bir kelimeye tıkla: <b>en yakın komşuları</b> kimler?',
         check: st => !!st.flags.near,
         aha: 'En yakın komşuları kendi türünden. Beyinde de böyle: “doktor” kelimesini duyunca “hemşire”yi daha hızlı tanırsın, çünkü anlamca yakın kavramlar birbirine benzeyen nöron gruplarını yakar (anlamsal hazırlama).'
       },
       {
         id: 'new',
+        shows: ['add'],
         text: 'Yeni bir kelime öğret (ör. <b>zürafa = hayvan</b>), yeniden eğit ve haritada ona tıkla: nereye yerleşti?',
         check: st => !!st.flags.newPlaced,
         aha: 'Yeni kelime için yeni bir nöron eklendi ve kendi türünün yanına yerleşti. Yeni bir kelime öğrendiğinde beynin de onu bildiğin kavramların arasına bağlar.'
       },
       {
         id: 'unknown',
+        shows: ['add', 'ask'],
         text: 'Hiç öğretmediğin bir kelimeyi sor (ör. <b>kaplan</b>). Ne diyor?',
         check: st => !!st.flags.unknown,
-        aha: 'Bilmiyor: o kelime için ağda hiçbir nöron yok. Sen ise hiç duymadığın bir kelimenin anlamını çoğu zaman çıkarabilirsin; yazılışından, eklerinden, cümleden. Kelimenin harflerine bakarak tahmin etmek 17. seviyenin konusu.'
+        aha: 'Bilmiyor: o kelime için ağda hiç nöron yok. Sen ise hiç duymadığın bir kelimenin anlamını çoğu zaman yazılışından ya da cümleden çıkarabilirsin; bu, son seviyenin konusu.'
       }
     ],
     cards: {
