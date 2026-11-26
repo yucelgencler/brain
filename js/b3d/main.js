@@ -739,7 +739,7 @@
     {
       title: () => 'Görme alanı: özellikler',
       cap: O =>
-        `Burada her nöron gözün gördüğü küçük bir parçaya bakıp belli bir özelliğe tepki veriyor. ${cap(O.name)} için ${O.v1txt} ateşliyor; ötekiler sessiz kalıyor.`,
+        `${cap(O.name)} için ${O.v1txt} ateşliyor; ötekiler sessiz kalıyor. Gerçekte her özelliğe binlerce nöron bakar; her biri en sevdiğine güçlü, benzerine zayıf tepki verir.`,
       ms: 80,
       live: () =>
         (micro.chainNote ? micro.chainNote + ' · ' : '') +
