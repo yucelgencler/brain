@@ -2,8 +2,6 @@
 
 Beynin bilgiyi nasıl aldığını, nasıl karar verdiğini, nasıl öğrendiğini ve nasıl hatırladığını **tek bir nörondan başlayarak kendi ellerinle** keşfettiğin, tarayıcıda çalışan bir öğrenme uygulaması.
 
-Kurulum yok, ön bilgi gerekmez. Matematik ya da programlama bilmen gerekmez.
-
 **▶ Hemen dene:** <https://yucelgencler.github.io/brain/>
 
 ![Ana sayfa: dönen 3B beyin ve “Nörondan Beyne” başlığı](docs/img/ana-sayfa.jpg)
