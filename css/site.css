@@ -29,9 +29,6 @@
   gap: 2px;
   margin-left: auto;
 }
-body[data-view='level'] .sitenav {
-  margin-left: 0;
-}
 .navlink {
   border: 0;
   background: none;
@@ -54,10 +51,7 @@ body[data-view='level'] .sitenav {
   display: none;
   margin-left: auto;
 }
-body[data-view='level'] .menubtn {
-  margin-left: 0;
-}
-.bar-missions[hidden],
+.navlink[hidden],
 .lvswitch[hidden] {
   display: none;
 }
@@ -205,12 +199,6 @@ body.hero-live .hero::after {
 body.hero-ready .hero-in {
   opacity: 1;
   transform: none;
-}
-.hero-kicker {
-  margin: 0;
-  color: var(--hero-ink-2);
-  font-size: 14px;
-  letter-spacing: 0.02em;
 }
 .hero h1 {
   font-size: clamp(46px, 7vw, 92px);

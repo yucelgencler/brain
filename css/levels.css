@@ -1390,20 +1390,15 @@
   opacity: 0.4;
   cursor: default;
 }
-.bar-missions {
-  display: flex;
+.mis-dots {
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-left: auto;
-}
-.bm-l {
-  font-size: 12.5px;
-  color: var(--ink-2);
-  margin-right: 2px;
+  gap: 4px;
+  flex: none;
 }
 .bm {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 1.5px solid var(--ink-2);
   background: var(--surface);

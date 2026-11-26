@@ -239,7 +239,7 @@ function buildLevel() {
   rec.routeSeen = true;
   el.innerHTML = `
     <div class="lv-head">
-      <div><p class="kicker crumb"><a href="#">Ana sayfa</a> › Bölüm ${part.no}: ${esc(part.title)} › Seviye ${lv.id}</p><h2>${esc(lv.title)}</h2></div>
+      <div><p class="kicker crumb">Bölüm ${part.no} · Seviye ${lv.id}</p><h2>${esc(lv.title)}</h2></div>
       <p class="lv-q">${esc(lv.question)}</p>
       ${brainLinkHTML(lv.key)}
     </div>
@@ -393,10 +393,9 @@ function buildPlaceholder() {
   document.title = `Seviye ${r.id}: ${r.title} · Nörondan Beyne`;
   const el = $('#lv');
   el.className = 'lv';
-  $('#barMissions').innerHTML = '';
   el.innerHTML = `
     <div class="lv-head">
-      <div><p class="kicker crumb"><a href="#">Ana sayfa</a> › Bölüm ${part.no}: ${esc(part.title)} › Seviye ${r.id}</p><h2>${esc(r.title)}</h2></div>
+      <div><p class="kicker crumb">Bölüm ${part.no} · Seviye ${r.id}</p><h2>${esc(r.title)}</h2></div>
     </div>
     <section class="panel soon-page">
       <p class="soon-badge ${r.lab ? 'lab' : ''}">${r.lab ? 'Şimdilik serbest deneyde' : 'Yakında'}</p>
@@ -817,19 +816,17 @@ function renderMissions(lv, rec) {
     extras = lv.missions.filter(m => m.extra),
     n = core.length,
     allDone = coreDone(lv, rec);
-  // üst şerit: görev noktaları
-  $('#barMissions').innerHTML =
-    `<span class="bm-l">Görevler</span>` +
+  // görev noktaları: bandın içinde, görevin hemen yanında
+  const dots =
+    `<span class="mis-dots" role="group" aria-label="Görevler">` +
     core
       .map((m, k) => {
         const done = rec.done.includes(m.id),
           act = rec.active === m.id && !allDone;
         return `<button class="bm ${done ? 'done' : ''} ${act ? 'active' : ''}" data-id="${m.id}" title="${esc(plain(m.text))}" aria-label="Görev ${k + 1}${done ? ', tamamlandı' : ''}">${done ? '✓' : k + 1}</button>`;
       })
-      .join('');
-  $('#barMissions')
-    .querySelectorAll('.bm')
-    .forEach(b => (b.onclick = () => pickMission(lv, rec, b.dataset.id)));
+      .join('') +
+    `</span>`;
   // tezgâhın üstündeki bant: şimdiki görev ya da az önce tamamlananın açıklaması
   const act = lv.missions.find(m => m.id === rec.active),
     idx = core.indexOf(act),
@@ -841,10 +838,13 @@ function renderMissions(lv, rec) {
   else if (act && act.extra && !rec.done.includes(act.id))
     h = `<div class="mis-cur"><span class="mis-n">Ek deney</span><span class="mis-t">${act.text}</span></div>`;
   else if (allDone)
-    h = `<div class="mis-cur done"><span class="mis-n">✓ ${n}/${n}</span><span class="mis-t">${lv.layered ? `Hepsi tamam! Aşağıda bunun beynindeki karşılığını oku, sonra sıradaki seviyeye geç.${extras.length ? ` Meraklısına “Derinleş”te ${extras.length} ek deney var.` : ''}` : 'Bu seviyenin bütün görevleri tamam. Aşağıdaki kartları okuyabilir ya da sonraki seviyeye geçebilirsin.'}</span></div>`;
+    h = `<div class="mis-cur done"><span class="mis-n">✓ ${n}/${n}</span>${dots}<span class="mis-t">${lv.layered ? `Hepsi tamam! Aşağıda bunun beynindeki karşılığını oku, sonra sıradaki seviyeye geç.${extras.length ? ` Meraklısına “Derinleş”te ${extras.length} ek deney var.` : ''}` : 'Bu seviyenin bütün görevleri tamam. Aşağıdaki kartları okuyabilir ya da sonraki seviyeye geçebilirsin.'}</span></div>`;
   else
-    h = `<div class="mis-cur"><span class="mis-n">Görev ${idx + 1}/${n}</span><span class="mis-t">${act.text}</span></div>`;
+    h = `<div class="mis-cur"><span class="mis-n">Görev ${idx + 1}/${n}</span>${dots}<span class="mis-t">${act.text}</span></div>`;
   $('#mission').innerHTML = h;
+  $('#mission')
+    .querySelectorAll('.bm')
+    .forEach(b => (b.onclick = () => pickMission(lv, rec, b.dataset.id)));
   applyLayers(lv, rec);
   const ok = $('#ahaOk');
   if (ok)
@@ -1476,7 +1476,7 @@ function renderNav() {
     nextR
       ? `<a class="btn primary" href="#seviye-${nextR.id}">${started ? 'Kaldığın yerden devam' : 'Baştan başla'}: ${nextR.id}. ${esc(nextR.title)} →</a>`
       : '<span>Bütün seviyeler tamam 🎉</span>'
-  }<span class="lvm-links"><a href="#sozluk">Sözlük</a><a href="lab.html">Serbest deney</a></span></div>`;
+  }<span class="lvm-links"><a href="lab.html">Serbest deney: ayarları açık laboratuvar →</a></span></div>`;
   el.innerHTML =
     top +
     `<div class="pgroup extra"><h3><small>Başlangıç</small>Beynin içine bir bak</h3><ol><li><a href="beyin3d.html"><span class="ln">3B</span><span class="lt">Beyinden nörona kısa tur</span><span class="lp">5 dk</span></a></li></ol></div>` +
@@ -1647,7 +1647,8 @@ function showView(v) {
   $('#glossary').hidden = v !== 'glossary';
   $('#levelView').hidden = v !== 'level';
   $('#lvswitch').hidden = v !== 'level';
-  $('#barMissions').hidden = v !== 'level';
+  // seviye sayfasında listeyi başlık açar; ayrı “Seviyeler” düğmesine gerek yok
+  $('#chaptersBtn').hidden = v === 'level';
   $('#navGlossary').toggleAttribute('aria-current', v === 'glossary');
   menuOpen(false);
   window.dispatchEvent(new CustomEvent('nb:view', { detail: v }));
