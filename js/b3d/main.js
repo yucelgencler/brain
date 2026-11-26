@@ -91,6 +91,7 @@
   }
   function placeCamera(s, t) {
     let d = s.far * Math.pow(s.near / s.far, t);
+    if (s.distK) d *= s.distK;
     if (camera.aspect < 1) d *= Math.min(2, 0.95 / camera.aspect); // dik ekranda sığsın
     const w = smooth(0.22, 0.93, t);
     const target = s.center.clone().lerp(s.focus, w);

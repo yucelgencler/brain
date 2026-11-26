@@ -228,6 +228,60 @@
     return finish({ mode: 'it', neurons: N, conns: C, stim, rest: {} });
   }
 
+  /* Karşılaştırma: limon ve karpuz aynı büyüklükte, kartta aynı yerde. Görme alanında bu ikisinin
+     aynı küçük noktasına bakan aynı 6 nöron (her biri en çok başka bir şeyi sever) iki kez, yan yana:
+     solda limona, sağda karpuza bakarken. Bakan aynı, ateşleyen farklı. */
+  const CMP_FEATS = [
+    ['curve', 'eğri kenar ◠'],
+    ['yb', 'sarı ↔ mavi'],
+    ['rg', 'kırmızı ↔ yeşil'],
+    ['vert', 'dik kenar |'],
+    ['hor', 'yatay kenar —'],
+    ['stripe', 'çizgili desen ≡']
+  ];
+  // o noktadan gelen sinyallerin sıklığı (Hz): güçlü 70, zayıf 30–35, yok 5
+  const CMP_OBJ = {
+    L: { name: 'limon', rates: { curve: 70, yb: 70, rg: 5, vert: 5, hor: 5, stripe: 5 } },
+    W: { name: 'karpuz', rates: { curve: 70, yb: 5, rg: 70, vert: 35, hor: 5, stripe: 70 } }
+  };
+  function specCompare() {
+    const N = [],
+      C = [],
+      rest = {};
+    const w = (a, b, v) => C.push({ from: a, to: b, w: v });
+    ['L', 'W'].forEach((g, gi) => {
+      const gx = gi ? 125 : -125;
+      CMP_FEATS.forEach((f, k) => {
+        const x = gx + ((k % 3) - 1) * 56,
+          row = k < 3 ? 0 : 1;
+        N.push({
+          id: g + 'g_' + f[0],
+          kind: 'in',
+          label: '',
+          pos: [x + 6, -230, row ? -20 : 20],
+          rate: 5
+        });
+        N.push({
+          id: g + '_' + f[0],
+          kind: 'pyr',
+          label: f[1],
+          feat: f[0],
+          group: g,
+          pos: [x, row ? -20 : 70, row ? -24 : 16],
+          bg: 30
+        });
+        rest[g + 'g_' + f[0]] = CMP_OBJ[g].rates[f[0]];
+      });
+      N.push({ id: g + '_inh', kind: 'int', label: '', group: g, pos: [gx, 20, 60], bg: 30 });
+      CMP_FEATS.forEach(f => {
+        w(g + 'g_' + f[0], g + '_' + f[0], 11);
+        w(g + '_' + f[0], g + '_inh', 5);
+        w(g + '_inh', g + '_' + f[0], -4);
+      });
+    });
+    return finish({ mode: 'compare', neurons: N, conns: C, rest, stim: {} });
+  }
+
   /* ---------- simülasyon ---------- */
   function Sim(spec, seed) {
     this.spec = spec;
@@ -337,7 +391,18 @@
     return Math.max(0, Math.min(1, (this.v[i] - LIF.rest) / (LIF.thr - LIF.rest)));
   };
 
-  const api = { LIF, Sim, specGeneric, specV1, specIT, rng, OBJECTS };
+  const api = {
+    LIF,
+    Sim,
+    specGeneric,
+    specV1,
+    specIT,
+    specCompare,
+    rng,
+    OBJECTS,
+    CMP_FEATS,
+    CMP_OBJ
+  };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else {
     root.B3 = root.B3 || {};

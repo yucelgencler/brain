@@ -637,3 +637,19 @@ body.slowctl .b3ctl .slow {
     min-height: 7.6em;
   }
 }
+.b3lbl.grp {
+  translate: -50% 0;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  background: rgba(8, 10, 26, 0.62);
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+.cmp-svg {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 4px auto 8px;
+  color: inherit;
+}

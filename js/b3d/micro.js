@@ -85,10 +85,18 @@
       st.drive = 1;
       probe = null;
       pops = [];
+      recent = []; // önceki sahnenin ateşlemeleri yeni devrenin etkinliğine karışmasın
       st.center.set(0, mode === 'generic' ? -45 : -25, 0);
       const S = B3.sim;
-      spec = mode === 'v1' ? S.specV1() : mode === 'it' ? S.specIT() : S.specGeneric(7);
-      const r = B3.rng(mode === 'v1' ? 5 : mode === 'it' ? 6 : 8);
+      spec =
+        mode === 'v1'
+          ? S.specV1()
+          : mode === 'it'
+            ? S.specIT()
+            : mode === 'compare'
+              ? S.specCompare()
+              : S.specGeneric(7);
+      const r = B3.rng({ v1: 5, it: 6, compare: 4 }[mode] || 8);
       group = new THREE.Group();
       scene.add(group);
       const pickMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -304,6 +312,11 @@
           v.bar = v.lbl.el.querySelector('.bar i');
         }
       });
+      if (mode === 'compare') {
+        lbl('🍋 Limona bakarken', 'grp', V(-125, 140, 0));
+        lbl('🍉 Karpuza bakarken', 'grp', V(125, 140, 0));
+        lbl('aynı noktadan gelen sinyaller', 'inp', V(0, -250, 0));
+      }
       if (mode === 'generic') {
         const p = vis.find(v => v.n.kind === 'pyr' && v.n.pos[1] > 0),
           q = vis.find(v => v.n.kind === 'int');
@@ -332,6 +345,18 @@
         spec.conns[0];
       st.focusConn = fc;
       st.focus.copy(fc.tgt);
+      // karşılaştırma: iki grubu karşıdan, biraz uzaktan ve (geniş ekranda) kartın sağında göster
+      if (mode === 'compare') {
+        st.center.set(window.innerWidth >= 700 ? -120 : 0, 25, 0);
+        st.focus.copy(st.center);
+        st.distK = 1.6;
+        st.yaw = 0;
+        st.pitch = 0.06;
+      } else if (st.distK > 1) {
+        st.distK = 1;
+        st.yaw = st.home.yaw;
+        st.pitch = st.home.pitch;
+      }
     };
 
     st.setStim = function (name) {
@@ -494,6 +519,40 @@
       return s;
     }
 
+    /* Limon ile karpuz: aynı noktaya bakan aynı 6 nöronun iki taraftaki ateşleme sıklığı */
+    function cmpRate(g, f) {
+      const n = spec.neurons.find(x => x.id === g + '_' + f);
+      return n ? sim.count[n.i] / (sim.t / 1000) : 0;
+    }
+    function compareCaption() {
+      if (sim.t < 200) return 'Sinyaller geliyor: hangi nöronlar ateşleyecek?';
+      const cnt = (g, f) => sim.count[spec.neurons.find(x => x.id === g + '_' + f).i];
+      const lv = (r, n) => (r >= 15 ? 2 : r >= 3 && n >= 2 ? 1 : 0),
+        nm = f => B3.sim.CMP_FEATS.find(x => x[0] === f)[1].replace(/ [◠|—≡]$/, ''),
+        both = [],
+        onlyL = [],
+        onlyW = [],
+        weak = [];
+      B3.sim.CMP_FEATS.forEach(([f]) => {
+        const a = lv(cmpRate('L', f), cnt('L', f)),
+          b = lv(cmpRate('W', f), cnt('W', f));
+        if (a === 2 && b === 2) both.push(nm(f));
+        else if (a === 2 && !b) onlyL.push(nm(f));
+        else if (b === 2 && !a) onlyW.push(nm(f));
+        if (a === 1) weak.push(nm(f) + ' (limonda)');
+        if (b === 1) weak.push(nm(f) + ' (karpuzda)');
+      });
+      const part = (t, xs) => (xs.length ? `${t}: ${xs.join(', ')}` : '');
+      return [
+        part('İkisinde de', both),
+        part('Yalnız limonda', onlyL),
+        part('Yalnız karpuzda', onlyW),
+        part('Zayıf', weak)
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    }
+
     /* --- takip --- */
     st.followNext = function () {
       st.following = { phase: 'wait', chain: 0 };
@@ -528,10 +587,13 @@
       const Fz = st.following,
         chaseSlow = Fz && Fz.chainMode && ['rideIn', 'atTarget', 'rideOut'].includes(Fz.phase);
       const slow = (probe && sim.t - probe.t0 < 40) || chaseSlow ? 0.3 : 1;
-      const simDt = info.paused ? 0 : Math.min(dt * info.speed * slow, 25);
+      // karşılaştırmada fark birkaç saniyede görünsün: ağır çekimin 8 katı hızlı (takip edilirken değil)
+      const fast = st.mode === 'compare' && !Fz ? 8 : 1;
+      const simDt = info.paused ? 0 : Math.min(dt * info.speed * slow * fast, 25);
       const res = simDt > 0 ? sim.step(simDt) : { spikes: [], arrivals: [] };
       const now = sim.t;
       if (st.mode === 'generic' && simDt > 0) st.caption = activityCaption();
+      if (st.mode === 'compare' && simDt > 0) st.caption = compareCaption();
       for (const s of res.spikes) {
         vis[s.i].flash = now;
         if (vis[s.i].n.kind === 'pyr') recent.push(s.t);
@@ -791,8 +853,31 @@
       }
       x.stroke();
     }
+    const CMP_SVG = (() => {
+      const spot =
+        '<circle cx="87" cy="30" r="11" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 3"/>';
+      const card = (x, inner, name) =>
+        `<g transform="translate(${x} 0)"><rect x="2" y="2" width="116" height="96" rx="10" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.25)"/>${inner}${spot}<text x="60" y="114" text-anchor="middle" fill="currentColor" font-size="12">${name}</text></g>`;
+      const lemon =
+        '<path d="M18 50 L24 46 L24 54 Z M102 50 L96 46 L96 54 Z" fill="#e9c21f"/><ellipse cx="60" cy="50" rx="38" ry="28" fill="#f5d33b"/>';
+      const melon =
+        '<ellipse cx="60" cy="50" rx="38" ry="30" fill="#3f8f3a"/><path d="M38 26 Q30 50 38 74 M60 20 V80 M82 26 Q90 50 82 74 M49 22 Q43 50 49 78 M71 22 Q77 50 71 78" stroke="#1f5a22" stroke-width="3" fill="none"/>';
+      return `<svg class="cmp-svg" viewBox="0 0 250 120" role="img" aria-label="Aynı büyüklükte bir limon ve bir karpuz; ikisinde de aynı yerde kesikli bir daire">${card(0, lemon, 'limon')}${card(130, melon, 'karpuz')}</svg>`;
+    })();
     st.card = function () {
-      st.caption = st.mode === 'generic' ? activityCaption() : '';
+      st.caption =
+        st.mode === 'generic' ? activityCaption() : st.mode === 'compare' ? compareCaption() : '';
+      if (st.mode === 'compare')
+        return {
+          title: 'Aynı yere bakan nöronlar',
+          scale: '≈ 100 µm',
+          body: `${CMP_SVG}Limon ve karpuz aynı büyüklükte, aynı yerde. Kesikli dairedeki küçük noktaya <b>aynı 6 nöron</b> bakıyor; her biri en çok başka bir şeyi sever. Solda limona, sağda karpuza bakarken: <b>bakan aynı, ateşleyen farklı.</b>`,
+          caption: true,
+          actions: [
+            { label: '👁 Sinyali takip et', fn: () => st.followNext() },
+            { label: '← Serbest devreye dön', fn: () => st.setMode('generic') }
+          ]
+        };
       if (st.mode !== 'generic')
         return {
           title: { v1: 'Görme alanında nöronlar', it: 'Şakak lobunda nöronlar' }[st.mode],
@@ -809,6 +894,7 @@
         caption: true,
         actions: [
           { label: '⚡ Bir nöronu ateşlet', fn: () => st.fireOne() },
+          { label: '🍋🍉 Limon ile karpuz', fn: () => st.setMode('compare') },
           {
             label: st.inhOn ? '🔇 Susturanları kapat' : '🔈 Susturanları aç',
             fn: () => st.setInhibition(!st.inhOn)

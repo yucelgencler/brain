@@ -102,6 +102,25 @@ test('V1: nesne yokken özellik nöronları neredeyse sessiz', () => {
       assert.ok(c[n] <= 2, n + ' ' + c[n]);
   }
 });
+test('limon ile karpuz: aynı nöronlar bakar; ortak özellik ikisinde, ayrışanlar yalnız birinde ateşler', () => {
+  for (const seed of SEEDS.slice(0, 4)) {
+    const spec = S.specCompare(),
+      c = run(spec, spec.rest, 1000, seed);
+    for (const [f] of S.CMP_FEATS) {
+      const rl = S.CMP_OBJ.L.rates[f],
+        rw = S.CMP_OBJ.W.rates[f];
+      for (const [g, r] of [
+        ['L', rl],
+        ['W', rw]
+      ]) {
+        const n = c[g + '_' + f];
+        if (r >= 70) assert.ok(n >= 15, `${g} ${f} güçlü ateşlemeli (${n})`);
+        else if (r <= 5) assert.ok(n <= 3, `${g} ${f} susmalı (${n})`);
+        else assert.ok(n >= 2 && n < 15, `${g} ${f} zayıf ateşlemeli (${n})`);
+      }
+    }
+  }
+});
 test('şakak lobu: her nesnede doğru kavram kazanır, ötekiler neredeyse susar', () => {
   for (const ob of Object.keys(S.OBJECTS))
     for (const seed of SEEDS) {
