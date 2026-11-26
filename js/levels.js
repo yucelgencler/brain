@@ -1505,6 +1505,10 @@ const LEVELS = [
   /* ------------------------------ 10: beş duyu, tek kavram ------------------------------ */
   {
     key: 'senses',
+    ver: 2,
+    layered: true,
+    brainShort:
+      'Görme, işitme, koku ve tat beyninde ayrı yerlerde başlar, ama sonunda aynı kavramda buluşur. Limonun resmi, yazılı adı, kokusu ve ekşiliği aynı “limon” nöronlarını yakar. Bir duyu eksik kalınca öbürleri boşluğu doldurur.',
     goal: 'Eğitilmiş bir ağın bir girdiyi cevaba nasıl çevirdiğini baştan sona izlemek: her duyu kendi yolundan gelir, kavram katmanında buluşur ve ağ ne olduğunu söyler.',
     todo: [
       'Bu beyin eğitilmiş hâlde geliyor: 10 şeyi (4 meyve, 3 hayvan, 3 eşya) tanıyor. Senin işin ona bir şey sunmak: 🃏 bir kart göster, 📖 bir kelime yaz, 👅 tat ver, 👃 koklat ya da 🔊 bir ses çal.',
@@ -1554,36 +1558,44 @@ const LEVELS = [
     missions: [
       {
         id: 'card',
-        text: 'Bir kart göster: soldan <b>🃏 🍋</b> kartını seç. Akışı soldan sağa izle: hangi nöronlar yanıyor, sonunda ne diyor?',
+        shows: [],
+        text: 'Bir kart göster: soldaki <b>🍋</b> kartına bas. Sinyal soldan sağa nöronlardan geçiyor; sonunda ne diyor?',
         check: st => !!st.flags.card,
-        aha: 'Kart önce görme nöronlarında özelliklerine ayrıldı: sarı, yuvarlak, pürüzlü. Görsel tanıyıcılardan biri bu üçlüye en çok benziyordu; o da limon kavram nöronunu yaktı ve çıktı “limon” dedi. Beyin bir resmi tek parça olarak değil, parçalarıyla görür; tanımak, parçaların bilinen bir birleşimle eşleşmesidir.'
+        aha: 'Kart önce görme nöronlarında parçalarına ayrıldı: sarı, yuvarlak, pürüzlü. Bu üçlüye en çok benzeyen tanıyıcı, limonun [[kavram nöronu|kavram nöronunu]] yaktı. Beyin bir resmi parçalarıyla görür; tanımak, parçaların bilinen bir birleşimle eşleşmesidir.'
       },
       {
         id: 'word',
+        shows: ['word'],
         text: 'Aynı şeyi yazıyla göster: yazı kutusuna <b>LİMON</b> yaz ve <b>Göster</b>’e bas. Bu sefer bambaşka nöronlardan geçiyor; sonunda hangi kavram nöronu yanıyor?',
         check: st => !!st.flags.word,
-        aha: 'Yazı, resimle hiç ortak nöronu olmayan bir yoldan geldi: harf dedektörleri, sonra kelime tanıyıcı. Ama sonunda kartın yaktığı kavram nöronunun ta kendisini yaktı. Quiroga ve arkadaşları (2005, 2009) ameliyat için beynine elektrot yerleştirilen hastalarda bunu gördü: tek bir nöron, ünlü bir oyuncunun fotoğrafına da, yazılı adına da, söylenen adına da tepki veriyordu. Bu nöronlara kavram hücresi deniyor.'
+        aha: 'Yazı, resimle hiç ortak nöronu olmayan bir yoldan geldi, ama sonunda aynı kavram nöronunu yaktı. Quiroga ve arkadaşları (2005) beyninde elektrot olan hastalarda tek bir nöronun ünlü bir oyuncunun fotoğrafına da, yazılı adına da tepki verdiğini gördü.'
       },
       {
         id: 'sound',
+        extra: true,
+        shows: ['word', 'sound', 'clear', 'taste', 'smell'],
         text: 'Gözler kapalı: önce <b>🧹 Hepsini temizle</b>, sonra sadece bir ses çal (ör. <b>🔊 miyav</b>). Ses kulakta nasıl ayrılıyor?',
         check: st => !!st.flags.sound,
         aha: 'Ses, kulağın iç kısmında (koklea) pesten tize frekanslara ayrıldı; miyav orta ve tiz bantları yaktı. Ses tanıyıcı bu deseni tanıdı ve kedi kavram nöronu yandı: aynı kavrama üçüncü bir yoldan ulaşıldı. Bir kediyi görmeden, sesinden tanıman bu.'
       },
       {
         id: 'ambig',
-        text: 'Tek bir duyu yetmeyebilir: temizle ve sadece <b>😋 tatlı</b> tat ver. Ne diyor?',
+        shows: ['word', 'clear', 'taste'],
+        text: 'Tek bir duyu yetmeyebilir: <b>🧹 Hepsini temizle</b>, sonra yalnız <b>😋 tatlı</b> tat ver. Ne diyor?',
         check: st => !!st.flags.ambig,
-        aha: 'Tatlı tat muza, elmaya ve çileğe uyuyor; beyin kararsız kaldı (%39, %32, %25). Gözün kapalıyken tadına baktığın bir şeyin ne olduğunu bilmek çoğu zaman zordur. Dil yalnızca beş temel tadı ayırır; meyvelerin farkını büyük ölçüde koku yapar.'
+        aha: 'Tatlı tat muza, elmaya ve çileğe uyuyor; beyin kararsız kaldı. Gözün kapalıyken tadına baktığın şeyi bilmek zordur: dil yalnız beş temel tadı ayırır, meyvelerin farkını büyük ölçüde koku yapar.'
       },
       {
         id: 'combine',
+        shows: ['word', 'clear', 'taste', 'smell'],
         text: 'Şimdi tatlıya bir koku ekle: <b>👃 🍓 çilek kokusu</b>. Kararsızlık bitiyor mu?',
         check: st => !!st.flags.combine,
-        aha: 'İki belirsiz ipucu birleşince kesinleşti: tatlı tat üç meyveye uyuyordu, koku başka şeylere de biraz benziyordu; ikisinin kesiştiği tek kavram çilek. Kavram nöronu farklı duyulardan gelen desteği topluyor. Beyin de duyuları böyle birleştirir: konuşan birinin dudaklarını görmek, gürültüde onu anlamayı belirgin biçimde kolaylaştırır.'
+        aha: 'İki belirsiz ipucu birleşince kesinleşti: tatlı üç meyveye uyuyordu, koku başka şeylere de benziyordu; ikisinin buluştuğu tek kavram çilek. Konuşan birinin dudaklarını görmek de gürültüde onu anlamayı böyle kolaylaştırır.'
       },
       {
         id: 'typo',
+        extra: true,
+        shows: ['word', 'sound', 'clear', 'taste', 'smell', 'mat', 'log'],
         text: 'Yanlış yazılmış kelime: temizle ve yazı kutusuna <b>KÖPEG</b> yaz (ya da ELNA, kedı…). Yine tanıyor mu?',
         check: st => !!st.flags.typo,
         aha: 'Harflerin çoğu tuttuğu için kelime tanıyıcı yine doğru kelimeyi seçti; tam eşleşme gerekmiyor, en çok benzeyen kazanıyor (yatay-dikey seviyesindeki bozuk çizgi gibi). Ama bu ağın bir zaafı var: harflerin sırasına bakmıyor. LAME yaz: “elma” der! Gerçek okuma harflerin sırasını da kullanır; son seviye bu soruna bakıyor.'
@@ -1606,6 +1618,10 @@ const LEVELS = [
   /* ------------------------------ 12: birlikte yanan, birlikte bağlanır (Ela, limon ve çilek) ------------------------------ */
   {
     key: 'hebb',
+    ver: 2,
+    layered: true,
+    brainShort:
+      'Bir şeyi yaşarken birlikte ateşleyen nöronların arasındaki bağlar güçlenir. Sonra tek bir parça (bir koku, bir renk) bütün anıyı geri çağırabilir. Hafıza tek bir hücrede değil, bu bağların ağında durur.',
     goal: 'Öğretmen, ödül ya da sürpriz olmadan da öğrenilebildiğini görmek: aynı anda gelen hisler birbirine bağlanır ve bir “şey” olur. Sonra o şeyin tek bir parçası, bütününü geri çağırır.',
     todo: [
       'Ela iki yaşında ve mutfakta ilk kez meyve tadıyor. Beyninde sekiz his nöronu var (renk, tat, koku, dokunma). Soldaki 🍋 Limon düğmesi Ela’ya bir limon yaşatır: dört his aynı anda yanar.',
@@ -1646,30 +1662,36 @@ const LEVELS = [
     missions: [
       {
         id: 'wire',
+        shows: [],
         text: 'Ela limonla tanışıyor: <b>🍋 Limon</b> düğmesine <b>4 kez</b> bas. Her seferinde dört his birlikte gelir: sarı renk, ekşi tat, keskin koku, pürüzlü kabuk.',
         check: st => hebbMinIn(st.W, HEBB.things.lim.x) >= 0.99,
-        aha: 'Dört his her seferinde aynı anda yandı ve aralarındaki altı bağın hepsi güçlendi. Kimse Ela’ya “bunun adı limon” demedi; ödül ya da sürpriz de yoktu. Tek kural şu: aynı anda yanan iki nöronun arasındaki bağ güçlenir. Donald Hebb bunu 1949’da öne sürdü; sonradan “birlikte yanan nöronlar birlikte bağlanır” diye özetlendi. Ela’nın beyninde bu dört his artık birbirine bağlı bir grup, yani bir “şey”.'
+        aha: 'Dört his her seferinde birlikte yandı ve aralarındaki bağların hepsi güçlendi. Kimse Ela’ya “bunun adı limon” demedi; ödül de yoktu. Tek kural: birlikte yanan nöronlar birbirine bağlanır. Buna [[Hebb kuralı]] denir.'
       },
       {
         id: 'complete',
+        shows: ['cue', 'koku'],
         text: 'Parçadan bütüne: Ela’ya sadece <b>👃 keskin kokuyu</b> ver (gözleri kapalı, limonu koklatıyorsun). Beyni ne hatırlıyor?',
         check: st => !!st.flags.complete,
-        aha: 'Sadece koku geldi; ama sarı renk, ekşi tat ve pürüzlü kabuk da yandı. Beyin eksik parçaları bağlar üzerinden tamamladı. Ekşi tat nöronu yanınca Ela’nın tadına bakmadan ağzı sulandı: limonu düşünmek bile ağzını sulandırır. Hipokampusun en önemli işlerinden biri bu: bir parçadan bütün anıyı geri çağırmak (örüntü tamamlama).'
+        aha: 'Yalnız koku geldi; ama sarı renk, ekşi tat ve pürüzlü kabuk da yandı. Beyin eksik parçaları bağlar üzerinden tamamladı; limonu düşünmek bile ağzını sulandırır. Buna [[örüntü tamamlama]] denir.'
       },
       {
         id: 'two',
+        shows: ['cue', 'koku', 'cil', 'kir'],
         text: 'İkinci şey: <b>🍓 Çilek</b> düğmesine <b>4 kez</b> bas. Sonra sadece <b>🔴 kırmızı</b> ipucunu ver. Limon mu geliyor, çilek mi?',
         check: st => !!st.flags.two,
-        aha: 'Kırmızı yalnızca çileği çağırdı; limona hiç dokunmadı. Aynı sekiz nöronda iki ayrı anı saklanıyor ve bir ipucu yalnızca kendi grubunu uyandırıyor. Bilgisayardaki bir dosyaya adresiyle ulaşılır; beyindeki bir anıya ise içeriğinin bir parçasıyla.'
+        aha: 'Kırmızı yalnız çileği çağırdı, limona hiç dokunmadı. Aynı sekiz nöronda iki ayrı anı saklanıyor; bir ipucu yalnız kendi grubunu uyandırıyor.'
       },
       {
         id: 'clean',
+        shows: ['cue', 'koku', 'cil', 'kir', 'noisy'],
         text: 'Yanlış ipucu: <b>🟡 sarı + 😖 ekşi + 😋 tatlı</b> ver. Tatlı tat limona ait değil. Ela ne hatırlıyor?',
         check: st => !!st.flags.clean,
-        aha: 'Sarı ve ekşi limonu çağırdı; limonun öbür parçaları da yandı. Tatlı tat ise hiçbir yandan destek almadı ve söndü. Beyin uymayan parçayı atıp en yakın anıya oturdu. Saçını kestirmiş ya da gözlük takmış bir arkadaşını yine tanıman da böyle: uymayan parça bastırılır, uyan anı tamamlanır.'
+        aha: 'Sarı ve ekşi limonu çağırdı; limona ait olmayan tatlı tat hiçbir yandan destek almadı ve söndü. Saçını kestirmiş bir arkadaşını da böyle tanırsın: uymayan parça bütünü bozmaz.'
       },
       {
         id: 'mix',
+        extra: true,
+        shows: ['cue', 'koku', 'cil', 'kir', 'noisy', 'mix', 'self', 'new', 'mat', 'log', 'strip'],
         text: 'Karışan anılar: <b>🍋🍓 Çilekli limonata</b> düğmesine <b>3 kez</b> bas (iki meyve hep birlikte). Sonra yine sadece <b>👃 keskin koku</b> ver. Şimdi ne geliyor?',
         check: st => !!st.flags.mix,
         aha: 'Keskin koku artık limonla birlikte çileği de çağırıyor: iki ayrı şey, birlikte yaşandıkça tek bir anıya kaynaştı. Hebb kuralı neyin birlikte geldiğine bakar, neyin “aslında” ayrı olduğuna bakmaz. Bir kokunun sana sadece bir yemeği değil, onu yediğin evi, mevsimi ve insanları da hatırlatması bu yüzden. İyi tarafı zengin çağrışımlar; kötü tarafı, benzer anıların birbirine karışabilmesi. Sonraki seviyeler bu soruna bakıyor.'

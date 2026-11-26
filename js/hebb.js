@@ -38,23 +38,23 @@ function hebbGridHTML(lv) {
   return `<section class="bench has-card">
       <div class="bench-card pact">
         <div class="pstep-h"><span class="pdot">1</span> Ela’ya bir an yaşat</div>
-        <div class="pbtns"><button class="btn" id="hLim">${T.lim.icon} Limon <small class="dimtxt">dört his birlikte</small></button><button class="btn" id="hCil">${T.cil.icon} Çilek <small class="dimtxt">dört his birlikte</small></button><button class="btn" id="hMix">${T.mix.icon} Çilekli limonata <small class="dimtxt">sekizi birden</small></button></div>
-        <div class="pstep-h"><span class="pdot">2</span> Bir ipucu ver: ne hatırlıyor?</div>
-        <div class="pbtns"><button class="btn" id="kKoku">👃 Sadece keskin koku</button><button class="btn" id="kKir">🔴 Sadece kırmızı</button><button class="btn" id="kNoisy">🟡 😖 😋 Karışık ipucu</button></div>
-        <p class="hint ehint">ya da sahnedeki hislere tıklayıp kendin seç, sonra:</p>
-        <div class="pbtns three"><button class="btn small" id="hSelLive">▶ Yaşat</button><button class="btn small" id="hSelCue">💭 İpucu</button><button class="btn ghost small" id="hSelClr">🧽</button></div>
+        <div class="pbtns"><button class="btn" id="hLim">${T.lim.icon} Limon <small class="dimtxt">dört his birlikte</small></button><button class="btn" id="hCil" data-lay="cil">${T.cil.icon} Çilek <small class="dimtxt">dört his birlikte</small></button><button class="btn" id="hMix" data-lay="mix">${T.mix.icon} Çilekli limonata <small class="dimtxt">sekizi birden</small></button></div>
+        <div class="pstep-h" data-lay="cue"><span class="pdot">2</span> Bir ipucu ver: ne hatırlıyor?</div>
+        <div class="pbtns"><button class="btn" id="kKoku" data-lay="koku">👃 Sadece keskin koku</button><button class="btn" id="kKir" data-lay="kir">🔴 Sadece kırmızı</button><button class="btn" id="kNoisy" data-lay="noisy">🟡 😖 😋 Karışık ipucu</button></div>
+        <p class="hint ehint" data-lay="self">ya da sahnedeki hislere tıklayıp kendin seç, sonra:</p>
+        <div class="pbtns three" data-lay="self"><button class="btn small" id="hSelLive">▶ Yaşat</button><button class="btn small" id="hSelCue">💭 İpucu</button><button class="btn ghost small" id="hSelClr">🧽</button></div>
         <p class="pnext" id="hNext" aria-live="polite"></p>
-        <div class="bench-more pquick"><button class="btn ghost small" id="hNew">👶 Yeni bebek (bağlar sıfır)</button></div>
+        <div class="bench-more pquick" data-lay="new"><button class="btn ghost small" id="hNew">👶 Yeni bebek (bağlar sıfır)</button></div>
       </div>
       <div class="bench-scene"><div class="stage scene-wrap"><svg id="hscene" viewBox="0 0 860 372" role="img" aria-label="Halkada Ela’nın sekiz his nöronu ve aralarındaki bağlar; sağda Ela ve aklından geçenler"></svg></div></div>
       <div class="bench-answer panel" id="hanswer" aria-live="polite"></div>
     </section>
-    <section class="strip" id="hstep" aria-live="polite"></section>
+    <section class="strip" id="hstep" aria-live="polite" data-lay="strip"></section>
     <section class="bench-bottom">
-      <div class="panel"><div class="ph"><h3>Bütün bağlar: hafıza burada</h3><span class="pc" id="hMatN"></span></div>
+      <div class="panel" data-lay="mat"><div class="ph"><h3>Bütün bağlar: hafıza burada</h3><span class="pc" id="hMatN"></span></div>
         <div class="llog-wrap"><table class="hmat" id="hmat"></table></div>
         <p class="hint">Her kare iki his arasındaki bağ: koyulaştıkça güçlü. Sol üst köşe limonun, sağ alt köşe çileğin bağları; öbür iki köşe ikisi arasındaki bağlar.</p></div>
-      <div class="panel"><h3>Son anlar</h3><div class="llog-wrap"><table class="tt" id="hlog"></table></div></div>
+      <div class="panel" data-lay="log"><h3>Son anlar</h3><div class="llog-wrap"><table class="tt" id="hlog"></table></div></div>
     </section>`;
 }
 

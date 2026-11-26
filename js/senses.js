@@ -39,26 +39,26 @@ function sensesGridHTML(lv) {
       <div class="bench-card pact sact">
         <div class="pstep-h">🃏 Kart göster</div>
         <div class="sgrid5">${T.map((t, k) => `<button class="btn sb" id="sc${k}" title="${esc(t.name)} kartı">${t.icon}</button>`).join('')}</div>
-        <div class="pstep-h">📖 Yazı göster</div>
-        <div class="srow"><input class="txt sword" id="sWord" maxlength="12" placeholder="ör. LİMON" autocomplete="off" spellcheck="false"><button class="btn small" id="sWordGo">Göster</button><button class="btn small" id="sWordRnd" title="Rastgele bir kelime">🎲</button></div>
-        <div class="pstep-h">👅 Tat ver</div>
-        <div class="sgrid5">${SENSES.tastes.map((t, k) => `<button class="btn sb tall" id="st${k}" title="${esc(t.name)}">${t.icon}<small>${esc(t.name)}</small></button>`).join('')}</div>
-        <div class="pstep-h">👃 Koklat</div>
-        <div class="sgrid5">${SENSES.smells.map((s, k) => `<button class="btn sb tall" id="sm${k}" title="${esc(s.name)}">${s.icon}<small>koku</small></button>`).join('')}</div>
-        <div class="pstep-h">🔊 Ses çal</div>
-        <div class="srow">${SENSES.sounds.map((s, k) => `<button class="btn small" id="ss${k}">${s.icon} ${esc(s.name)}</button>`).join('')}</div>
+        <div class="pstep-h" data-lay="word">📖 Yazı göster</div>
+        <div class="srow" data-lay="word"><input class="txt sword" id="sWord" maxlength="12" placeholder="ör. LİMON" autocomplete="off" spellcheck="false"><button class="btn small" id="sWordGo">Göster</button><button class="btn small" id="sWordRnd" title="Rastgele bir kelime">🎲</button></div>
+        <div class="pstep-h" data-lay="taste">👅 Tat ver</div>
+        <div class="sgrid5" data-lay="taste">${SENSES.tastes.map((t, k) => `<button class="btn sb tall" id="st${k}" title="${esc(t.name)}">${t.icon}<small>${esc(t.name)}</small></button>`).join('')}</div>
+        <div class="pstep-h" data-lay="smell">👃 Koklat</div>
+        <div class="sgrid5" data-lay="smell">${SENSES.smells.map((s, k) => `<button class="btn sb tall" id="sm${k}" title="${esc(s.name)}">${s.icon}<small>koku</small></button>`).join('')}</div>
+        <div class="pstep-h" data-lay="sound">🔊 Ses çal</div>
+        <div class="srow" data-lay="sound">${SENSES.sounds.map((s, k) => `<button class="btn small" id="ss${k}">${s.icon} ${esc(s.name)}</button>`).join('')}</div>
         <p class="pnext" id="sNext" aria-live="polite"></p>
-        <div class="bench-more pquick"><button class="btn ghost small" id="sClr">🧹 Hepsini temizle</button></div>
+        <div class="bench-more pquick" data-lay="clear"><button class="btn ghost small" id="sClr">🧹 Hepsini temizle</button></div>
       </div>
       <div class="bench-scene"><div class="stage scene-wrap"><svg id="sscene" viewBox="0 0 1000 576" role="img" aria-label="Soldan sağa: girdi, duyu nöronları, duyu alanları, kavram nöronları ve çıktı"></svg></div></div>
       <div class="bench-answer panel" id="sanswer" aria-live="polite"></div>
     </section>
-    <section class="strip" id="sstep" aria-live="polite"></section>
+    <section class="strip" id="sstep" aria-live="polite" data-lay="strip"></section>
     <section class="bench-bottom">
-      <div class="panel"><div class="ph"><h3>Hangi kavrama hangi duyuyla ulaşılır?</h3></div>
+      <div class="panel" data-lay="mat"><div class="ph"><h3>Hangi kavrama hangi duyuyla ulaşılır?</h3></div>
         <div class="llog-wrap"><table class="tt smat" id="smat"></table></div>
         <p class="hint">✓: o duyunun bu kavrama giden bir yolu var. Renkli hücre: şu an o yoldan gelen destek.</p></div>
-      <div class="panel"><h3>Son denemeler</h3><div class="llog-wrap"><table class="tt" id="slog"></table></div></div>
+      <div class="panel" data-lay="log"><h3>Son denemeler</h3><div class="llog-wrap"><table class="tt" id="slog"></table></div></div>
     </section>`;
 }
 
