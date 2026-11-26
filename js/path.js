@@ -116,6 +116,7 @@ const BRAIN_LINK = {
   two: ['durak=katlar', 'kabuğun katları ve ara nöronlar'],
   lines: ['lob=occipital', 'görme alanı (V1), ense lobu'],
   shapes: ['lob=occipital', 'görme alanı, ense lobu'],
+  digits: ['lob=occipital', 'görme alanı ve şakak lobunun alt yüzü'],
   senses: ['lob=temporal', 'duyuların birleştiği şakak lobu'],
   hebb: ['lob=temporal', 'anıların kaydedildiği şakak lobu'],
   where: ['lob=temporal', 'şakak lobu ve kabuk'],

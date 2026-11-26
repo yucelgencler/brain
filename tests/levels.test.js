@@ -22,6 +22,15 @@ test('seviye 10 yol haritasında yerinde ve hazır', () => {
   assert.ok(!r.note && !r.lab);
   assert.deepStrictEqual(Object.keys(S.level.cards).sort(), ['brain', 'limit', 'model']);
 });
+test('seviye 11 (rakam tanıma) şekil tanımanın hemen ardından, gelişmiş modda açılır', () => {
+  const r = Lv.ROADMAP.find(x => x.key === 'digits');
+  assert.strictEqual(r.id, 11);
+  assert.strictEqual(S.digitsLevel.id, 11);
+  assert.strictEqual(S.digitsLevel.kind, 'shapes');
+  assert.strictEqual(S.digitsLevel.init().mode, 'adv');
+  assert.strictEqual(S.level.init().mode, 'simple');
+  assert.ok(!S.level.missions.some(m => (m.shows || []).includes('adv')));
+});
 test('basit mod: her şekilden 2 örnekle, hiç görmediği bozuk çizimleri tanır', () => {
   const st = fresh(S.level),
     net = S.shapesNet(),
@@ -72,7 +81,7 @@ test('gelişmiş mod: 16 nöron on rakamı öğrenir, 2 nöron öğrenemez', () 
   assert.ok(small.tr < 0.75, JSON.stringify(small));
 });
 test('gelişmiş mod: görev bayrakları ve kendi şeklin', () => {
-  const st = fresh(S.level);
+  const st = fresh(S.digitsLevel);
   st.adv.hidden = 2;
   S.advRecord(st, { steps: 300, trainAcc: 0.5, testAcc: 0.5 });
   assert.ok(st.flags.smallDone && !st.flags.adv90);
@@ -86,12 +95,15 @@ test('gelişmiş mod: görev bayrakları ve kendi şeklin', () => {
   assert.strictEqual(ds.labels.length, 11);
   assert.strictEqual(ds.labels[10], 'kalp');
   assert.strictEqual(ds.train.length, 11 * 24);
+  S.advRecord(st, { steps: 300, trainAcc: 0.95, testAcc: 0.9 });
+  assert.ok(st.flags.ownDone);
+  assert.deepStrictEqual(check(S.digitsLevel, st), ['ten', 'small', 'noise', 'own']);
 });
 
 const W13 = require('../js/levels/13-where.js');
-test('seviye 13: yarım ipucundan anı geri gelir; nöron ve bağlantı kaybına dayanıklı', () => {
+test('seviye 14: yarım ipucundan anı geri gelir; nöron ve bağlantı kaybına dayanıklı', () => {
   const st = fresh(W13.level);
-  assert.strictEqual(W13.level.id, 13);
+  assert.strictEqual(W13.level.id, 14);
   W13.memRun(st);
   assert.ok(st.flags.recalled, 'Pamuk’un yarısından Pamuk');
   st.dead = [3, 9, 14, 20, 27, 33];
@@ -110,7 +122,7 @@ test('seviye 13: yarım ipucundan anı geri gelir; nöron ve bağlantı kaybına
   assert.ok(st.flags.cutHalf, 'bağlantıların yarısı kopsa da hatırlar');
   assert.deepStrictEqual(check(W13.level, st), ['recall', 'one', 'many', 'cut']);
 });
-test('seviye 13: ağır hasar anıyı birden değil, yavaş yavaş bozar', () => {
+test('seviye 14: ağır hasar anıyı birden değil, yavaş yavaş bozar', () => {
   const avg = cut => {
     let s = 0;
     for (let seed = 1; seed <= 6; seed++) {
@@ -132,10 +144,10 @@ test('seviye 13: ağır hasar anıyı birden değil, yavaş yavaş bozar', () =>
 });
 const G14 = require('../js/levels/14-general.js');
 const S15 = require('../js/levels/15-sleep.js');
-test('seviye 14: tek örnekte ezberci "hatırlamıyorum", kavrayan aşırı genelliyor; sınavı kavrayan kazanır', () => {
+test('seviye 15: tek örnekte ezberci "hatırlamıyorum", kavrayan aşırı genelliyor; sınavı kavrayan kazanır', () => {
   const st = fresh(G14.level),
     net = G14.genNet();
-  assert.strictEqual(G14.level.id, 14);
+  assert.strictEqual(G14.level.id, 15);
   G14.genTeach(st, net, G14.GEN.protos[0], 0);
   const r = G14.genAsk(st, net, G14.GEN.protos[2], 2);
   assert.strictEqual(r.memo, null);
@@ -151,8 +163,8 @@ test('seviye 14: tek örnekte ezberci "hatırlamıyorum", kavrayan aşırı gene
   assert.ok(e.cortex >= 27 && e.memo <= 3, `ezberci ${e.memo}, kavrayan ${e.cortex}`);
   assert.deepStrictEqual(check(G14.level, st), ['one', 'over', 'all', 'new', 'exam']);
 });
-test('seviye 15: uykusuz unutur, uykulu (az tekrarla bile) hepsini hatırlar', () => {
-  assert.strictEqual(S15.level.id, 15);
+test('seviye 16: uykusuz unutur, uykulu (az tekrarla bile) hepsini hatırlar', () => {
+  assert.strictEqual(S15.level.id, 16);
   const live = (sleep, replay, seed) => {
     const st = fresh(S15.level);
     st.sleep = sleep;
@@ -177,9 +189,9 @@ test('seviye 15: uykusuz unutur, uykulu (az tekrarla bile) hepsini hatırlar', (
 });
 const W16 = require('../js/levels/16-words.js');
 const R17 = require('../js/levels/17-read.js');
-test('seviye 16: eğitimle aynı türden kelimeler kümelenir; komşu kendi türünden; bilinmeyen kelime', () => {
+test('seviye 17: eğitimle aynı türden kelimeler kümelenir; komşu kendi türünden; bilinmeyen kelime', () => {
   const st = fresh(W16.level);
-  assert.strictEqual(W16.level.id, 16);
+  assert.strictEqual(W16.level.id, 17);
   let list = W16.wordsList(st);
   const net = W16.wordsNet(list.length);
   const before = W16.wordsClustering(net, list);
@@ -203,9 +215,9 @@ test('seviye 16: eğitimle aynı türden kelimeler kümelenir; komşu kendi tür
   assert.strictEqual(W16.wordsAsk(st, net2, 'kaplan').known, false);
   assert.deepStrictEqual(check(W16.level, st), ['train', 'near', 'new', 'unknown']);
 });
-test('seviye 17: yanlış harfe dayanır, kayınca şaşırır, farklı yerlerde görerek düzelir', () => {
+test('seviye 18: yanlış harfe dayanır, kayınca şaşırır, farklı yerlerde görerek düzelir', () => {
   const st = fresh(R17.level);
-  assert.strictEqual(R17.level.id, 17);
+  assert.strictEqual(R17.level.id, 18);
   let net = R17.readNet();
   R17.readTrain(net, R17.readData(false, 5), R17.READ.plain, C.mulberry32(5));
   st.trained = 1;

@@ -1,7 +1,8 @@
 'use strict';
 /* ------------------------------------------------------------------
-   SEVİYE 10 görünümü: şekil ve rakam tanıma (basit + gelişmiş mod).
+   SEVİYE 10 (şekil tanıma) ve 11 (rakam tanıma) görünümü.
    Model ve görevler: js/levels/10-shapes.js. Ağ: core.js Net.
+   Mod seviyeden gelir: shapes → basit, digits → gelişmiş.
    Tezgâh: göz (çizilebilir 5×7) → nöron ağı (canlı çizim) → cevap.
 ------------------------------------------------------------------- */
 let shNet = null, // basit mod ağı
@@ -43,17 +44,13 @@ function shapesGridHTML(lv) {
   for (let i = 0; i < 35; i++)
     cells += `<button class="sh-cell" data-i="${i}" aria-label="Piksel ${Math.floor(i / 5) + 1}. satır ${(i % 5) + 1}. sütun" aria-pressed="false"></button>`;
   return `
-  <div class="sh-mode" role="group" aria-label="Zorluk" data-lay="adv">
-    <button class="sh-mbtn" id="shSimple" aria-pressed="true">Basit: 3 şekil</button>
-    <button class="sh-mbtn" id="shAdvBtn" aria-pressed="false">Gelişmiş: 10 rakam</button>
-  </div>
   <section class="bench sh-bench">
     <div class="panel sh-eye">
       <div class="ph"><h3>Göz</h3><span class="pc">35 piksel = 35 duyu nöronu</span></div>
       <div class="sh-grid" id="shGrid">${cells}</div>
       <div class="sh-tools"><button class="btn small" id="shClear">Temizle</button><button class="btn small" id="shSample">Örnek çiz</button></div>
       <p class="hint sh-eyehint" id="shEyeHint"></p>
-      <div class="sh-add" id="shAdd" hidden>
+      <div class="sh-add" id="shAdd" data-lay="custom" hidden>
         <label for="shNew">Bu çizimi yeni bir şekil olarak ekle</label>
         <div class="sh-add-row"><input id="shNew" placeholder="ör. kalp" maxlength="12" autocomplete="off" /><button class="btn small" id="shAddBtn">Ekle</button></div>
       </div>
@@ -71,8 +68,8 @@ function shapesGridHTML(lv) {
     <div class="sh-ctl panel">
       <button class="btn primary" id="shTrain" aria-pressed="false">▶ Eğit</button>
       <button class="btn" id="shStep">Biraz eğit</button>
-      <label class="ctl">Ağ büyüklüğü <input type="range" id="shHidden" min="2" max="32" step="1" /><output id="shHiddenOut"></output></label>
-      <label class="ctl">Bozukluk <input type="range" id="shNoise" min="0" max="6" step="1" /><output id="shNoiseOut"></output></label>
+      <label class="ctl" data-lay="size">Ağ büyüklüğü <input type="range" id="shHidden" min="2" max="32" step="1" /><output id="shHiddenOut"></output></label>
+      <label class="ctl" data-lay="noise">Bozukluk <input type="range" id="shNoise" min="0" max="6" step="1" /><output id="shNoiseOut"></output></label>
       <button class="btn ghost" id="shReset">↺ Boş ağla başla</button>
     </div>
     <div class="sh-scores" id="shScores"></div>
@@ -88,6 +85,7 @@ function shapesGridHTML(lv) {
 function wireShapes(lv) {
   const rec = R(),
     st = rec.st;
+  st.mode = lv.key === 'digits' ? 'adv' : 'simple';
   shNet = shapesReplay(st);
   if (st.mode === 'adv') shAdvBuild(st);
   wireShNetHover();
@@ -140,8 +138,6 @@ function wireShapes(lv) {
     }
     refresh();
   };
-  $('#shSimple').onclick = () => shSetMode(st, 'simple');
-  $('#shAdvBtn').onclick = () => shSetMode(st, 'adv');
   // gelişmiş mod denetimleri
   $('#shHidden').value = st.adv.hidden;
   $('#shNoise').value = st.adv.noise;
@@ -210,16 +206,6 @@ function wireShapes(lv) {
       if (document.getElementById('shNet')) refresh();
     });
   }
-}
-function shSetMode(st, m) {
-  if (st.mode === m) return;
-  shapesStop();
-  st.mode = m;
-  if (m === 'adv') {
-    shAdvBuild(st);
-    if (st.bits.every(b => !b)) st.bits = DIGIT_BITS[3].slice();
-  }
-  refresh();
 }
 function shAdvBuild(st, fresh) {
   if (shAdv && !fresh) return;
@@ -636,7 +622,7 @@ function shSuggest(lv, rec) {
       } else if (st.flags.taughtWrong && wrongHere) s.ids.push('shTest');
       else if (on >= 4 && !taught && !(here && last.ok)) s.ids.push('shTest');
       else s.grid = true;
-    } else if (act) s.ids.push('shAdvBtn');
+    }
   } else {
     if (act === 'ten')
       s.ids.push(
@@ -645,7 +631,8 @@ function shSuggest(lv, rec) {
     else if (act === 'small') s.ids.push(st.adv.hidden !== 2 ? 'shHidden' : 'shTrain');
     else if (act === 'noise')
       s.ids.push(st.adv.hidden < 8 ? 'shHidden' : st.adv.noise < 6 ? 'shNoise' : 'shTrain');
-    else if (act) s.ids.push('shSimple');
+    else if (act === 'own')
+      s.ids.push(!st.adv.custom.length ? 'shAddBtn' : st.adv.hidden < 8 ? 'shHidden' : 'shTrain');
   }
   return s;
 }
@@ -655,8 +642,6 @@ function updateShapes(lv, rec) {
   if (adv && !shAdv) shAdvBuild(st);
   if (!shNet) shNet = shapesReplay(st);
   const sug = shSuggest(lv, rec);
-  $('#shSimple').setAttribute('aria-pressed', String(!adv));
-  $('#shAdvBtn').setAttribute('aria-pressed', String(adv));
   $('#shAdd').hidden = !adv;
   $('#shTray').hidden = adv;
   $('#shAdvBox').hidden = !adv;
@@ -668,8 +653,7 @@ function updateShapes(lv, rec) {
   }
   $('#shGrid').classList.toggle('psugc', sug.grid);
   $('#shSample').classList.toggle('psug', sug.ids.includes('shSample'));
-  $('#shAdvBtn').classList.toggle('psug', sug.ids.includes('shAdvBtn'));
-  $('#shSimple').classList.toggle('psug', sug.ids.includes('shSimple'));
+  $('#shAddBtn').classList.toggle('psug', sug.ids.includes('shAddBtn'));
   $('#shEyeHint').textContent = adv
     ? 'Piksellere dokun ya da sürükle. “Örnek çiz” rastgele, biraz bozuk bir rakam çizer.'
     : `Piksellere dokun ya da sürükle. “Örnek çiz” seçili şeklin (${SHAPES.names[st.label].toLocaleLowerCase('tr-TR')}) biraz bozuk bir örneğini çizer.`;

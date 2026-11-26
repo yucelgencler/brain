@@ -127,13 +127,14 @@ test('yol haritası: numaralar sıralı, hazır seviyeler yerinde', () => {
   ROADMAP.forEach((r, i) => assert.strictEqual(r.id, i + 1));
   assert.deepStrictEqual(
     LEVELS.map(l => l.id),
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13]
   );
   assert.strictEqual(ROADMAP[4].key, 'predict');
   assert.strictEqual(ROADMAP[6].key, 'fruit');
   assert.strictEqual(ROADMAP[9].key, 'shapes');
-  assert.strictEqual(ROADMAP[10].key, 'senses');
-  assert.strictEqual(ROADMAP[11].key, 'hebb');
+  assert.strictEqual(ROADMAP[10].key, 'digits');
+  assert.strictEqual(ROADMAP[11].key, 'senses');
+  assert.strictEqual(ROADMAP[12].key, 'hebb');
   for (const r of ROADMAP) assert.ok(r.title && r.part, r.key);
 });
 test('bölümler: her bölümün numarası, sorusu ve tanıtımı var; her seviye bir bölümde', () => {

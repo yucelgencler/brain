@@ -10,21 +10,21 @@ Beynin bilgiyi nasıl aldığını, nasıl karar verdiğini, nasıl öğrendiği
 
 Her seviye bir soruyla başlar. Küçük bir beyin devresiyle denersin, görevler seni adım adım bir keşfe götürür ve sonunda aynı şeyin gerçek beyinde nasıl olduğunu okursun. Kolaydan zora beş bölüm var:
 
-| Bölüm     | Soru                                | Seviyeler                                                                                                     |
-| --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Başlangıç | Beynin içine bir bak                | 3B tur: beyinden kabuğa, nöronlara ve sinapsa                                                                 |
-| 1         | Bir nöron nasıl karar verir?        | 1 Tek bir ışık hücresi · 2 İki ışık, bir karar · 3 Susturan bağlantı                                          |
-| 2         | Nöron nasıl öğrenir?                | 4 Öğretmenle öğrenme · 5 Tahmin ederek öğrenme · 6 Tek nöronun duvarı                                         |
-| 3         | Nöronlar birlikte nasıl anlar?      | 7 Muz ve armut · 8 Gizli nöronlar · 9 Yatay mı dikey mi? · 10 Şekil ve rakam tanıma · 11 Beş duyu, tek kavram |
-| 4         | Beyin nasıl hatırlar ve pekiştirir? | 12 Birlikte yanan, birlikte bağlanır · 13 Hafıza nerede? · 14 Ezber mi, anlamak mı? · 15 Unutma ve uyku       |
-| 5         | Kelimeler ve anlam                  | 16 Kelimelerin anlamı · 17 Okumak                                                                             |
-| Final     | Hepsi bir arada                     | 3B: bir limona, çileğe ya da dondurmaya baktığında gözden kelimeye giden yol                                  |
+| Bölüm     | Soru                                | Seviyeler                                                                                                              |
+| --------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Başlangıç | Beynin içine bir bak                | 3B tur: beyinden kabuğa, nöronlara ve sinapsa                                                                          |
+| 1         | Bir nöron nasıl karar verir?        | 1 Tek bir ışık hücresi · 2 İki ışık, bir karar · 3 Susturan bağlantı                                                   |
+| 2         | Nöron nasıl öğrenir?                | 4 Öğretmenle öğrenme · 5 Tahmin ederek öğrenme · 6 Tek nöronun duvarı                                                  |
+| 3         | Nöronlar birlikte nasıl anlar?      | 7 Muz ve armut · 8 Gizli nöronlar · 9 Yatay mı dikey mi? · 10 Şekil tanıma · 11 Rakam tanıma · 12 Beş duyu, tek kavram |
+| 4         | Beyin nasıl hatırlar ve pekiştirir? | 13 Birlikte yanan, birlikte bağlanır · 14 Hafıza nerede? · 15 Ezber mi, anlamak mı? · 16 Unutma ve uyku                |
+| 5         | Kelimeler ve anlam                  | 17 Kelimelerin anlamı · 18 Okumak                                                                                      |
+| Final     | Hepsi bir arada                     | 3B: bir limona, çileğe ya da dondurmaya baktığında gözden kelimeye giden yol                                           |
 
 Hiçbir seviye kilitli değil; istediğin yerden başlayabilirsin. İlerlemen yalnızca kendi tarayıcında saklanır.
 
 |                                                                                         |                                                                            |
 | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| ![Seviye 13: yarım bir ipucundan anıyı geri getiren hafıza ağı](docs/img/seviye-13.jpg) | ![Seviye 10: şekil ve rakam tanıyan nöron ağı](docs/img/seviye-10.jpg)     |
+| ![Seviye 14: yarım bir ipucundan anıyı geri getiren hafıza ağı](docs/img/seviye-13.jpg) | ![Seviye 10: şekil tanıyan nöron ağı](docs/img/seviye-10.jpg)              |
 | ![3B: nöronlar, dendritler ve sinyaller](docs/img/3b-noronlar.jpg)                      | ![3B: çilekten gelen ışık görme alanına gidiyor](docs/img/3b-yolculuk.jpg) |
 
 ## Nasıl çalışır?
@@ -66,4 +66,4 @@ Yeni bir seviye fikrin, bir düzeltmen ya da bir önerin mi var? Çok sevinirim.
 
 ### In English
 
-**Nörondan Beyne** (“From a Neuron to the Brain”) is a browser-based, hands-on course on how the brain perceives, decides, learns and remembers, starting from a single neuron. It has 17 guided levels in five chapters plus an interactive 3D brain you can zoom from the whole brain down to a single synapse. The interface is in Turkish. No build step, no dependencies: open `index.html`. Run the tests with `npm test`. MIT licensed.
+**Nörondan Beyne** (“From a Neuron to the Brain”) is a browser-based, hands-on course on how the brain perceives, decides, learns and remembers, starting from a single neuron. It has 18 guided levels in five chapters plus an interactive 3D brain you can zoom from the whole brain down to a single synapse. The interface is in Turkish. No build step, no dependencies: open `index.html`. Run the tests with `npm test`. MIT licensed.

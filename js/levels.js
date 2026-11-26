@@ -1785,15 +1785,8 @@ const ROADMAP = [
   { key: 'fruit' },
   { key: 'two' },
   { key: 'lines' },
-  {
-    key: 'shapes',
-    part: 'C',
-    title: 'Şekil ve rakam tanıma',
-    lab: 'digits',
-    note: 'serbest deney',
-    about:
-      '5×7 piksellik rakamları daha büyük bir ağla tanımak: kaç gizli nöron yeter, bozuk çizilmiş bir rakamı nasıl tamamlar?'
-  },
+  { key: 'shapes', part: 'C', title: 'Şekil tanıma' },
+  { key: 'digits', part: 'C', title: 'Rakam tanıma' },
   { key: 'senses' },
 
   { key: 'hebb' },

@@ -1,31 +1,4 @@
-/* Seviye 10: şekil ve rakam tanıma */
-.sh-mode {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  margin: 4px 0 12px;
-  background: var(--surface-2);
-  border-radius: 12px;
-}
-.sh-mbtn {
-  border: 0;
-  background: transparent;
-  border-radius: 9px;
-  padding: 8px 16px;
-  font-weight: 500;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-.sh-mbtn[aria-pressed='true'] {
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(34, 24, 58, 0.12);
-}
-.sh-mbtn.psug {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
-  animation: psug 1.6s ease-in-out infinite;
-}
+/* Seviye 10–11: şekil ve rakam tanıma */
 .sh-bench {
   display: grid;
   grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.6fr) minmax(250px, 1fr);

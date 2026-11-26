@@ -177,7 +177,7 @@
       model:
         'Kelime 3×6 piksellik harflerle çizilir: 186 göz nöronu → 24 ara nöron → 4 tür (hayvan, meyve, renk, şehir). Ağ her kelimeyi birkaç pikseli oynamış kopyalarıyla görür. “Farklı yerlerde de göster” açıkken kopyaların yarısı da birkaç piksel sağa ya da sola kaydırılır.',
       limit:
-        'Gerçek okuma harf, hece ve ek gibi parçaları ayrı ayrı tanıyan katmanlarla yürür; burada tek bir ara katman kelimenin bütün resmine bakıyor. Anlam da yalnız dört türden ibaret değil (16. seviye).'
+        'Gerçek okuma harf, hece ve ek gibi parçaları ayrı ayrı tanıyan katmanlarla yürür; burada tek bir ara katman kelimenin bütün resmine bakıyor. Anlam da yalnız dört türden ibaret değil (17. seviye).'
     },
     deeper: `<p><b>Neden kayınca şaşırıyor?</b> Bir ara nöronun bağlantıları resmin belli piksellerine bağlı. “kedi” bir harf sağa kayınca ateşlenen pikseller bambaşka bağlantılara denk gelir; ağın gözünde başka bir resimdir.</p>
     <p><b>Beynin çözümü:</b> Görme yolunda alt katmanlarda aynı küçük şekle (bir çizgi, bir köşe) her yerde tepki veren dedektörler vardır; üst katmanlar bunları toplayarak yere daha az bağlı hâle gelir. Burada bu, kelimeleri farklı yerlerde göstererek taklit ediliyor.</p>`

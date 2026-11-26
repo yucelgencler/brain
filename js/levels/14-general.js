@@ -182,7 +182,7 @@
       model:
         'Ezberci her çizimi olduğu gibi saklar. Sorduğun çizim sakladıklarından birine en fazla bir pikselle uyuyorsa onun adını söyler, uymuyorsa “hatırlamıyorum” der. Kavrayan 35 → 6 → 3 nöronluk bir ağdır. Her örnekte bağlantılarını biraz düzeltir (10. seviyedeki gibi), ama ezberciden yavaş öğrenir.',
       limit:
-        'Gerçek hipokampus tam bir kopya saklamaz; eksik ipucundan tamamlar (12. ve 13. seviyeler). Kabuk da bazı şeyleri ezberleyebilir. Buradaki iki öğrenci, iki sistemin uç hâllerini karşılaştırmak için basitleştirildi.'
+        'Gerçek hipokampus tam bir kopya saklamaz; eksik ipucundan tamamlar (13. ve 14. seviyeler). Kabuk da bazı şeyleri ezberleyebilir. Buradaki iki öğrenci, iki sistemin uç hâllerini karşılaştırmak için basitleştirildi.'
     },
     deeper: `<p><b>Ezber neden yeni çizimde çuvallıyor?</b> Ezberci yalnız “bu çizimi gördüm mü?” diye bakıyor. İki piksel farklı bir çizim onun için tamamen yeni bir şey.</p>
     <p><b>Kavrayan neden tek örnekte yanılıyor?</b> Tek bir artı görünce “ne görürsem artı” demek, o anki bütün bilgiyle tutarlı. Aşırı genelleme bundan doğar; küçük çocukların her dört ayaklıya “kuçu” demesi de buna benzer.</p>

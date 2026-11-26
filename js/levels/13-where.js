@@ -199,7 +199,7 @@
         shows: [],
         text: '<b>Pamuk’un yarısını</b> ipucu olarak ver ve <b>Hatırla</b>’ya bas.',
         check: st => !!st.flags.recalled,
-        aha: 'Yarım bir resimden bütünü geri getirdi. Her nöron ötekilerden gelen bağlantılara bakıp “ben de bu resimde yanmalıyım” ya da “sönmeliyim” diye karar verdi. 12. seviyedeki [[örüntü tamamlama]], bu kez 36 nöronla.'
+        aha: 'Yarım bir resimden bütünü geri getirdi. Her nöron ötekilerden gelen bağlantılara bakıp “ben de bu resimde yanmalıyım” ya da “sönmeliyim” diye karar verdi. 13. seviyedeki [[örüntü tamamlama]], bu kez 36 nöronla.'
       },
       {
         id: 'one',
@@ -239,7 +239,7 @@
       brain:
         'Bir anı beyinde tek bir yerde değil, birlikte yanan nöron gruplarının bağlantılarında saklanır; buna hafıza izi (engram) denir. 1953’te H.M. adlı hastanın iki yandaki hipokampusu alınınca eski anılarının çoğu kaldı ama yeni anı oluşturamadı: hipokampus yeni anıları kaydetmek için gerekli, ama anının tamamı orada durmuyor. 2012’de farelerde bir anıyı taşıyan hücreler ışıkla uyarılınca hayvan o anıyı “hatırladı”.',
       model:
-        '36 nöron, her biri ötekilerin hepsine bağlı: 630 bağlantı. Üç resim 12. seviyedeki “birlikte yanan bağlanır” kuralıyla aynı bağlantılara üst üste yazıldı. Hatırlarken her nöron sırayla, bağlantılarından gelen desteğe bakıp yanar ya da söner; birkaç turda ağ en yakın anıya oturur.',
+        '36 nöron, her biri ötekilerin hepsine bağlı: 630 bağlantı. Üç resim 13. seviyedeki “birlikte yanan bağlanır” kuralıyla aynı bağlantılara üst üste yazıldı. Hatırlarken her nöron sırayla, bağlantılarından gelen desteğe bakıp yanar ya da söner; birkaç turda ağ en yakın anıya oturur.',
       limit:
         'Gerçek hafıza tek bir ağda değil; hipokampus, kabuğun farklı bölgeleri ve zamanla değişen bağlantılar birlikte çalışır. Bu ağda bağlantılar iki yönde eşit güçte, beyinde öyle değil. Ayrıca burada yalnız üç resim var; aynı ağa çok fazla resim yazılırsa anılar birbirine karışmaya başlar.'
     },
