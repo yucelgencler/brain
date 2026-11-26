@@ -33,24 +33,24 @@ function multiGridHTML(lv) {
   return `<section class="bench has-card">
       <div class="bench-card">
         <div class="tcard-wrap" id="mcard"></div>
-        <button class="btn primary big" id="mOne">Bir kart göster</button>
-        <div class="bench-more"><button class="btn small" id="mRound">Bir tur</button><button class="btn small" id="mAuto" aria-pressed="false">Otomatik ▶</button><button class="btn ghost small" id="mReset">Boş beyin</button></div>
+        <button class="btn primary big" id="mOne" data-glow="one">Bir kart göster</button>
+        <div class="bench-more" data-lay="more"><button class="btn small" id="mRound">Bir tur</button><button class="btn small" id="mAuto" aria-pressed="false">Otomatik ▶</button><button class="btn ghost small" id="mReset">Boş beyin</button></div>
         <p class="hint" id="mNext"></p>
       </div>
       <div class="bench-scene"><div class="stage scene-wrap"><svg id="mscene" viewBox="0 0 730 350" role="img" aria-label="Özellik nöronları ve kavram nöronları"></svg></div>
-        <p class="hint">Özellik nöronlarına tıklayarak kendi meyveni yapabilirsin.</p></div>
+        <p class="hint" data-lay="own" data-glow="own">Özellik nöronlarına tıklayarak kendi meyveni yapabilirsin.</p></div>
       <div class="bench-answer panel" id="manswer" aria-live="polite"></div>
     </section>
-    <section class="strip" id="mstep" aria-live="polite"></section>
+    <section class="strip" id="mstep" aria-live="polite" data-lay="strip"></section>
     <section class="bench-bottom three">
-      <div class="panel"><div class="ph"><h3>Eğitim kartları</h3><span class="pc" id="mScore"></span></div>
+      <div class="panel" data-lay="deck"><div class="ph"><h3>Eğitim kartları</h3><span class="pc" id="mScore"></span></div>
         <p class="hint">Bir karta tıklarsan beyne sadece gösterilir; öğretmek için “Bir kart göster”i kullan.</p><div class="mdeck" id="mdeck"></div>
         <div class="lrounds"><div class="ph"><h3>Tur başına yanlış kart</h3><span class="pc" id="mRoundsN"></span></div><svg id="mrounds" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg><p class="hint" id="mRoundsHint"></p></div></div>
-      <div class="panel"><h3>Ortak mı, farklı mı?</h3>
+      <div class="panel" data-lay="cmp" data-glow="cmp"><h3>Ortak mı, farklı mı?</h3>
         <p class="hint">İki kart seç: hangi özellik nöronları ikisinde de ateşliyor, hangi kavram nöronu hangisinde?</p>
         <div class="row cmp-sel"><select id="cmpA" aria-label="Birinci kart"></select><span class="pc">ile</span><select id="cmpB" aria-label="İkinci kart"></select></div>
         <table class="tt cmp" id="cmpT"></table><p class="cmp-sum" id="cmpSum"></p></div>
-      <div class="panel"><h3>Bağlantı tablosu</h3>
+      <div class="panel" data-lay="wt"><h3>Bağlantı tablosu</h3>
         <p class="hint">Her özellik nöronundan her kavram nöronuna giden bağlantının gücü. Aynı özellik iki nörona farklı sayılar verebilir.</p><table class="tt wt" id="wtT"></table></div>
     </section>`;
 }
@@ -81,7 +81,7 @@ function wireMulti(lv) {
   lv.outs.forEach((o, k) => {
     const y = MX.cy[k];
     h += `<circle class="soma" id="mc${k}" cx="${MX.cx}" cy="${y}" r="${MX.cr}"/><text class="px-state emo" x="${MX.cx}" y="${y + 12}">${o.icon}</text>
-      <text class="soma-sub" id="mct${k}" x="${MX.cx}" y="${y + MX.cr + 20}"></text>
+      <text class="soma-sub" data-lay="sums" id="mct${k}" x="${MX.cx}" y="${y + MX.cr + 20}"></text>
       <line class="axon" id="max${k}" x1="${MX.cx + MX.cr}" y1="${y}" x2="${MX.cx + MX.cr + 40}" y2="${y}"/>
       <text class="out-t" id="mot${k}" x="${MX.cx + MX.cr + 50}" y="${y - 2}"></text><text class="out-s" id="mos${k}" x="${MX.cx + MX.cr + 50}" y="${y + 17}"></text>`;
   });

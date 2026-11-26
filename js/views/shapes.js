@@ -21,6 +21,8 @@ function shapesStop() {
 }
 function shapesResetView() {
   shapesStop();
+  cancelAnimationFrame(SHN.raf);
+  Object.assign(SHN, { raf: 0, key: '', hover: null, net: null });
   shNet = null;
   shAdv = null;
 }
@@ -59,7 +61,8 @@ function shapesGridHTML(lv) {
     <div class="panel sh-brain">
       <div class="ph"><h3>Nöron ağı</h3><span class="pc" id="shBrainSub"></span></div>
       <canvas id="shNet" role="img" aria-label="Göz nöronlarından ara nöronlara, oradan cevap nöronlarına giden bağlantılar"></canvas>
-      <p class="hint">Koyu nokta = ateşleyen nöron. <b class="pos-t">Mavi</b> çizgi uyarır, <b class="neg-t">pembe</b> çizgi susturur; kalınlık bağlantının gücü.</p>
+      <div class="sh-tip" id="shTip" hidden></div>
+      <p class="hint">Bir şekil çizince sinyalin aktığını izle. <b>Bir nöronun üstüne gel</b>: bağlantıları ve etkisi görünür. <b class="pos-t">Mavi</b> uyarır, <b class="neg-t">pembe</b> susturur.</p>
     </div>
     <div class="panel sh-ans" id="shAns" aria-live="polite"></div>
   </section>
@@ -87,6 +90,7 @@ function wireShapes(lv) {
     st = rec.st;
   shNet = shapesReplay(st);
   if (st.mode === 'adv') shAdvBuild(st);
+  wireShNetHover();
   const grid = $('#shGrid');
   const paintAt = el => {
     if (!el || !el.classList.contains('sh-cell') || shPaint === null) return;
@@ -257,13 +261,39 @@ function shAdvRun(st, steps) {
 function shCss(n) {
   return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888';
 }
-function drawShapesNet(cv, net, bits, labels) {
+/* ---------- Ağ çizimi: sinyal akışı ve üstüne gelince bağlantılar ---------- */
+// Çizim değişince sinyal gözden ara nöronlara, oradan cevaba akar (p: 0 → 2).
+// Bir nöronun üstüne gelince yalnız onun bağlantıları öne çıkar ve bir kutu
+// onun neye baktığını ve hangi cevabı ne kadar etkilediğini anlatır.
+const SHN = { net: null, bits: null, labels: null, key: '', t0: 0, raf: 0, hover: null, lay: null };
+const SH_STEP = 520; // bir katmandan ötekine ms
+function shNetShow(net, bits, labels) {
+  const key = bits.join('');
+  const changed = SHN.key && key !== SHN.key && key.includes('1');
+  Object.assign(SHN, { net, bits: bits.slice(), labels, key });
+  if (changed && !reducedMotion) {
+    SHN.t0 = performance.now();
+    if (!SHN.raf) SHN.raf = requestAnimationFrame(shNetTick);
+  } else if (!SHN.raf) shNetPaint(Infinity);
+  shTipUpdate();
+}
+function shNetTick(now) {
+  const p = (now - SHN.t0) / SH_STEP;
+  shNetPaint(p);
+  SHN.raf = p < 2.3 ? requestAnimationFrame(shNetTick) : 0;
+  if (!SHN.raf) shNetPaint(Infinity);
+}
+function shNetPaint(p) {
+  const cv = document.getElementById('shNet');
+  if (cv && SHN.net) drawShapesNet(cv, SHN.net, SHN.bits, SHN.labels, p, SHN.hover);
+}
+function drawShapesNet(cv, net, bits, labels, p = Infinity, hover = null) {
   const dpr = window.devicePixelRatio || 1,
     W = cv.clientWidth || 400,
     H = Math.max(260, Math.min(360, W * 0.62));
-  cv.style.height = H + 'px';
-  cv.width = Math.round(W * dpr);
-  cv.height = Math.round(H * dpr);
+  if (cv.style.height !== H + 'px') cv.style.height = H + 'px';
+  if (cv.width !== Math.round(W * dpr)) cv.width = Math.round(W * dpr);
+  if (cv.height !== Math.round(H * dpr)) cv.height = Math.round(H * dpr);
   const x = cv.getContext('2d');
   x.setTransform(dpr, 0, 0, dpr, 0, 0);
   x.clearRect(0, 0, W, H);
@@ -279,7 +309,6 @@ function drawShapesNet(cv, net, bits, labels) {
     out = acts[2],
     nH = hid.length,
     nO = out.length;
-  // girdi: 5×7 küçük kareler
   const c = Math.min(14, (H - 40) / 7 - 2),
     gx = 10,
     gy = (H - 7 * (c + 2)) / 2;
@@ -288,58 +317,102 @@ function drawShapesNet(cv, net, bits, labels) {
     ox = W - 96;
   const hy = j => 18 + ((H - 36) * (j + 0.5)) / nH,
     oy = k => 18 + ((H - 36) * (k + 0.5)) / nO;
+  const rH = Math.max(3.5, Math.min(10, (H - 40) / nH / 2.6)),
+    rO = Math.max(5, Math.min(13, (H - 40) / nO / 2.4));
+  SHN.lay = { c, inPos, hx, hy, ox, oy, rH, rO, nH, nO };
   const W1 = net.W[0],
     W2 = net.W[1];
   let m1 = 1e-9,
     m2 = 1e-9;
   for (const v of W1) m1 = Math.max(m1, Math.abs(v));
   for (const v of W2) m2 = Math.max(m2, Math.abs(v));
+  const f1 = clamp(p, 0, 1), // ara nöronlara ulaşma
+    f2 = clamp(p - 1, 0, 1); // cevaba ulaşma
+  // üstüne gelinen nöronla ilgili bir bağlantı mı?
+  const rel1 = (i, j) =>
+      !hover || (hover.l === 0 && hover.i === i) || (hover.l === 1 && hover.i === j),
+    rel2 = (j, k) => !hover || (hover.l === 1 && hover.i === j) || (hover.l === 2 && hover.i === k);
+  const dim = hover ? 0.12 : 1;
   x.lineCap = 'round';
-  // göz → ara: yalnız yanan piksellerden
+  const line = (x1, y1, x2, y2) => {
+    x.beginPath();
+    x.moveTo(x1, y1);
+    x.lineTo(x2, y2);
+    x.stroke();
+  };
+  // göz → ara (üstüne gelinen ara nöronun bütün girişleri, yoksa yalnız yanan piksellerinki)
   for (let j = 0; j < nH; j++)
     for (let i = 0; i < 35; i++) {
-      if (!bits[i]) continue;
+      const r = rel1(i, j),
+        focus = hover && r;
+      if (!bits[i] && !focus) continue;
       const w = W1[j * 35 + i],
         a = Math.abs(w) / m1;
-      if (a < 0.15) continue;
+      if (a < (focus ? 0.05 : 0.15)) continue;
       const [px, py] = inPos(i);
       x.strokeStyle = w > 0 ? POS : NEG;
-      x.globalAlpha = 0.12 + 0.5 * a;
-      x.lineWidth = 0.6 + 1.8 * a;
-      x.beginPath();
-      x.moveTo(px + c / 2, py);
-      x.lineTo(hx, hy(j));
-      x.stroke();
+      x.globalAlpha =
+        (0.12 + 0.5 * a) *
+        (r ? (focus ? 1.6 : 1) : dim) *
+        (0.35 + 0.65 * f1) *
+        (bits[i] ? 1 : 0.55);
+      x.lineWidth = 0.6 + (focus ? 2.6 : 1.8) * a;
+      line(px + c / 2, py, hx, hy(j));
     }
   // ara → cevap
   for (let k = 0; k < nO; k++)
     for (let j = 0; j < nH; j++) {
+      const r = rel2(j, k),
+        focus = hover && r;
       const w = W2[k * nH + j],
-        a = (Math.abs(w) / m2) * (0.25 + 0.75 * Math.abs(hid[j]));
+        a = (Math.abs(w) / m2) * (focus ? 1 : 0.25 + 0.75 * Math.abs(hid[j]) * f1);
       if (a < 0.08) continue;
-      x.strokeStyle = w * hid[j] >= 0 ? POS : NEG;
-      x.globalAlpha = 0.1 + 0.7 * a;
+      x.strokeStyle = (focus ? w : w * hid[j]) >= 0 ? POS : NEG;
+      x.globalAlpha = Math.min(
+        1,
+        (0.1 + 0.7 * a) * (r ? (focus ? 1.4 : 1) : dim) * (0.35 + 0.65 * f2)
+      );
       x.lineWidth = 0.6 + 3 * a;
-      x.beginPath();
-      x.moveTo(hx, hy(j));
-      x.lineTo(ox, oy(k));
-      x.stroke();
+      line(hx, hy(j), ox, oy(k));
     }
+  // akan sinyal: en güçlü katkılar boyunca noktalar
+  if (p < 2) {
+    const l = p < 1 ? 0 : 1,
+      fr = p - l,
+      list = [];
+    if (l === 0) {
+      for (let j = 0; j < nH; j++)
+        for (let i = 0; i < 35; i++) if (bits[i]) list.push([W1[j * 35 + i], i, j]);
+    } else
+      for (let k = 0; k < nO; k++)
+        for (let j = 0; j < nH; j++) list.push([W2[k * nH + j] * hid[j], j, k]);
+    list.sort((u, v) => Math.abs(v[0]) - Math.abs(u[0]));
+    list.slice(0, 60).forEach((e, rank) => {
+      const f = clamp(fr * 1.35 - (rank % 6) * 0.06, 0, 1);
+      if (f <= 0 || f >= 1) return;
+      const [x1, y1] = l === 0 ? [inPos(e[1])[0] + c / 2, inPos(e[1])[1]] : [hx, hy(e[1])],
+        [x2, y2] = l === 0 ? [hx, hy(e[2])] : [ox, oy(e[2])];
+      x.fillStyle = e[0] > 0 ? POS : NEG;
+      x.globalAlpha = 0.9;
+      x.beginPath();
+      x.arc(x1 + (x2 - x1) * f, y1 + (y2 - y1) * f, 2.6, 0, 7);
+      x.fill();
+    });
+  }
   x.globalAlpha = 1;
   // düğümler
   for (let i = 0; i < 35; i++) {
     const [px, py] = inPos(i);
     x.fillStyle = bits[i] ? ON : SURF;
-    x.strokeStyle = LINE;
-    x.lineWidth = 1;
+    x.strokeStyle = hover && hover.l === 0 && hover.i === i ? INK : LINE;
+    x.lineWidth = hover && hover.l === 0 && hover.i === i ? 2.5 : 1;
     x.beginPath();
     x.roundRect(px - c / 2, py - c / 2, c, c, 2);
     x.fill();
     x.stroke();
   }
-  const rH = Math.max(3.5, Math.min(10, (H - 40) / nH / 2.6));
   for (let j = 0; j < nH; j++) {
-    const v = hid[j];
+    const v = hid[j] * f1;
     x.fillStyle = SURF;
     x.beginPath();
     x.arc(hx, hy(j), rH, 0, 7);
@@ -348,12 +421,16 @@ function drawShapesNet(cv, net, bits, labels) {
     x.fillStyle = v >= 0 ? ON : NEG;
     x.fill();
     x.globalAlpha = 1;
+    const hv = hover && hover.l === 1 && hover.i === j;
     x.strokeStyle = INK;
-    x.lineWidth = 1.2;
+    x.lineWidth = hv ? 3 : 1.2;
+    if (hv) {
+      x.beginPath();
+      x.arc(hx, hy(j), rH + 3, 0, 7);
+    }
     x.stroke();
   }
-  const best = shArgmax(Array.from(out)),
-    rO = Math.max(5, Math.min(13, (H - 40) / nO / 2.4));
+  const best = shArgmax(Array.from(out));
   x.font = `${nO > 6 ? 12 : 14}px "IBM Plex Sans", system-ui, sans-serif`;
   x.textBaseline = 'middle';
   for (let k = 0; k < nO; k++) {
@@ -361,21 +438,130 @@ function drawShapesNet(cv, net, bits, labels) {
     x.beginPath();
     x.arc(ox, oy(k), rO, 0, 7);
     x.fill();
-    x.globalAlpha = Math.min(1, out[k] * 1.3);
+    x.globalAlpha = Math.min(1, out[k] * 1.3 * f2);
     x.fillStyle = ON;
     x.fill();
     x.globalAlpha = 1;
-    x.strokeStyle = k === best ? INK : INK2;
-    x.lineWidth = k === best ? 2 : 1;
+    const win = k === best && f2 >= 1;
+    x.strokeStyle = win || (hover && hover.l === 2 && hover.i === k) ? INK : INK2;
+    x.lineWidth = win ? 2 : hover && hover.l === 2 && hover.i === k ? 2.5 : 1;
     x.stroke();
-    x.fillStyle = k === best ? INK : INK2;
-    x.fillText(`${labels[k]} ${shPct(out[k])}`, ox + rO + 6, oy(k));
+    x.fillStyle = win ? INK : INK2;
+    x.fillText(f2 >= 1 ? `${labels[k]} ${shPct(out[k])}` : labels[k], ox + rO + 6, oy(k));
   }
   x.fillStyle = INK2;
   x.font = '11px "IBM Plex Sans", system-ui, sans-serif';
   x.textBaseline = 'alphabetic';
   x.fillText('göz', gx, H - 4);
   x.fillText('ara nöronlar', hx - 30, H - 4);
+}
+// Fare hangi nöronun üstünde?
+function shHit(mx, my) {
+  const L = SHN.lay;
+  if (!L) return null;
+  for (let i = 0; i < 35; i++) {
+    const [px, py] = L.inPos(i);
+    if (Math.abs(mx - px) <= L.c / 2 + 1 && Math.abs(my - py) <= L.c / 2 + 1) return { l: 0, i };
+  }
+  for (let j = 0; j < L.nH; j++)
+    if (Math.hypot(mx - L.hx, my - L.hy(j)) <= Math.max(L.rH + 3, 7)) return { l: 1, i: j };
+  for (let k = 0; k < L.nO; k++)
+    if (Math.hypot(mx - L.ox, my - L.oy(k)) <= L.rO + 4) return { l: 2, i: k };
+  return null;
+}
+const shSg = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2).replace('.', ',');
+// Bir ara nöronun “neye baktığı”: 5×7 ızgarada giriş bağlantıları
+function shField(net, j) {
+  const W1 = net.W[0];
+  let m = 1e-9;
+  for (let i = 0; i < 35; i++) m = Math.max(m, Math.abs(W1[j * 35 + i]));
+  let h = '<div class="sh-field" aria-hidden="true">';
+  for (let i = 0; i < 35; i++) {
+    const w = W1[j * 35 + i] / m;
+    h += `<i style="background:${w >= 0 ? 'var(--pos)' : 'var(--neg)'};opacity:${(0.1 + 0.9 * Math.abs(w)).toFixed(2)}"></i>`;
+  }
+  return h + '</div>';
+}
+function shTipHTML(h) {
+  const { net, bits, labels } = SHN,
+    acts = net.forward(bits),
+    hid = acts[1],
+    out = acts[2],
+    nH = hid.length,
+    W1 = net.W[0],
+    W2 = net.W[1];
+  if (h.l === 0) {
+    const r = Math.floor(h.i / 5) + 1,
+      c = (h.i % 5) + 1,
+      arr = [];
+    for (let j = 0; j < nH; j++) arr.push([W1[j * 35 + h.i], j]);
+    arr.sort((a, b) => Math.abs(b[0]) - Math.abs(a[0]));
+    return `<b>Göz nöronu</b> (${r}. satır, ${c}. sütun) · ${bits[h.i] ? 'yanık' : 'sönük'}<br>${
+      bits[h.i]
+        ? 'Yanınca ara nöronlara sinyal yollar. En güçlü bağlantıları: '
+        : 'Sönükken sinyal yollamaz. Yansa en çok şunları etkilerdi: '
+    }${arr
+      .slice(0, 3)
+      .map(e => `ara nöron ${e[1] + 1} (${shSg(e[0])})`)
+      .join(', ')}`;
+  }
+  if (h.l === 1) {
+    const j = h.i,
+      eff = labels
+        .map((lab, k) => [W2[k * nH + j] * hid[j], lab])
+        .sort((a, b) => Math.abs(b[0]) - Math.abs(a[0]));
+    return `<b>Ara nöron ${j + 1}</b> · ${hid[j] >= 0 ? 'etkin' : 'ters yönde etkin (pembe)'} ${shPct(Math.abs(hid[j]))}
+      <div class="sh-tip-row">${shField(net, j)}<span>Neye bakıyor? <b class="pos-t">Mavi</b> pikseller onu uyarır, <b class="neg-t">pembe</b>ler susturur.</span></div>
+      Bu çizimde etkisi: ${eff
+        .slice(0, 3)
+        .map(e => `<b>${esc(e[1])}</b> ${shSg(e[0])}`)
+        .join(' · ')}`;
+  }
+  const k = h.i,
+    arr = [];
+  for (let j = 0; j < nH; j++) arr.push([W2[k * nH + j] * hid[j], j]);
+  arr.sort((a, b) => Math.abs(b[0]) - Math.abs(a[0]));
+  return `<b>Cevap nöronu: ${esc(labels[k])}</b> · ${shPct(out[k])}<br>Bu çizimde onu en çok etkileyen ara nöronlar: ${arr
+    .slice(0, 3)
+    .map(e => `${e[1] + 1} (${shSg(e[0])})`)
+    .join(', ')}`;
+}
+function shTipUpdate() {
+  const tip = document.getElementById('shTip');
+  if (!tip) return;
+  if (!SHN.hover || !SHN.net) {
+    tip.hidden = true;
+    return;
+  }
+  tip.innerHTML = shTipHTML(SHN.hover);
+  tip.hidden = false;
+}
+function wireShNetHover() {
+  const cv = $('#shNet'),
+    tip = $('#shTip');
+  const move = e => {
+    const r = cv.getBoundingClientRect(),
+      mx = e.clientX - r.left,
+      my = e.clientY - r.top,
+      h = shHit(mx, my),
+      same = (h && SHN.hover && h.l === SHN.hover.l && h.i === SHN.hover.i) || (!h && !SHN.hover);
+    SHN.hover = h;
+    if (h) {
+      tip.style.left = clamp(mx + 16, 4, cv.clientWidth - 260) + 'px';
+      tip.style.top = my + cv.offsetTop + 16 + 'px';
+    }
+    if (!same) {
+      shTipUpdate();
+      if (!SHN.raf) shNetPaint(Infinity);
+    }
+  };
+  cv.addEventListener('pointermove', move);
+  cv.addEventListener('pointerdown', move);
+  cv.addEventListener('pointerleave', () => {
+    SHN.hover = null;
+    shTipUpdate();
+    if (!SHN.raf) shNetPaint(Infinity);
+  });
 }
 function drawShCurve(cv, curve) {
   const dpr = window.devicePixelRatio || 1,
@@ -492,7 +678,7 @@ function updateShapes(lv, rec) {
   $('#shBrainSub').textContent = adv
     ? `35 göz → ${st.adv.hidden} ara nöron → ${labels.length} cevap`
     : `35 göz → ${SHAPES.hidden} ara nöron → 3 cevap`;
-  drawShapesNet($('#shNet'), net, st.bits, labels);
+  shNetShow(net, st.bits, labels);
   const p = Array.from(net.predict(st.bits)),
     on = st.bits.reduce((a, b) => a + b, 0),
     best = shArgmax(p);

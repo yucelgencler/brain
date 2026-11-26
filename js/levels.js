@@ -1198,6 +1198,10 @@ const LEVELS = [
   /* ------------------------------ 7: muz ve armut ------------------------------ */
   {
     key: 'fruit',
+    ver: 2,
+    layered: true,
+    brainShort:
+      'Beyninde renkleri, kenarları ve dokuları algılayan nöronlar bütün nesneler için ortaktır. Muzu armuttan ayıran tek bir nöron değil, bu ortak nöronlardan hangilerinin birlikte ateşlediğidir: bir desen. Yeni bir meyve öğrenmek için yeni gözlere gerek yok, yeni bir desen yeter.',
     goal: 'Birden çok nöronun aynı girdileri nasıl paylaştığını görmek: muzu ve armudu tanıyan nöronlar hangi özellikleri ortak kullanıyor, hangi bağlantılar ayrı?',
     todo: [
       'Soldaki altı nöron özellik nöronu (sarı, yeşil, şekil, yumuşaklık…), sağdaki iki nöron kavram nöronu: 🍌 muz ve 🍐 armut. Her özellik nöronu iki kavram nöronuna da bağlı.',
@@ -1245,24 +1249,32 @@ const LEVELS = [
     missions: [
       {
         id: 'learn',
-        text: 'İki nörona birden öğret: “Bir kart göster”e basarak <b>altı kartın hepsini</b> doğru bilene kadar devam et.',
+        shows: ['more', 'deck'],
+        glow: ['one'],
+        text: '<b>“Bir kart göster”</b>e bas: iki nöron (🍌 muz ve 🍐 armut) aynı anda öğrensin. Altı kartın hepsini doğru bilene kadar devam et; <b>Otomatik</b> da olur.',
         check: st => !!st.flags.learned,
-        aha: 'Öğrendi. İki kavram nöronu aynı altı özellik nöronunu dinliyor ama her birinin kendi bağlantıları var; bir kartta muz nöronu yanılınca sadece muz nöronunun bağlantıları düzeldi. Bağlantı tablosuna bak: ikisi aynı özelliklere farklı sayılar vermiş.'
+        aha: 'Öğrendi! İki [[kavram nöronu]] aynı altı özellik nöronunu dinliyor ama her birinin kendi bağlantıları var. Bir kartta muz nöronu yanılınca yalnız onun bağlantıları düzeldi.'
       },
       {
         id: 'compare',
-        text: '“Ortak mı, farklı mı?” panelinde iki kart seç ve karşılaştır (ör. olgun muz ile olgun armut). Hangi özellik nöronları ikisinde de ateşliyor?',
+        shows: ['more', 'deck', 'cmp'],
+        glow: ['cmp'],
+        text: 'Aşağıdaki <b>Ortak mı, farklı mı?</b> panelinde iki kartı karşılaştır (ör. olgun muz ile olgun armut). Hangi özellikler ikisinde de var?',
         check: st => !!st.flags.compared,
-        aha: 'Olgun muz ile olgun armutta sarı ve yumuşak nöronları ortak, şekil nöronları farklı. Beyinde de böyle: renk, kenar ve doku nöronları bütün nesneler için ortak; bir nesneyi ötekinden ayıran, ortak havuzdaki hangi nöronların birlikte ateşlediği, yani desen.'
+        aha: 'Sarı ve yumuşak ortak, şekil farklı. Beyinde de renk, kenar ve doku nöronları bütün nesneler için ortaktır; bir nesneyi ötekinden ayıran, bu ortak nöronlardan hangilerinin birlikte ateşlediğidir: bir desen.'
       },
       {
         id: 'shared',
-        text: 'Öğrendikten sonra kendi meyveni yap: özellik nöronlarına tıklayarak <b>sadece 🟡 sarı ve 🧽 yumuşak</b> açık kalsın. Beyin buna ne diyor?',
+        shows: ['more', 'deck', 'cmp', 'own'],
+        glow: ['own'],
+        text: 'Kendi meyveni yap: soldaki özellik nöronlarına tıklayarak <b>yalnız 🟡 sarı ve 🧽 yumuşak</b> açık kalsın. Nöronlar ne diyor?',
         check: st => !!st.flags.learned && st.shown < 0 && sameW(st.x, [1, 0, 0, 0, 0, 1]),
-        aha: 'Ne muz ne armut diyor. Sarı ve yumuşak iki meyvede de var, limon da sarı: bu özellikler muzu armuttan ayırmaya yaramıyor. Öğrenme kuralı sadece hata olunca değiştiği için, ayırt etmeye yaramayan özelliklerin bağlantıları sıfır civarında kaldı ya da eksiye indi. Beyin de dikkatini ayırt edici özelliklere yöneltmeyi öğrenir.'
+        aha: 'Ne muz ne armut diyor: sarı ve yumuşak iki meyvede de var, ayırt etmeye yaramıyor. Nöronlar farkı yaratan özelliklere güvenmeyi öğrendi; senin dikkatin de farkı yaratan şeye yönelir.'
       },
       {
         id: 'mixed',
+        extra: true,
+        shows: ['more', 'deck', 'cmp', 'own', 'wt'],
         text: 'Şimdi <b>🌙 uzun, kavisli</b> ile <b>💧 damla şekli</b>ni birlikte aç: hem muz hem armut şekli. Ne oluyor?',
         check: st => !!st.flags.learned && st.shown < 0 && st.x[2] === 1 && st.x[3] === 1,
         aha: 'Kafası karıştı. Bağlantı tablosuna bak: muz nöronu uzun şekli lehte (+), damla şeklini aleyhte (−) kanıt saymayı öğrendi; armut nöronu tam tersini. İki şekil birden gelince lehte ve aleyhte kanıtlar birbirini götürüyor. Öğrenen beyin sadece “neye benziyor”u değil, “neye benzemiyor”u da öğreniyor.'
