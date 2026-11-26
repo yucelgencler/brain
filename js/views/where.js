@@ -35,11 +35,13 @@ function whereGridHTML(lv) {
       <div class="wh-qbtns">${MEM.names
         .map(
           (n, k) =>
-            `<button class="btn small" id="whHalf${k}">${MEM.icons[k]} ${['Pamuk’un', 'Evin', 'Şemsiyenin'][k]} yarısı</button>`
+            `<button class="btn small" id="whHalf${k}"${k ? ' data-lay="more"' : ''}>${MEM.icons[k]} ${['Pamuk’un', 'Evin', 'Şemsiyenin'][k]} yarısı</button>`
         )
-        .join('')}<button class="btn small" id="whNoisy">🌫️ Bozuk bir Pamuk</button></div>
+        .join(
+          ''
+        )}<button class="btn small" id="whNoisy" data-lay="noisy">🌫️ Bozuk bir Pamuk</button></div>
       <div class="wh-grid wh-cgrid" id="whCue">${cue}</div>
-      <p class="hint">Kutulara dokunarak kendi ipucunu da çizebilirsin. Taralı kutular: ipucunda boş kalan yer.</p>
+      <p class="hint" data-lay="self">Kutulara dokunarak kendi ipucunu da çizebilirsin. Taralı kutular: ipucunda boş kalan yer.</p>
     </div>
     <div class="panel wh-net">
       <div class="ph"><h3>2. Hafıza ağı</h3><span class="pc" id="whSub">36 nöron · 630 bağlantı</span></div>
@@ -47,14 +49,14 @@ function whereGridHTML(lv) {
       <p class="wh-stepline" id="whStep" aria-live="polite"></p>
       <div class="wh-ctl">
         <button class="btn primary" id="whGo">▶ Hatırla</button>
-        <button class="btn" id="whKill" aria-pressed="false">✂ Nöron sil</button>
-        <button class="btn ghost" id="whFix">Onar</button>
+        <button class="btn" id="whKill" aria-pressed="false" data-lay="kill">✂ Nöron sil</button>
+        <button class="btn ghost" id="whFix" data-lay="cut">Onar</button>
       </div>
-      <label class="ctl wh-cut">Kopan bağlantı <input type="range" id="whCut" min="0" max="0.9" step="0.05" /><output id="whCutOut"></output></label>
+      <label class="ctl wh-cut" data-lay="cut">Kopan bağlantı <input type="range" id="whCut" min="0" max="0.9" step="0.05" /><output id="whCutOut"></output></label>
     </div>
     <div class="panel wh-ans" id="whAns" aria-live="polite"></div>
   </section>
-  <section class="panel wh-logp"><div class="ph"><h3>Hasar günlüğü</h3><span class="pc">son hatırlamalar</span></div><div class="llog-wrap"><table class="tt" id="whLog"></table></div></section>`;
+  <section class="panel wh-logp" data-lay="log"><div class="ph"><h3>Hasar günlüğü</h3><span class="pc">son hatırlamalar</span></div><div class="llog-wrap"><table class="tt" id="whLog"></table></div></section>`;
 }
 
 function wireWhere(lv) {

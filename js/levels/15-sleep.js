@@ -96,6 +96,9 @@
 
   const level = Lv.registerLevel({
     key: 'sleep',
+    layered: true,
+    brainShort:
+      'Gün içinde yaşadıklarını önce hipokampus hızlıca kaydeder. Uyurken bu yeni anılar eskilerle birlikte tekrar oynatılır ve beyin kabuğu ikisini birden pekiştirir. Bu yüzden iyi bir uykudan sonra öğrendiklerini daha iyi hatırlarsın.',
     ver: 1,
     part: 'D',
     kind: 'sleep',
@@ -113,24 +116,29 @@
     missions: [
       {
         id: 'day1',
+        shows: [],
         text: '<b>1. günü yaşa</b>: ağ artı ve çarpıyı öğrensin.',
         check: st => !!st.flags.day1,
         aha: 'Bir gün boyunca artı ve çarpı gördü, ikisini de tanıyor. Kare hiç görmediği için onu bilmiyor.'
       },
       {
         id: 'forget',
-        text: 'Uyku <b>kapalıyken</b> <b>2. günü yaşa</b>: bu gün yalnız kare görülüyor. Artı ile çarpıya ne oluyor?',
+        shows: ['day2'],
+        text: 'Şimdi <b>2. günü yaşa</b>: bu gün yalnız kare görülüyor (gece uyku yok). Artı ile çarpıya ne oluyor?',
         check: st => !!st.flags.forgot,
-        aha: 'Kareyi öğrendi ama artıyı ve çarpıyı unuttu: yeni şeyi öğrenmek için değişen bağlantılar, eskileri taşıyan bağlantıların üstüne yazıldı. Yapay ağlarda buna yıkıcı karışma denir (McCloskey ve Cohen, 1989). Beyin bunu nasıl önlüyor?'
+        aha: 'Kareyi öğrendi ama artıyı ve çarpıyı unuttu: yeni şey için değişen bağlantılar, eskileri taşıyan bağlantıların üstüne yazıldı. Gerçek beyin böyle unutmaz; nasıl korunduğunu sıradaki görev gösteriyor.'
       },
       {
         id: 'sleep',
+        shows: ['day2', 'sleep'],
         text: '<b>Baştan al</b>, uykuyu <b>aç</b> ve iki günü yeniden yaşa. Gece eski anılar tekrar oynatılacak.',
         check: st => !!st.flags.slept,
-        aha: 'Bu kez üçünü de hatırlıyor. Her gece hipokampus günün yeni anılarını eski anılarla karıştırıp kabuğa tekrar oynattı; kabuk yeniyi öğrenirken eskiyi de tazeledi. İlk gündüz eskiler biraz unutuldu, ama ilk gece geri geldi; çizgide gördün.'
+        aha: 'Bu kez üçünü de hatırlıyor. Her gece [[hipokampus]] günün yeni anılarını eskilerle karıştırıp kabuğa tekrar oynattı; kabuk yeniyi öğrenirken eskiyi de tazeledi. Buna [[pekiştirme]] denir.'
       },
       {
         id: 'little',
+        extra: true,
+        shows: ['day2', 'sleep', 'rep', 'log'],
         text: 'Gece tekrarını <b>en aza</b> indir (her 12 yeni anıya 1 eski) ve iki günü yeniden yaşa. Bu kadarı yetiyor mu?',
         check: st => !!st.flags.little,
         aha: 'Çok az tekrar bile yetti: eski anıların ara sıra yeniden oynatılması onları korumaya yeter. Biraz daha yavaş toparlandılar, o kadar. Uykudan sonra hatırlamanın iyileşmesi insanlarda birçok deneyde gösterildi.'

@@ -163,6 +163,9 @@
 
   const level = Lv.registerLevel({
     key: 'where',
+    layered: true,
+    brainShort:
+      'Bir anı beyninde tek bir hücrede değil, birçok nöronun arasındaki bağlantılara dağılmış olarak durur. Bu yüzden her gün nöron kaybetsen de anıların yerinde kalır; ağır hasarda bile anı bir anda değil, yavaş yavaş bulanıklaşarak zayıflar.',
     ver: 1,
     part: 'D',
     kind: 'where',
@@ -191,30 +194,36 @@
     missions: [
       {
         id: 'recall',
+        shows: [],
         text: '<b>Pamuk’un yarısını</b> ipucu olarak ver ve <b>Hatırla</b>’ya bas.',
         check: st => !!st.flags.recalled,
-        aha: 'Yarım bir resimden bütünü geri getirdi. Her nöron ötekilerden gelen bağlantılara bakıp “ben de bu resimde yanmalıyım” ya da “sönmeliyim” diye karar verdi. Bu, 12. seviyedeki örüntü tamamlamanın 36 nöronluk hâli.'
+        aha: 'Yarım bir resimden bütünü geri getirdi. Her nöron ötekilerden gelen bağlantılara bakıp “ben de bu resimde yanmalıyım” ya da “sönmeliyim” diye karar verdi. 12. seviyedeki [[örüntü tamamlama]], bu kez 36 nöronla.'
       },
       {
         id: 'one',
+        shows: ['kill'],
         text: '<b>Nöron sil</b>’i aç, ağdan bir nöronu sil ve yeniden hatırlat. Pamuk o nöronla birlikte gitti mi?',
         check: st => !!st.flags.oneDead,
         aha: 'Gitmedi. Pamuk tek bir nöronda değil, 630 bağlantının hepsine biraz biraz yazılmış. Tek bir nöronun kaybı resmi bozmuyor. Senin beyninde de her gün nöronlar ölür ama anıların yerinde durur.'
       },
       {
         id: 'many',
+        shows: ['kill', 'more'],
         text: 'En az <b>6 nöron</b> sil ve üç anıyı da (Pamuk, ev, şemsiye) sırayla hatırlat.',
         check: st => !!(st.flags.many && st.flags.many.length >= 3),
         aha: 'Ağın altıda biri gitti, üç anı hâlâ yerinde. Aynı nöronlar üç anıyı birden taşıyor: bir anı bir hücre değil, birçok hücrenin birlikte yanma deseni.'
       },
       {
         id: 'cut',
+        shows: ['kill', 'more', 'cut'],
         text: 'Nöronları <b>onar</b>, sonra bağlantıların <b>yarısını kopar</b> (%50) ve hatırlat.',
         check: st => !!st.flags.cutHalf,
-        aha: 'Bağlantıların yarısı gitti, anı hâlâ tam. Karl Lashley 1920’lerden 1950’ye fareler üzerinde tam bunu aradı: kabuğun hangi parçasını çıkarırsa çıkarsın öğrenilmiş bir yol tek bir yerden silinmedi; bozulma, çıkarılan miktarla orantılıydı.'
+        aha: 'Bağlantıların yarısı gitti, anı hâlâ tam. Karl Lashley fareler üzerinde yıllarca öğrenilmiş bir yolun beyindeki yerini aradı; kabuğun hangi parçasını çıkarırsa çıkarsın tek bir yerden silinmedi. Anı her yere biraz biraz yazılmıştı.'
       },
       {
         id: 'lost',
+        extra: true,
+        shows: ['kill', 'more', 'cut', 'noisy', 'self', 'log'],
         text: 'Hasarı <b>%85</b>’e çıkar ve üç anıyı hatırlat. Anı birden mi kayboluyor, yoksa bulanıklaşıp başka anılarla mı karışıyor?',
         check: st => !!st.flags.cutLost,
         aha: 'Çok ağır hasarda bile anı birden yok olmuyor: önce bulanıklaşıyor, sonra benzer bir anıyla karışmaya başlıyor. Beyin hasarında ve yaşlanmada da hafıza çoğu zaman böyle, yavaş yavaş zayıflar.'

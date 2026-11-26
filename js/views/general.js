@@ -18,14 +18,14 @@ function generalGridHTML(lv) {
       <div class="sh-tools"><button class="btn small" id="gnClear">Temizle</button><button class="btn small" id="gnSample">Örnek çiz</button></div>
       <span class="sh-q">Bu çizim aslında ne?</span>
       <div class="sh-chips" id="gnChips" role="group" aria-label="Şeklin adı"></div>
-      <div class="sh-acts"><button class="btn primary" id="gnTeach"></button><button class="btn" id="gnAsk">Sor (öğretmeden)</button></div>
+      <div class="sh-acts"><button class="btn primary" id="gnTeach"></button><button class="btn" id="gnAsk" data-lay="ask">Sor (öğretmeden)</button></div>
     </div>
     <div class="panel gn-panel" id="gnMemo"></div>
     <div class="panel gn-panel" id="gnCortex"></div>
   </section>
   <section class="gn-bottom">
-    <div class="panel"><div class="ph"><h3>Sınav: hiç görmedikleri 30 çizim</h3><button class="btn" id="gnExam">📝 Sınava sok</button></div><div id="gnExamBox"></div></div>
-    <div class="panel"><div class="ph"><h3>Son sorular</h3><span class="pc" id="gnCount"></span></div><div class="llog-wrap"><table class="tt" id="gnLog"></table></div></div>
+    <div class="panel" data-lay="exam"><div class="ph"><h3>Sınav: hiç görmedikleri 30 çizim</h3><button class="btn" id="gnExam">📝 Sınava sok</button></div><div id="gnExamBox"></div></div>
+    <div class="panel" data-lay="log"><div class="ph"><h3>Son sorular</h3><span class="pc" id="gnCount"></span></div><div class="llog-wrap"><table class="tt" id="gnLog"></table></div></div>
   </section>`;
 }
 function wireGeneral(lv) {

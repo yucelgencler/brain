@@ -107,6 +107,9 @@
 
   const level = Lv.registerLevel({
     key: 'general',
+    layered: true,
+    brainShort:
+      'Beyninde iki tür öğrenme yan yana çalışır. Hipokampus bir olayı tek seferde, ayrıntılarıyla kaydeder; beyin kabuğu ise birçok deneyimden yavaş yavaş ortak kuralı çıkarır. Ezber bildiğin soruda, anlamak yeni soruda işe yarar.',
     ver: 1,
     part: 'D',
     kind: 'general',
@@ -133,33 +136,38 @@
     missions: [
       {
         id: 'one',
+        shows: [],
         text: 'Gözde hazır bir artı var. Adı “Artı” seçili; <b>Öğret</b>’e bas. İki öğrenci de aynı tek örneği görecek.',
         check: st => st.examples.length >= 1,
         aha: 'İkisi de ilk örneği aldı. Ezberci çizimi olduğu gibi bir kenara yazdı; kavrayan bağlantılarını biraz değiştirdi.'
       },
       {
         id: 'over',
+        shows: ['ask'],
         text: 'Şimdi “Kare”yi seç, <b>Örnek çiz</b> ile bir kare çiz ve <b>Sor</b>. İkisi ne diyor?',
         check: st => !!st.flags.over,
-        aha: 'Ezberci “hatırlamıyorum” dedi: yalnız gördüğü o tek artıyı biliyor. Kavrayan ise kareye de “artı” dedi: tek örnekten her şeyin artı olduğu sonucunu çıkardı. Biri fazla özel, öbürü fazla genel; ikisinin de daha çok örneğe ihtiyacı var.'
+        aha: 'Ezberci “hatırlamıyorum” dedi: yalnız gördüğü o tek artıyı biliyor. Kavrayan ise kareye de “artı” dedi: tek örnekten her şeyin artı olduğu sonucunu çıkardı. Biri fazla katı, öbürü fazla aceleci.'
       },
       {
         id: 'all',
+        shows: ['ask'],
         text: 'Her şekilden en az <b>2 örnek</b> öğret: artı, çarpı, kare.',
         check: st => st.counts.every(c => c >= 2),
         aha: 'Artık ikisinin de elinde her şekilden örnek var. Ezbercinin defteri doldu; kavrayanın bağlantıları üç şekli birbirinden ayırmaya başladı.'
       },
       {
         id: 'new',
+        shows: ['ask'],
         text: 'Öğretmediğin, biraz yamuk yeni bir çizim yap ve <b>Sor</b>. Kavrayan bilsin, ezberci bilemesin.',
         check: st => !!st.flags.newGen,
-        aha: 'Kavrayan hiç görmediği çizimi tanıdı, ezberci tanıyamadı. Ezberci her örneği olduğu gibi saklıyor; kavrayan örneklerin ortak yanını, yani çizgilerin nerede olduğunu çıkarıyor.'
+        aha: 'Kavrayan hiç görmediği çizimi tanıdı, ezberci tanıyamadı. Ezberci her örneği olduğu gibi saklıyor; kavrayan örneklerin ortak yanını çıkarıyor. Buna [[genelleme]] denir.'
       },
       {
         id: 'exam',
+        shows: ['ask', 'exam'],
         text: '<b>Sınava sok</b>: ikisine de hiç görmedikleri 30 çizim. Hangisi kaçını bilecek?',
         check: st => !!st.flags.exam,
-        aha: 'Sınavı kavrayan kazandı. Okulda da ezber, soruların aynısı gelince işe yarar; yeni bir soruda kuralı anlamış olan kazanır. Beyinde iki yol da var: hipokampus bir olayı tek seferde, olduğu gibi kaydeder; kabuk birçok deneyimden yavaş yavaş genel bilgiyi çıkarır. İkisi nasıl birlikte çalışıyor? 15. seviyede.'
+        aha: 'Sınavı kavrayan kazandı. Okulda da ezber, soruların aynısı gelince işe yarar; yeni bir soruda kuralı anlamış olan kazanır.'
       }
     ],
     cards: {

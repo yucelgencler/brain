@@ -39,12 +39,12 @@ function sleepGridHTML(lv) {
     <div class="panel sl-ctl">
       <div class="ph"><h3>Günler</h3><span class="pc" id="slStage"></span></div>
       <button class="btn primary" id="slDay1">☀ 1. günü yaşa <small>artı ve çarpı</small></button>
-      <button class="btn primary" id="slDay2">☀ 2. günü yaşa <small>yalnız kare</small></button>
-      <div class="sl-sleep">
+      <button class="btn primary" id="slDay2" data-lay="day2">☀ 2. günü yaşa <small>yalnız kare</small></button>
+      <div class="sl-sleep" data-lay="sleep">
         <button class="btn" id="slSleep" aria-pressed="false"></button>
-        <label class="ctl" id="slRepL">Gece tekrarı <input type="range" id="slRep" min="1" max="12" step="1" /><output id="slRepOut"></output></label>
+        <label class="ctl" id="slRepL" data-lay="rep">Gece tekrarı <input type="range" id="slRep" min="1" max="12" step="1" /><output id="slRepOut"></output></label>
       </div>
-      <button class="btn ghost" id="slReset">↺ Baştan al</button>
+      <button class="btn ghost" id="slReset" data-lay="sleep">↺ Baştan al</button>
       <p class="hint" id="slNow" aria-live="polite"></p>
     </div>
     <div class="panel sl-chart">
@@ -54,7 +54,7 @@ function sleepGridHTML(lv) {
     </div>
     <div class="panel sl-memp" id="slMem"></div>
   </section>
-  <section class="panel sl-res"><div class="ph"><h3>Denemelerin</h3><span class="pc">2. günün sonunda</span></div><div class="llog-wrap"><table class="tt" id="slLog"></table></div></section>`;
+  <section class="panel sl-res" data-lay="log"><div class="ph"><h3>Denemelerin</h3><span class="pc">2. günün sonunda</span></div><div class="llog-wrap"><table class="tt" id="slLog"></table></div></section>`;
 }
 function wireSleep(lv) {
   const st = R().st;
