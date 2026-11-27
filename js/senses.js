@@ -6,9 +6,16 @@
    Model: sensesRun/sensesCommit (levels.js). Sesler Web Audio ile üretilir.
 ------------------------------------------------------------------- */
 let svLastStep = '',
-  svAC = null;
+  svAC = null,
+  svFlowRaf = 0, // sinyal akışı animasyonu
+  svFlowKey = null, // son girdiler (değişince akış başlar)
+  svHover = null; // üstüne gelinen nöron: { t: 'k' | 'o', i }
 function sensesResetView() {
   svLastStep = '';
+  cancelAnimationFrame(svFlowRaf);
+  svFlowRaf = 0;
+  svFlowKey = null;
+  svHover = null;
 }
 const SZ = {
   rows: {
@@ -35,7 +42,7 @@ const SV_SENSE = [
 
 function sensesGridHTML(lv) {
   const T = SENSES.things;
-  return `<section class="bench has-card">
+  return `<section class="bench has-card sv-bench">
       <div class="bench-card pact sact">
         <div class="pstep-h">🃏 Kart göster</div>
         <div class="sgrid5">${T.map((t, k) => `<button class="btn sb" id="sc${k}" title="${esc(t.name)} kartı">${t.icon}</button>`).join('')}</div>
@@ -50,7 +57,8 @@ function sensesGridHTML(lv) {
         <p class="pnext" id="sNext" aria-live="polite"></p>
         <div class="bench-more pquick" data-lay="clear"><button class="btn ghost small" id="sClr">🧹 Hepsini temizle</button></div>
       </div>
-      <div class="bench-scene"><div class="stage scene-wrap"><svg id="sscene" viewBox="0 0 1000 576" role="img" aria-label="Soldan sağa: girdi, duyu nöronları, duyu alanları, kavram nöronları ve çıktı"></svg></div></div>
+      <div class="bench-scene"><div class="stage scene-wrap sv-wrap"><svg id="sscene" viewBox="0 0 1000 576" role="img" aria-label="Soldan sağa: girdi, duyu nöronları, duyu alanları, kavram nöronları ve çıktı. Bir kavramın ya da çıktının üstüne gelince ona giden yollar belirginleşir."></svg></div></div>
+      <div class="sv-tip" id="svTip" hidden></div>
       <div class="bench-answer panel" id="sanswer" aria-live="polite"></div>
     </section>
     <section class="strip" id="sstep" aria-live="polite" data-lay="strip"></section>
@@ -67,13 +75,14 @@ function wireSenses(lv) {
     T = SENSES.things,
     R0 = SZ.rows;
   let h = `<text class="coltitle" x="68" y="18">Girdi</text><text class="coltitle" x="270" y="18">1 · Duyu nöronları</text>
-    <text class="coltitle" x="${SZ.cx + 62}" y="18">2 · Duyu alanları</text><text class="coltitle" x="${SZ.kx + 20}" y="18">3 · Kavram</text><text class="coltitle" x="${SZ.ex + 50}" y="18">4 · Çıktı</text>
-    <g id="sl1"></g><g id="sl2"></g><g id="sl3"></g>`;
+    <text class="coltitle" x="${SZ.cx + 62}" y="18">2 · Duyu alanları</text><text class="coltitle" x="${SZ.kx + 20}" y="18">3 · Kavram</text><text class="coltitle" x="${SZ.ex + 50}" y="18">4 · Çıktı</text>`;
   SV_SENSE.forEach(s => {
     const [y0, y1] = R0[s.k];
     h += `<rect class="sblock" x="6" y="${y0}" width="${SZ.cx + 170}" height="${y1 - y0 - 4}" rx="10"/>
       <text class="sbl" x="14" y="${y0 + 16}">${s.icon} ${s.name}</text><g id="sin-${s.k}"></g>`;
   });
+  // bağlantılar kutuların üstünde, nöronların altında; vurgulanan yol (shl) en üstte
+  h += `<g id="sl1"></g><g id="sl2"></g><g id="sl3"></g><g id="shl"></g>`;
   // 1 · duyu nöronları
   SENSES.vis.forEach((f, i) => {
     const x = SZ.bx + 18 + (i % 7) * 36,
@@ -130,7 +139,7 @@ function wireSenses(lv) {
   // 3 · kavram nöronları
   T.forEach((t, k) => {
     const y = 48 + k * 52;
-    h += `<circle class="soma sk" id="kc${k}" cx="${SZ.kx}" cy="${y}" r="21"/><text class="pemo" x="${SZ.kx}" y="${y + 7}" style="font-size:20px">${t.icon}</text>
+    h += `<circle class="soma sk" id="kc${k}" cx="${SZ.kx}" cy="${y}" r="21" tabindex="0"/><text class="pemo" x="${SZ.kx}" y="${y + 7}" style="font-size:20px">${t.icon}</text>
     <text class="skn" id="kn${k}" x="${SZ.kx + 28}" y="${y - 2}">${esc(t.name)}</text><text class="skp" id="kp${k}" x="${SZ.kx + 28}" y="${y + 13}"></text>`;
   });
   // 4 · çıktı: konuşma balonu + tür nöronları
@@ -138,7 +147,7 @@ function wireSenses(lv) {
     <text class="soma-sub" id="oT" x="${SZ.ex + 29}" y="108" style="font-size:15px"></text>`;
   SENSES.cats.forEach((c, j) => {
     const y = 210 + j * 110;
-    h += `<circle class="soma sk" id="oc${j}" cx="${SZ.ex + 29}" cy="${y}" r="28"/><text class="pemo" x="${SZ.ex + 29}" y="${y + 7}" style="font-size:20px">${c.icon}</text>
+    h += `<circle class="soma sk so" id="oc${j}" cx="${SZ.ex + 29}" cy="${y}" r="28" tabindex="0"/><text class="pemo" x="${SZ.ex + 29}" y="${y + 7}" style="font-size:20px">${c.icon}</text>
     <text class="soma-sub" x="${SZ.ex + 29}" y="${y + 46}" style="font-size:13px">${c.name}</text><text class="skp" id="op${j}" x="${SZ.ex + 29}" y="${y + 62}" style="text-anchor:middle"></text>`;
   });
   // kullanılmayan duyuların satırları soluklaşır (dikkat kullanılan yola gitsin)
@@ -146,7 +155,9 @@ function wireSenses(lv) {
     const [y0, y1] = R0[s.k];
     h += `<rect class="sveil" id="sveil-${s.k}" x="4" y="${y0 - 2}" width="${SZ.cx + 174}" height="${y1 - y0}" rx="10"/>`;
   });
+  h += `<g id="sfx"></g>`;
   svg.innerHTML = h;
+  wireSvHover(svg);
   // girdiler
   const st = () => R().st,
     go = () => {
@@ -418,44 +429,45 @@ function updateSenses(lv, rec) {
   SENSES.smells.forEach((s, k) => rs('ro' + k, r.rec.smell[k]));
   SENSES.sounds.forEach((s, k) => rs('ra' + k, r.rec.sound[k]));
   // çizgiler: duyu nöronu → tanıyıcı (sadece yananlar)
-  const C = id => {
-    const e = $('#' + id);
-    if (e.tagName === 'circle')
-      return [+e.getAttribute('cx'), +e.getAttribute('cy'), +e.getAttribute('r')];
-    return [
-      +e.getAttribute('x') + +e.getAttribute('width') / 2,
-      +e.getAttribute('y') + +e.getAttribute('height') / 2,
-      +e.getAttribute('width') / 2
-    ];
-  };
+  // sinyal akışı için etkin bağlantılar: aşama 0 girdi → duyu nöronu, 1 → tanıyıcı, 2 → kavram, 3 → çıktı
+  const segs = [],
+    seg = (a, b, s) => segs.push(svSeg(a, b, s)),
+    from = (x, y, b, s) => {
+      const [x2, y2, r2] = svC(b);
+      segs.push({ x1: x, y1: y, c: [x, y, x2 - r2, y2], x2: x2 - r2, y2, s });
+    };
+  r.inp.vis.forEach((v, i) => v && from(116, R0.vis[0] + 67, 'nv' + i, 0));
+  r.inp.let.forEach((v, i) => v && from(122, R0.word[0] + 62, 'nl' + i, 0));
+  r.inp.smell.forEach((v, i) => v && from(104, R0.smell[0] + 42, 'no' + i, 0));
+  r.inp.sound.forEach((v, i) => v > 0.2 && from(122, R0.sound[0] + 42, 'na' + i, 0));
+  r.inp.taste.forEach((v, i) => v && from(100, R0.taste[0] + 46, 'nt' + i, 0));
   const ln = (a, b, op, cls) => {
-    const [x1, y1, r1] = C(a),
-      [x2, y2, r2] = C(b);
-    return `<line class="${cls}" x1="${x1 + r1}" y1="${y1}" x2="${x2 - r2}" y2="${y2}" style="opacity:${op.toFixed(2)}"/>`;
+    if (op >= 0.2) seg(a, b, cls.startsWith('sln3') ? 3 : cls.startsWith('sln2') ? 2 : 1);
+    return svLn(a, b, op, cls);
   };
   let l1 = '';
   T.forEach((t, k) => {
     if (r.rec.vis[k] > 0)
       r.inp.vis.forEach((v, i) => {
-        if (v && t.vis.includes(i)) l1 += ln('nv' + i, 'rv' + k, 0.25 + 0.6 * r.rec.vis[k], 'sl');
+        if (v && t.vis.includes(i)) l1 += ln('nv' + i, 'rv' + k, 0.25 + 0.6 * r.rec.vis[k], 'sln');
       });
     if (r.rec.word[k] > 0) {
       const L = sLetters(t.word);
       r.inp.let.forEach((v, i) => {
-        if (v && L[i]) l1 += ln('nl' + i, 'rw' + k, 0.2 + 0.6 * r.rec.word[k], 'sl');
+        if (v && L[i]) l1 += ln('nl' + i, 'rw' + k, 0.2 + 0.6 * r.rec.word[k], 'sln');
       });
     }
   });
   SENSES.smells.forEach((s, k) => {
     if (r.rec.smell[k] > 0)
       r.inp.smell.forEach((v, i) => {
-        if (v && s.r[i]) l1 += ln('no' + i, 'ro' + k, 0.25 + 0.6 * r.rec.smell[k], 'sl');
+        if (v && s.r[i]) l1 += ln('no' + i, 'ro' + k, 0.25 + 0.6 * r.rec.smell[k], 'sln');
       });
   });
   SENSES.sounds.forEach((s, k) => {
     if (r.rec.sound[k] > 0)
       r.inp.sound.forEach((v, i) => {
-        if (v && s.b[i] > 0.2) l1 += ln('na' + i, 'ra' + k, 0.25 + 0.6 * r.rec.sound[k], 'sl');
+        if (v && s.b[i] > 0.2) l1 += ln('na' + i, 'ra' + k, 0.25 + 0.6 * r.rec.sound[k], 'sln');
       });
   });
   $('#sl1').innerHTML = l1;
@@ -463,22 +475,22 @@ function updateSenses(lv, rec) {
   let l2 = '';
   T.forEach((t, k) => {
     const p = r.parts[k];
-    l2 += ln('rv' + k, 'kc' + k, p.vis ? 0.9 : 0.07, 'sl2' + (p.vis ? ' on' : ''));
-    l2 += ln('rw' + k, 'kc' + k, p.word ? 0.9 : 0.07, 'sl2' + (p.word ? ' on' : ''));
+    l2 += ln('rv' + k, 'kc' + k, p.vis ? 0.9 : 0.07, 'sln2' + (p.vis ? ' on' : ''));
+    l2 += ln('rw' + k, 'kc' + k, p.word ? 0.9 : 0.07, 'sln2' + (p.word ? ' on' : ''));
     if (t.smell != null)
-      l2 += ln('ro' + t.smell, 'kc' + k, p.smell ? 0.9 : 0.07, 'sl2' + (p.smell ? ' on' : ''));
+      l2 += ln('ro' + t.smell, 'kc' + k, p.smell ? 0.9 : 0.07, 'sln2' + (p.smell ? ' on' : ''));
     if (t.sound != null)
-      l2 += ln('ra' + t.sound, 'kc' + k, p.sound ? 0.9 : 0.07, 'sl2' + (p.sound ? ' on' : ''));
+      l2 += ln('ra' + t.sound, 'kc' + k, p.sound ? 0.9 : 0.07, 'sln2' + (p.sound ? ' on' : ''));
     if (t.taste)
       l2 += ln(
         'thub',
         'kc' + k,
         p.taste ? 0.25 + 0.65 * p.taste : 0.06,
-        'sl2 taste' + (p.taste ? ' on' : '')
+        'sln2 taste' + (p.taste ? ' on' : '')
       );
   });
   r.inp.taste.forEach((v, i) => {
-    if (v) l1 += ln('nt' + i, 'thub', 0.8, 'sl');
+    if (v) l1 += ln('nt' + i, 'thub', 0.8, 'sln');
   });
   $('#sl1').innerHTML = l1;
   $('#sl2').innerHTML = l2;
@@ -499,14 +511,14 @@ function updateSenses(lv, rec) {
       'kc' + k,
       'oc' + t.cat,
       pk > 0.05 ? 0.2 + 0.8 * pk : 0.05,
-      'sl3' + (pk > 0.05 ? ' on' : '')
+      'sln3' + (pk > 0.05 ? ' on' : '')
     );
   });
   $('#sl3').innerHTML = l3;
   SENSES.cats.forEach((c, j) => {
     const e = $('#oc' + j),
       pj = any && !r.unknown ? r.cat[j] : 0;
-    e.setAttribute('class', 'soma sk' + (pj >= 0.6 ? ' top' : ''));
+    e.setAttribute('class', 'soma sk so' + (pj >= 0.6 ? ' top' : ''));
     e.style.setProperty('--a', pj);
     $('#op' + j).textContent = any && !r.unknown ? svPct(pj) : '';
   });
@@ -517,6 +529,228 @@ function updateSenses(lv, rec) {
   svStep(rec, r, say);
   svMat(r);
   svLog(st);
+  // girdiler değiştiyse sinyal soldan sağa aksın; üstüne gelinen yol yeniden çizilsin
+  const key = JSON.stringify([st.card, w, st.smell, st.sound, st.taste]);
+  if (svFlowKey !== null && key !== svFlowKey) svFlowStart(segs);
+  svFlowKey = key;
+  svHoverPaint(r);
+}
+
+/* ---------- çizim yardımcıları ---------- */
+function svC(id) {
+  const e = document.getElementById(id);
+  if (e.tagName === 'circle')
+    return [+e.getAttribute('cx'), +e.getAttribute('cy'), +e.getAttribute('r')];
+  return [
+    +e.getAttribute('x') + +e.getAttribute('width') / 2,
+    +e.getAttribute('y') + +e.getAttribute('height') / 2,
+    +e.getAttribute('width') / 2
+  ];
+}
+// Duyu nöronundan çıkan bağlantı, sıradaki öbür nöronların içinden geçmesin diye önce
+// yukarı (bloğun üst yarısındaysa) ya da aşağı çıkar, sonra kıvrılıp tanıyıcıya varır.
+function svSeg(a, b, s) {
+  const [x1, y1, r1] = svC(a),
+    [x2, y2, r2] = svC(b),
+    ex = x2 - r2;
+  if (/^n[vlota]\d/.test(a)) {
+    const blk = Object.values(SZ.rows).find(([t, u]) => y1 >= t && y1 <= u) || [y1 - 1, y1 + 1],
+      dir = y1 <= (blk[0] + blk[1]) / 2 + 4 ? -1 : 1,
+      sy = y1 + dir * r1;
+    return { x1, y1: sy, c: [x1, sy + dir * 22, ex - 36, y2], x2: ex, y2, s };
+  }
+  const sx = x1 + r1;
+  return { x1: sx, y1, c: [sx, y1, ex, y2], x2: ex, y2, s };
+}
+const svD = g =>
+  `M${g.x1.toFixed(1)} ${g.y1.toFixed(1)}C${g.c.map(v => v.toFixed(1)).join(' ')} ${g.x2.toFixed(1)} ${g.y2.toFixed(1)}`;
+function svAt(g, e) {
+  const u = 1 - e,
+    a = u * u * u,
+    b = 3 * u * u * e,
+    c = 3 * u * e * e,
+    d = e * e * e;
+  return [
+    a * g.x1 + b * g.c[0] + c * g.c[2] + d * g.x2,
+    a * g.y1 + b * g.c[1] + c * g.c[3] + d * g.y2
+  ];
+}
+function svLn(a, b, op, cls) {
+  return `<path class="${cls}" d="${svD(svSeg(a, b))}" style="opacity:${op.toFixed(2)}"/>`;
+}
+
+/* ---------- sinyal akışı: girdi değişince sinyal katman katman ilerler ---------- */
+const SV_STEP = 430; // bir katmandan ötekine ms
+function svFlowStart(segs) {
+  svFlowEnd();
+  const svg = document.getElementById('sscene'),
+    fx = document.getElementById('sfx');
+  if (!svg || !fx || reducedMotion || !segs.length) return;
+  svg.classList.add('fl0');
+  fx.innerHTML = segs
+    .map(g => `<circle class="spk s${g.s}" r="3.8" cx="${g.x1}" cy="${g.y1}" opacity="0"/>`)
+    .join('');
+  const dots = [...fx.children],
+    t0 = performance.now();
+  const tick = now => {
+    const t = (now - t0) / SV_STEP,
+      stg = Math.floor(t);
+    if (t >= 4) return svFlowEnd();
+    for (let k = 0; k < 4; k++) svg.classList.toggle('fl' + k, k === stg);
+    const u = t - stg,
+      e = u * u * (3 - 2 * u);
+    segs.forEach((g, i) => {
+      const d = dots[i];
+      if (g.s !== stg) return d.setAttribute('opacity', 0);
+      const [px, py] = svAt(g, e);
+      d.setAttribute('cx', px.toFixed(1));
+      d.setAttribute('cy', py.toFixed(1));
+      d.setAttribute('opacity', u < 0.85 ? 1 : ((1 - u) / 0.15).toFixed(2));
+    });
+    svFlowRaf = requestAnimationFrame(tick);
+  };
+  svFlowRaf = requestAnimationFrame(tick);
+}
+function svFlowEnd() {
+  cancelAnimationFrame(svFlowRaf);
+  svFlowRaf = 0;
+  const svg = document.getElementById('sscene'),
+    fx = document.getElementById('sfx');
+  if (svg) ['fl0', 'fl1', 'fl2', 'fl3'].forEach(c => svg.classList.remove(c));
+  if (fx) fx.innerHTML = '';
+}
+
+/* ---------- üstüne gelince: bir kavrama (ya da çıktıya) giden bütün yollar ---------- */
+// [kaynak, hedef, duyu] çiftleri; duyu: vis | word | smell | sound | taste | out
+function svPathOf(k) {
+  const t = SENSES.things[k],
+    P = [],
+    add = (a, b, sense) => P.push([a, b, sense, k]);
+  t.vis.forEach(i => add('nv' + i, 'rv' + k, 'vis'));
+  add('rv' + k, 'kc' + k, 'vis');
+  sLetters(t.word).forEach((v, i) => v && add('nl' + i, 'rw' + k, 'word'));
+  add('rw' + k, 'kc' + k, 'word');
+  if (t.smell != null) {
+    SENSES.smells[t.smell].r.forEach((v, i) => v && add('no' + i, 'ro' + t.smell, 'smell'));
+    add('ro' + t.smell, 'kc' + k, 'smell');
+  }
+  if (t.sound != null) {
+    SENSES.sounds[t.sound].b.forEach((v, i) => v > 0.2 && add('na' + i, 'ra' + t.sound, 'sound'));
+    add('ra' + t.sound, 'kc' + k, 'sound');
+  }
+  if (t.taste) {
+    t.taste.forEach((v, i) => v > 0 && add('nt' + i, 'thub', 'taste'));
+    add('thub', 'kc' + k, 'taste');
+  }
+  add('kc' + k, 'oc' + t.cat, 'out');
+  return P;
+}
+function svHoverPaint(r) {
+  const svg = document.getElementById('sscene'),
+    hl = document.getElementById('shl'),
+    tip = document.getElementById('svTip');
+  if (!svg || !hl) return;
+  svg.querySelectorAll('.pth').forEach(e => e.classList.remove('pth'));
+  const h = svHover;
+  svg.classList.toggle('hov', !!h);
+  if (!h) {
+    hl.innerHTML = '';
+    tip.hidden = true;
+    return;
+  }
+  r = r || sensesRun(R().st);
+  const T = SENSES.things,
+    ks = h.t === 'k' ? [h.i] : T.map((t, k) => k).filter(k => T[k].cat === h.i),
+    pairs = ks.flatMap(svPathOf),
+    any = r.nGiven > 0 && !r.unknown,
+    act = ([, , sense, k]) => (sense === 'out' ? any && r.p[k] > 0.05 : r.parts[k][sense] > 0);
+  hl.innerHTML = pairs
+    .map(q => svLn(q[0], q[1], 1, 'shl' + (act(q) ? ' act' : '') + (q[2] === 'out' ? ' out' : '')))
+    .join('');
+  pairs.forEach(([a, b]) => {
+    document.getElementById(a).classList.add('pth');
+    document.getElementById(b).classList.add('pth');
+  });
+  tip.innerHTML = h.t === 'k' ? svTipConcept(h.i, r) : svTipOut(h.i, r);
+  tip.hidden = false;
+  svTipPlace();
+}
+function svTipConcept(k, r) {
+  const t = SENSES.things[k],
+    p = r.parts[k],
+    row = (icon, name, what, v) =>
+      `<li>${icon} <b>${name}</b>: ${what}${v > 0 ? ` <span class="sv-v">+${svN(v)}</span>` : ''}</li>`;
+  let h = `<b>${t.icon} ${esc(t.name)}</b> · kavram nöronu<ul>`;
+  h += row('👁', 'görme', esc(t.vis.map(i => SENSES.vis[i]).join(', ')), p.vis);
+  h += row('📖', 'okuma', esc(t.word), p.word);
+  if (t.smell != null) h += row('👃', 'koku', esc(SENSES.smells[t.smell].name), p.smell);
+  if (t.sound != null) h += row('👂', 'işitme', esc(SENSES.sounds[t.sound].name), p.sound);
+  if (t.taste)
+    h += row(
+      '👅',
+      'tat',
+      esc(
+        SENSES.tastes
+          .filter((x, i) => t.taste[i] > 0)
+          .map(x => x.name)
+          .join(', ')
+      ),
+      p.taste
+    );
+  h += '</ul>';
+  h +=
+    r.nGiven && r.c[k] > 0
+      ? `Şu an gelen destek <b>${svN(r.c[k])}</b> → ${svPct(r.unknown ? 0 : r.p[k])}`
+      : 'Şu an ona hiçbir yoldan sinyal gelmiyor.';
+  return h;
+}
+function svTipOut(j, r) {
+  const c = SENSES.cats[j],
+    T = SENSES.things,
+    any = r.nGiven > 0 && !r.unknown;
+  const li = T.map((t, k) => k)
+    .filter(k => T[k].cat === j)
+    .map(
+      k =>
+        `<li>${T[k].icon} ${esc(T[k].name)}${any && r.p[k] >= 0.005 ? ` <span class="sv-v">${svPct(r.p[k])}</span>` : ''}</li>`
+    )
+    .join('');
+  return `<b>${c.icon} ${esc(c.name)}</b> · çıktı nöronu<br>Bu kavram nöronlarından beslenir:<ul>${li}</ul>${any ? `Toplam: <b>${svPct(r.cat[j])}</b>` : 'Şu an sessiz.'}`;
+}
+// Açıklama sağdaki cevap panelinin üstüne gelir: sahnede hiçbir yolu kapatmasın
+function svTipPlace() {
+  const tip = document.getElementById('svTip'),
+    ans = document.getElementById('sanswer');
+  if (!tip || !ans) return;
+  tip.style.left = ans.offsetLeft + 'px';
+  tip.style.top = ans.offsetTop + 'px';
+  tip.style.width = ans.offsetWidth + 'px';
+  tip.style.minHeight = ans.offsetHeight + 'px';
+}
+function wireSvHover(svg) {
+  const set = h => {
+    const same = (h && svHover && h.t === svHover.t && h.i === svHover.i) || (!h && !svHover);
+    svHover = h;
+    if (!same) svHoverPaint();
+  };
+  const hook = (el, h) => {
+    if (!el) return;
+    el.addEventListener('pointerenter', e => e.pointerType === 'mouse' && set(h));
+    el.addEventListener('pointerleave', e => e.pointerType === 'mouse' && set(null));
+    el.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse') return;
+      e.stopPropagation();
+      set(svHover && svHover.t === h.t && svHover.i === h.i ? null : h);
+    });
+    el.addEventListener('focus', () => set(h));
+    el.addEventListener('blur', () => set(null));
+  };
+  SENSES.things.forEach((t, k) => {
+    hook(document.getElementById('kc' + k), { t: 'k', i: k });
+    hook(document.getElementById('kn' + k), { t: 'k', i: k });
+  });
+  SENSES.cats.forEach((c, j) => hook(document.getElementById('oc' + j), { t: 'o', i: j }));
+  svg.addEventListener('pointerdown', e => e.pointerType !== 'mouse' && set(null));
 }
 // Çıktının söylediği
 function svSay(r) {

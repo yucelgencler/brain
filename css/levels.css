@@ -2995,26 +2995,26 @@ details.manual[open] > summary {
   font-size: 10.5px;
   fill: var(--ink-2);
 }
-.sl {
+.sln {
   stroke: var(--light-ink);
   stroke-width: 1.2;
 }
-.sl2 {
+.sln2 {
   stroke: var(--ink-2);
   stroke-width: 1;
 }
-.sl2.on {
+.sln2.on {
   stroke: var(--pos);
   stroke-width: 2.5;
 }
-.sl2.taste.on {
+.sln2.taste.on {
   stroke: var(--neg);
 }
-.sl3 {
+.sln3 {
   stroke: var(--ink-2);
   stroke-width: 1;
 }
-.sl3.on {
+.sln3.on {
   stroke: var(--ok);
   stroke-width: 2.5;
 }
@@ -3054,11 +3054,11 @@ details.manual[open] > summary {
   font-weight: 600;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .sl {
+  :root:not([data-theme='light']) .sln {
     stroke: var(--light);
   }
 }
-:root[data-theme='dark'] .sl {
+:root[data-theme='dark'] .sln {
   stroke: var(--light);
 }
 
@@ -3300,4 +3300,139 @@ button.info[aria-expanded='true'] {
 }
 .sveil.on {
   opacity: 0.78;
+}
+
+/* Seviye 12: üstüne gelince yol, girdi değişince sinyal akışı */
+.sln,
+.sln2,
+.sln3,
+.shl {
+  fill: none;
+}
+.sv-bench {
+  position: relative;
+}
+#sscene .pemo,
+#sscene .skp {
+  pointer-events: none;
+}
+#sscene .sk,
+#sscene .skn {
+  cursor: pointer;
+}
+#sscene .sk:focus {
+  outline: none;
+}
+#sscene .sk:focus-visible {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.shl {
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  opacity: 0.55;
+  stroke-dasharray: 4 3;
+}
+.shl.act {
+  stroke-width: 3;
+  opacity: 1;
+  stroke-dasharray: none;
+}
+#sscene.hov .sln,
+#sscene.hov .sln2,
+#sscene.hov .sln3 {
+  opacity: 0.08 !important;
+}
+#sscene.hov .sveil {
+  opacity: 0;
+}
+#sscene.hov .sn:not(.pth),
+#sscene.hov .sltr:not(.pth),
+#sscene.hov .srec:not(.pth),
+#sscene.hov .sk:not(.pth),
+#sscene.hov .sbar {
+  opacity: 0.3;
+}
+#sscene.hov .pth {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.sv-tip {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  box-shadow: 0 10px 28px rgba(20, 10, 50, 0.14);
+  font-size: 14px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+.sv-tip ul {
+  margin: 6px 0;
+  padding-left: 0;
+  list-style: none;
+}
+.sv-tip li {
+  margin: 2px 0;
+}
+.sv-v {
+  font-weight: 700;
+  color: var(--pos);
+}
+/* akış: sinyal varana kadar sonraki katmanlar sönük */
+.spk {
+  pointer-events: none;
+}
+.spk.s0,
+.spk.s1 {
+  fill: var(--light-ink);
+}
+.spk.s2 {
+  fill: var(--pos);
+}
+.spk.s3 {
+  fill: var(--ok);
+}
+#sscene.fl0 .sn.on,
+#sscene.fl0 .sltr.on {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+}
+#sscene.fl0 #sl1,
+#sscene.fl0 #sl2,
+#sscene.fl1 #sl2,
+#sscene.fl0 #sl3,
+#sscene.fl1 #sl3,
+#sscene.fl2 #sl3 {
+  opacity: 0.15;
+}
+#sscene.fl0 .srec,
+#sscene.fl1 .srec {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+#sscene.fl0 .sk,
+#sscene.fl1 .sk,
+#sscene.fl2 .sk,
+#sscene.fl3 .so {
+  fill: var(--node-off);
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+#sscene.fl0 .skp,
+#sscene.fl1 .skp,
+#sscene.fl2 .skp,
+#sscene.fl0 #oI,
+#sscene.fl1 #oI,
+#sscene.fl2 #oI,
+#sscene.fl3 #oI,
+#sscene.fl0 #oT,
+#sscene.fl1 #oT,
+#sscene.fl2 #oT,
+#sscene.fl3 #oT {
+  opacity: 0;
 }
